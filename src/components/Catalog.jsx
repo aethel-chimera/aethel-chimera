@@ -8,110 +8,56 @@ import { bus } from '../scrollBus'
 
 gsap.registerPlugin(ScrollTrigger)
 
-// Filtros do menu-comando (estilo AT "WHAT ARE YOU LOOKING FOR?").
 const FILTERS = ['Todos', 'WhatsApp', 'Pix', 'Agendamento', 'CRM']
 
+// Card usado APENAS no mobile (onde não há mundo 3D): mantém a imagem.
 function ProjectCard({ project, index, dimmed }) {
-  const cardRef = useRef(null)
-  const frameRef = useRef(null)
-
-  // tilt 3D que segue o mouse — sensação de painel flutuante no espaço
-  useEffect(() => {
-    const card = cardRef.current
-    const frame = frameRef.current
-    if (!card || !frame || !window.matchMedia('(pointer: fine)').matches) return
-
-    const target = { rx: 0, ry: 0 }
-    const cur = { rx: 0, ry: 0 }
-    let raf
-    let active = false
-
-    const onMove = (e) => {
-      const r = card.getBoundingClientRect()
-      target.ry = ((e.clientX - r.left) / r.width - 0.5) * 12
-      target.rx = -((e.clientY - r.top) / r.height - 0.5) * 9
-      active = true
-    }
-    const onLeave = () => {
-      target.rx = 0
-      target.ry = 0
-    }
-    const tick = () => {
-      cur.rx += (target.rx - cur.rx) * 0.08
-      cur.ry += (target.ry - cur.ry) * 0.08
-      if (active) frame.style.transform = `perspective(1100px) rotateX(${cur.rx}deg) rotateY(${cur.ry}deg)`
-      raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    card.addEventListener('mousemove', onMove)
-    card.addEventListener('mouseleave', onLeave)
-    return () => {
-      cancelAnimationFrame(raf)
-      card.removeEventListener('mousemove', onMove)
-      card.removeEventListener('mouseleave', onLeave)
-    }
-  }, [])
-
   return (
     <article
-      ref={cardRef}
       data-tags={project.tags.join('|')}
-      data-cursor="VER"
-      className="catalog-card shrink-0 w-[88vw] md:w-[72vw] max-w-5xl transition-all duration-500"
+      className="catalog-card transition-all duration-500"
       style={{ opacity: dimmed ? 0.28 : 1, filter: dimmed ? 'grayscale(0.7)' : 'none' }}
     >
-      <div ref={frameRef} className="at-panel rounded-xl will-change-transform">
+      <div className="at-panel rounded-xl">
         <span className="panel-scanlines" aria-hidden="true" />
-        {/* ticks de canto */}
-        <span className="panel-tick" style={{ top: 8, left: 8, borderTopWidth: 1, borderLeftWidth: 1 }} aria-hidden="true" />
-        <span className="panel-tick" style={{ top: 8, right: 8, borderTopWidth: 1, borderRightWidth: 1 }} aria-hidden="true" />
-        <span className="panel-tick" style={{ bottom: 8, left: 8, borderBottomWidth: 1, borderLeftWidth: 1 }} aria-hidden="true" />
-        <span className="panel-tick" style={{ bottom: 8, right: 8, borderBottomWidth: 1, borderRightWidth: 1 }} aria-hidden="true" />
-
-        <div className="grid md:grid-cols-[1.5fr_1fr]">
-          {/* mídia com moldura de navegador */}
-          <div className="panel-media border-r border-ivory/10">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-ivory/10">
-              <span className="font-mono text-[0.55rem] text-amber">{String(index + 1).padStart(2, '0')}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-ivory/20" />
-              <span className="w-1.5 h-1.5 rounded-full bg-ivory/20" />
-              <span className="w-1.5 h-1.5 rounded-full bg-amber/60" />
-              <span className="mono-label text-[0.5rem] text-titanium/70 ml-2 truncate">
-                {project.name.toLowerCase().replace(/\s/g, '')}.com.br
+        <div className="panel-media">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-ivory/10">
+            <span className="font-mono text-[0.55rem] text-amber">{String(index + 1).padStart(2, '0')}</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-ivory/20" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber/60" />
+            <span className="mono-label text-[0.5rem] text-titanium/70 ml-2 truncate">
+              {project.name.toLowerCase().replace(/\s/g, '')}.com.br
+            </span>
+          </div>
+          <img
+            src={project.image}
+            alt={`Mockup do site da ${project.name}`}
+            className="w-full aspect-[16/10] object-cover"
+            loading="lazy"
+          />
+        </div>
+        <div className="p-7">
+          <p className="mono-label text-titanium/70">
+            {project.segment} · {project.year}
+          </p>
+          <h3 className="font-display font-semibold text-2xl text-ivory mt-2 mb-5">{project.name}</h3>
+          <ul className="space-y-2 mb-5">
+            {project.metrics.map((m) => (
+              <li key={m} className="font-mono text-xs text-amber flex items-center gap-2">
+                <span className="text-amber/50">+</span> {m}
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {project.tags.map((t) => (
+              <span key={t} className="mono-label text-[0.55rem] border border-ivory/15 rounded-full px-3 py-1.5 text-titanium">
+                {t}
               </span>
-            </div>
-            <img
-              src={project.image}
-              alt={`Mockup do site da ${project.name}`}
-              className="w-full aspect-[16/10] object-cover"
-              loading="lazy"
-            />
+            ))}
           </div>
-
-          {/* dados */}
-          <div className="p-7 md:p-9 flex flex-col">
-            <p className="mono-label text-titanium/70">
-              {project.segment} · {project.year}
-            </p>
-            <h3 className="font-display font-semibold text-2xl md:text-3xl text-ivory mt-2 mb-6">{project.name}</h3>
-            <ul className="space-y-2 mb-6">
-              {project.metrics.map((m) => (
-                <li key={m} className="font-mono text-xs text-amber flex items-center gap-2">
-                  <span className="text-amber/50">+</span> {m}
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-wrap gap-2 mb-8 mt-auto">
-              {project.tags.map((t) => (
-                <span key={t} className="mono-label text-[0.55rem] border border-ivory/15 rounded-full px-3 py-1.5 text-titanium">
-                  {t}
-                </span>
-              ))}
-            </div>
-            <a href={project.url} className="arrow-link">
-              Visitar site
-            </a>
-          </div>
+          <a href={project.url} className="arrow-link">
+            Visitar site
+          </a>
         </div>
       </div>
     </article>
@@ -120,79 +66,157 @@ function ProjectCard({ project, index, dimmed }) {
 
 export default function Catalog({ reducedMotion }) {
   const sectionRef = useRef(null)
-  const trackRef = useRef(null)
   const progressRef = useRef(null)
+  const stRef = useRef(null)
   const [filter, setFilter] = useState('Todos')
+  const [active, setActive] = useState(0)
 
   const matches = (p) => filter === 'Todos' || p.tags.includes(filter)
+  const N = CATALOG.length
 
+  // Desktop: a seção pina e o progresso do scroll percorre os slides 3D do
+  // mundo WebGL (que ficam atrás). Cada slide ganha ~1 viewport de scroll.
   useEffect(() => {
     if (reducedMotion) return
     const mm = gsap.matchMedia()
     mm.add('(min-width: 768px)', () => {
-      const track = trackRef.current
-      const getDistance = () => track.scrollWidth - window.innerWidth
-      gsap.to(track, {
-        x: () => -getDistance(),
-        ease: 'none',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          pin: true,
-          scrub: 1,
-          end: () => '+=' + getDistance(),
-          invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            if (progressRef.current) progressRef.current.style.transform = `scaleX(${self.progress})`
-            bus.catalogP = self.progress // alimenta os painéis 3D do fundo
-          },
+      const st = ScrollTrigger.create({
+        trigger: sectionRef.current,
+        pin: true,
+        start: 'top top',
+        end: () => '+=' + Math.round((N - 0.35) * window.innerHeight),
+        scrub: true,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          bus.catalogP = self.progress
+          if (progressRef.current) progressRef.current.style.transform = `scaleX(${self.progress})`
+          setActive(Math.round(self.progress * (N - 1)))
         },
       })
+      stRef.current = st
+      return () => st.kill()
     })
     return () => mm.revert()
-  }, [reducedMotion])
+  }, [reducedMotion, N])
 
   const onFilter = (f) => {
     setFilter(f)
     blip(330, 0.04, 'sine')
+    // desktop: rola até o primeiro projeto que casa com o filtro
+    const st = stRef.current
+    if (st && f !== 'Todos') {
+      const idx = CATALOG.findIndex((p) => p.tags.includes(f))
+      if (idx >= 0) {
+        const targetScroll = st.start + (idx / (N - 1)) * (st.end - st.start)
+        if (window.__lenis) window.__lenis.scrollTo(targetScroll)
+        else window.scrollTo(0, targetScroll)
+      }
+    }
   }
 
-  return (
-    <section
-      id="catalogo"
-      ref={sectionRef}
-      className="relative z-[3] py-24 md:py-0 md:min-h-screen md:flex md:flex-col md:justify-center overflow-hidden"
-    >
-      <div className="px-5 md:px-10 mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-        <SectionHead index="04" title="Catálogo" accent="vivo" />
+  const p = CATALOG[active]
 
-        {/* menu-comando estilo Active Theory */}
-        <div className="flex flex-col gap-2">
-          <p className="mono-label text-titanium/60">O que você procura?</p>
-          <div className="flex flex-wrap gap-x-5 gap-y-1">
-            {FILTERS.map((f) => (
-              <button
-                key={f}
-                onClick={() => onFilter(f)}
-                className={`arrow-link ${filter === f ? '!text-amber' : ''}`}
-              >
-                {f}
-              </button>
-            ))}
+  return (
+    <section id="catalogo" ref={sectionRef} className="relative z-[3] overflow-hidden py-24 md:py-0 md:h-screen">
+      {/* ===================== DESKTOP: galeria de slides 3D ===================== */}
+      <div className="hidden md:block">
+        {/* topo: título + menu-comando */}
+        <div className="absolute top-0 inset-x-0 px-10 pt-24 flex items-end justify-between gap-6 z-[4]">
+          <SectionHead index="04" title="Catálogo" accent="vivo" />
+          <div className="flex flex-col gap-2">
+            <p className="mono-label text-titanium/60">O que você procura?</p>
+            <div className="flex flex-wrap gap-x-5 gap-y-1 justify-end">
+              {FILTERS.map((f) => (
+                <button key={f} onClick={() => onFilter(f)} className={`arrow-link ${filter === f ? '!text-amber' : ''}`}>
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* scrim para leitura da info sobre o slide */}
+        <div
+          className="absolute left-0 bottom-0 w-[55%] h-[60%] z-[3] pointer-events-none"
+          style={{ background: 'linear-gradient(105deg, rgba(7,7,11,0.92) 0%, rgba(7,7,11,0.55) 45%, transparent 100%)' }}
+          aria-hidden="true"
+        />
+
+        {/* info do slide ativo */}
+        <div className="absolute left-10 bottom-16 z-[4] max-w-md">
+          <div key={active} className="catalog-active">
+            <span className="font-display font-semibold text-[clamp(4rem,8vw,7rem)] text-ivory/10 leading-none block -mb-4 select-none" aria-hidden="true">
+              {String(active + 1).padStart(2, '0')}
+            </span>
+            <p className="mono-label text-amber mb-2">
+              {p.segment} · {p.year}
+            </p>
+            <h3 className="font-display font-semibold text-4xl text-ivory mb-4">{p.name}</h3>
+            <ul className="space-y-1 mb-5">
+              {p.metrics.map((m) => (
+                <li key={m} className="font-mono text-xs text-amber flex items-center gap-2">
+                  <span className="text-amber/50">+</span> {m}
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-2 mb-5">
+              {p.tags.map((t) => (
+                <span key={t} className="mono-label text-[0.55rem] border border-ivory/15 rounded-full px-3 py-1.5 text-titanium">
+                  {t}
+                </span>
+              ))}
+            </div>
+            <a href={p.url} className="arrow-link">
+              Visitar site
+            </a>
+          </div>
+        </div>
+
+        {/* contador + barra de progresso */}
+        <div className="absolute right-10 bottom-16 z-[4] text-right">
+          <p className="mono-label text-titanium/70 mb-3">
+            {String(active + 1).padStart(2, '0')} / {String(N).padStart(2, '0')}
+          </p>
+          <div className="w-40 h-px bg-ivory/10 ml-auto">
+            <div ref={progressRef} className="h-full bg-amber origin-left" style={{ transform: 'scaleX(0)' }} />
+          </div>
+        </div>
+
+        {/* dica de scroll */}
+        <p className="absolute left-1/2 -translate-x-1/2 bottom-7 z-[4] mono-label text-titanium/40">role para percorrer</p>
+      </div>
+
+      {/* ===================== MOBILE: pilha vertical (com imagem) ===================== */}
+      <div className="md:hidden">
+        <div className="px-5 mb-8">
+          <SectionHead index="04" title="Catálogo" accent="vivo" />
+          <div className="mt-6">
+            <p className="mono-label text-titanium/60 mb-2">O que você procura?</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {FILTERS.map((f) => (
+                <button key={f} onClick={() => { setFilter(f); blip(330, 0.04, 'sine') }} className={`arrow-link ${filter === f ? '!text-amber' : ''}`}>
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-14 px-5">
+          {CATALOG.map((proj, i) => (
+            <ProjectCard key={proj.name} project={proj} index={i} dimmed={!matches(proj)} />
+          ))}
         </div>
       </div>
 
-      {/* desktop: stream horizontal pinado / mobile: pilha vertical */}
-      <div ref={trackRef} className="flex flex-col gap-14 px-5 md:flex-row md:gap-10 md:px-10 md:w-max md:items-center">
-        {CATALOG.map((p, i) => (
-          <ProjectCard key={p.name} project={p} index={i} dimmed={!matches(p)} />
+      {/* SEO/acessibilidade: catálogo textual completo */}
+      <ul className="sr-only">
+        {CATALOG.map((proj) => (
+          <li key={proj.name}>
+            {proj.name} — {proj.segment}, {proj.year}. {proj.metrics.join(', ')}.{' '}
+            <a href={proj.url}>Visitar site</a>
+          </li>
         ))}
-      </div>
-
-      {/* barra de progresso do stream */}
-      <div className="hidden md:block mx-10 mt-10 h-px bg-ivory/10">
-        <div ref={progressRef} className="h-full bg-amber origin-left" style={{ transform: 'scaleX(0)' }} />
-      </div>
+      </ul>
     </section>
   )
 }

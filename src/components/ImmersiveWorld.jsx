@@ -34,7 +34,7 @@ const ACTS = {
   hero:       { glass: 1.0,  fluid: 0.0, panels: 0.0, camZ: 6.0 },
   manifesto:  { glass: 0.35, fluid: 0.9, panels: 0.0, camZ: 5.3 },
   servicos:   { glass: 0.0,  fluid: 1.0, panels: 0.0, camZ: 6.2 },
-  catalogo:   { glass: 0.0,  fluid: 0.25, panels: 1.0, camZ: 7.0 },
+  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, camZ: 6.0 },
   processo:   { glass: 0.0,  fluid: 0.85, panels: 0.0, camZ: 6.0 },
   resultados: { glass: 0.0,  fluid: 0.8, panels: 0.0, camZ: 6.4 },
   planos:     { glass: 0.0,  fluid: 0.65, panels: 0.0, camZ: 6.0 },
@@ -197,14 +197,13 @@ function Panels({ shared }) {
   }, [textures])
 
   const N = CATALOG.length
-  const SP = 3.8 // espaçamento horizontal entre os slides
+  const SP = 5.6 // espaçamento horizontal entre os slides
   const layout = useMemo(
     () =>
       CATALOG.map((_, i) => ({
         x: i * SP,
-        y: i % 2 === 0 ? 0.55 : -0.65,
-        z: -2.3 - (i % 3) * 0.55,
-        ry: i % 2 === 0 ? 0.32 : -0.32,
+        z: -0.8,
+        ry: 0,
       })),
     [N]
   )
@@ -214,31 +213,32 @@ function Panels({ shared }) {
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
     grp.current.visible = w > 0.02
-    // EFEITO DE SCROLL: o trilho 3D desliza conforme o progresso do catálogo,
-    // sincronizado ao scroll horizontal dos cards em DOM.
-    const targetX = 2.0 - bus.catalogP * (N - 1) * SP
-    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, targetX, 3, d)
+    // EFEITO DE SCROLL: o trilho 3D desliza conforme o progresso do catálogo;
+    // o slide ativo fica centralizado, os vizinhos espiam nas laterais.
+    const targetX = -bus.catalogP * (N - 1) * SP
+    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, targetX, 4, d)
     grp.current.children.forEach((m, i) => {
-      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w, 4, d)
+      // distância do slide ao centro da tela → o ativo brilha mais, gira menos
+      const worldX = layout[i].x + grp.current.position.x
+      const dist = Math.abs(worldX)
+      const focus = Math.max(0, 1 - dist / SP) // 1 no centro, 0 no vizinho
+      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * (0.35 + focus * 0.65), 5, d)
+      m.material.color.setScalar(0.7 + focus * 0.55)
+      m.rotation.y = THREE.MathUtils.damp(m.rotation.y, worldX * 0.05, 4, d)
+      m.position.y = Math.sin(state.clock.elapsedTime * 0.4 + i) * 0.06
       const edge = m.children[0]
-      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * 0.85, 4, d)
-      m.position.y = layout[i].y + Math.sin(state.clock.elapsedTime * 0.4 + i) * 0.1
+      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * focus, 5, d)
     })
   })
 
   return (
     <group ref={grp}>
       {CATALOG.map((p, i) => (
-        <mesh
-          key={p.name}
-          position={[layout[i].x, layout[i].y, layout[i].z]}
-          rotation={[0, layout[i].ry, 0]}
-          scale={[2.9, 1.82, 1]}
-        >
+        <mesh key={p.name} position={[layout[i].x, 0, layout[i].z]} scale={[4.6, 2.85, 1]}>
           <planeGeometry args={[1, 1]} />
           <meshBasicMaterial
             map={textures[i]}
-            color="#7c7c7c"
+            color="#cccccc"
             transparent
             opacity={0}
             side={THREE.DoubleSide}
@@ -246,7 +246,7 @@ function Panels({ shared }) {
           />
           {/* moldura âmbar do slide */}
           <lineSegments>
-            <edgesGeometry args={[new THREE.PlaneGeometry(1.02, 1.04)]} />
+            <edgesGeometry args={[new THREE.PlaneGeometry(1.015, 1.03)]} />
             <lineBasicMaterial color="#E0A458" transparent opacity={0} />
           </lineSegments>
         </mesh>
