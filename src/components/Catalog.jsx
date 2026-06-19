@@ -135,15 +135,8 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
           </div>
         </div>
 
-        {/* scrim para leitura da info sobre o slide */}
-        <div
-          className="absolute left-0 bottom-0 w-[55%] h-[60%] z-[3] pointer-events-none"
-          style={{ background: 'linear-gradient(105deg, rgba(7,7,11,0.92) 0%, rgba(7,7,11,0.55) 45%, transparent 100%)' }}
-          aria-hidden="true"
-        />
-
-        {/* info do slide ativo */}
-        <div className="absolute left-10 bottom-16 z-[4] max-w-md">
+        {/* info do slide ativo — sem bloco escuro; legibilidade por sombra */}
+        <div className="catalog-info absolute left-10 bottom-16 z-[4] max-w-md">
           <div key={active} className="catalog-active">
             <span className="font-display font-semibold text-[clamp(4rem,8vw,7rem)] text-ivory/10 leading-none block -mb-4 select-none" aria-hidden="true">
               {String(active + 1).padStart(2, '0')}

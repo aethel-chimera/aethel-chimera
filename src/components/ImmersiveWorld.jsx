@@ -197,13 +197,15 @@ function Panels({ shared }) {
   }, [textures])
 
   const N = CATALOG.length
-  const SP = 5.6 // espaçamento horizontal entre os slides
+  const GAP = 5.2 // profundidade entre as telas no corredor
+  // telas flutuando em PROFUNDIDADE, escalonadas no espaço (não numa linha
+  // plana). O scroll faz a câmera voar pelo corredor de telas.
   const layout = useMemo(
     () =>
       CATALOG.map((_, i) => ({
-        x: i * SP,
-        z: -0.8,
-        ry: 0,
+        x: (i % 2 === 0 ? 1.7 : -1.7) + ((i % 3) - 1) * 0.5,
+        y: (i % 2 === 0 ? 0.45 : -0.5) + ((i % 3) - 1) * 0.25,
+        z: -i * GAP,
       })),
     [N]
   )
@@ -213,28 +215,30 @@ function Panels({ shared }) {
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
     grp.current.visible = w > 0.02
-    // EFEITO DE SCROLL: o trilho 3D desliza conforme o progresso do catálogo;
-    // o slide ativo fica centralizado, os vizinhos espiam nas laterais.
-    const targetX = -bus.catalogP * (N - 1) * SP
-    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, targetX, 4, d)
+    // FLY-THROUGH: o grupo avança em direção à câmera conforme o scroll, então
+    // cada tela se aproxima, ganha foco e passa — sensação de voar pelas telas.
+    const targetZ = bus.catalogP * (N - 1) * GAP
+    grp.current.position.z = THREE.MathUtils.damp(grp.current.position.z, targetZ, 4.5, d)
     grp.current.children.forEach((m, i) => {
-      // distância do slide ao centro da tela → o ativo brilha mais, gira menos
-      const worldX = layout[i].x + grp.current.position.x
-      const dist = Math.abs(worldX)
-      const focus = Math.max(0, 1 - dist / SP) // 1 no centro, 0 no vizinho
-      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * (0.35 + focus * 0.65), 5, d)
-      m.material.color.setScalar(0.7 + focus * 0.55)
-      m.rotation.y = THREE.MathUtils.damp(m.rotation.y, worldX * 0.05, 4, d)
-      m.position.y = Math.sin(state.clock.elapsedTime * 0.4 + i) * 0.06
+      const worldZ = layout[i].z + grp.current.position.z
+      // aparece da profundidade e some ao passar pela câmera
+      const far = THREE.MathUtils.smoothstep(worldZ, -GAP * 2.4, -GAP * 0.25)
+      const near = 1 - THREE.MathUtils.smoothstep(worldZ, 0, GAP * 0.8)
+      const vis = far * near
+      const focus = Math.max(0, 1 - Math.abs(worldZ) / (GAP * 0.7)) // 1 no plano focal
+      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * vis, 6, d)
+      m.material.color.setScalar(0.7 + focus * 0.6)
+      m.rotation.y = THREE.MathUtils.damp(m.rotation.y, -layout[i].x * 0.06 + shared.current.mx * 0.05, 4, d)
+      m.position.y = layout[i].y + Math.sin(state.clock.elapsedTime * 0.4 + i) * 0.05
       const edge = m.children[0]
-      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * focus, 5, d)
+      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * vis * 0.9, 6, d)
     })
   })
 
   return (
     <group ref={grp}>
       {CATALOG.map((p, i) => (
-        <mesh key={p.name} position={[layout[i].x, 0, layout[i].z]} scale={[4.6, 2.85, 1]}>
+        <mesh key={p.name} position={[layout[i].x, layout[i].y, layout[i].z]} scale={[5.0, 3.1, 1]}>
           <planeGeometry args={[1, 1]} />
           <meshBasicMaterial
             map={textures[i]}
@@ -244,7 +248,7 @@ function Panels({ shared }) {
             side={THREE.DoubleSide}
             toneMapped={false}
           />
-          {/* moldura âmbar do slide */}
+          {/* moldura âmbar da tela */}
           <lineSegments>
             <edgesGeometry args={[new THREE.PlaneGeometry(1.015, 1.03)]} />
             <lineBasicMaterial color="#E0A458" transparent opacity={0} />
