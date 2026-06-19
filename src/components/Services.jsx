@@ -7,6 +7,9 @@ import SectionHead from './SectionHead'
 
 gsap.registerPlugin(ScrollTrigger)
 
+// cor premium distinta por serviço (tons joia/metálico, coesos com a marca)
+const SERVICE_ACCENTS = ['#E0A458', '#C9A66B', '#5FA391', '#9A85C4', '#C77B4A', '#D9A38E']
+
 export default function Services({ reducedMotion }) {
   const rootRef = useRef(null)
   const previewRef = useRef(null)
@@ -65,10 +68,14 @@ export default function Services({ reducedMotion }) {
       <SectionHead index="03" kicker="06 disciplinas" title="Serviços" accent="como dossiês" className="mb-16" />
 
       <ul>
-        {SERVICES.map((s) => {
+        {SERVICES.map((s, i) => {
           const isOpen = openId === s.id
           return (
-            <li key={s.id} className="service-row card-wave relative border-t border-ivory/10 last:border-b">
+            <li
+              key={s.id}
+              className="service-row card-wave relative border-t border-ivory/10 last:border-b"
+              style={{ '--accent': SERVICE_ACCENTS[i % SERVICE_ACCENTS.length] }}
+            >
               <button
                 className="w-full flex items-center gap-6 py-7 text-left group"
                 onClick={() => setOpenId(isOpen ? null : s.id)}
@@ -76,11 +83,11 @@ export default function Services({ reducedMotion }) {
                 onMouseLeave={() => setHoverImage(null)}
                 aria-expanded={isOpen}
               >
-                <span className="font-mono text-sm text-amber w-8 shrink-0">{s.id}</span>
-                <span className="font-display font-medium text-[clamp(1.3rem,3.2vw,2.4rem)] text-ivory group-hover:text-amber transition-colors duration-300 flex-1">
+                <span className="service-num font-mono text-sm w-8 shrink-0">{s.id}</span>
+                <span className="service-title font-display font-medium text-[clamp(1.3rem,3.2vw,2.4rem)] text-ivory flex-1">
                   {s.title}
                 </span>
-                <span className="mono-label text-titanium/60 hidden sm:block">{s.category}</span>
+                <span className="service-cat mono-label text-titanium/60 hidden sm:block">{s.category}</span>
                 <Plus
                   size={20}
                   className={`text-titanium transition-transform duration-500 ${isOpen ? 'rotate-45' : ''}`}

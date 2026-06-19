@@ -488,6 +488,26 @@ button:focus-visible {
   100% { transform: translateY(250%); }
 }
 
+/* cor premium por item de Serviços + franja RGB no hover (como o resto do site) */
+.service-num {
+  color: var(--accent, #e0a458);
+}
+.service-title {
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+.service-cat {
+  transition: color 0.3s ease;
+}
+.service-row:hover .service-title,
+.service-row:focus-within .service-title {
+  color: var(--accent, #e0a458);
+  text-shadow: -1.5px 0 rgba(255, 70, 90, 0.45), 1.5px 0 rgba(70, 220, 220, 0.45);
+}
+.service-row:hover .service-cat,
+.service-row:focus-within .service-cat {
+  color: var(--accent, #e0a458);
+}
+
 /* ===== FLUXO DE ONDAS — luz que corre nas interações (inspirado no vídeo) ===== */
 /* linha de luz que percorre a borda superior do card no hover */
 .card-wave::before {
