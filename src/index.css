@@ -481,6 +481,63 @@ button:focus-visible {
   100% { transform: translateY(250%); }
 }
 
+/* ===== FLUXO DE ONDAS — luz que corre nas interações (inspirado no vídeo) ===== */
+/* linha de luz que percorre a borda superior do card no hover */
+.card-wave::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(224, 164, 88, 0) 8%,
+    #e0a458 32%,
+    #5ad1b0 50%,
+    #7aa2ff 68%,
+    rgba(224, 164, 88, 0) 92%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  background-position: 120% 0;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+.card-wave:hover::before,
+.card-wave:focus-within::before {
+  opacity: 0.95;
+  animation: light-flow 2.4s linear infinite;
+}
+@keyframes light-flow {
+  from { background-position: 220% 0; }
+  to { background-position: -120% 0; }
+}
+
+/* régua das seções com uma onda de luz contínua */
+.flow-rule {
+  background: linear-gradient(
+    90deg,
+    rgba(244, 242, 236, 0.12),
+    rgba(224, 164, 88, 0.9),
+    rgba(90, 209, 176, 0.6),
+    rgba(244, 242, 236, 0.12)
+  ) !important;
+  background-size: 220% 100% !important;
+  animation: light-flow 3.4s linear infinite;
+}
+
+/* onda senoidal animada (divisores / interações de seção) */
+.wave-flow path {
+  stroke-dasharray: 14 10;
+  animation: wave-dash 2.4s linear infinite;
+}
+@keyframes wave-dash {
+  to { stroke-dashoffset: -48; }
+}
+
 /* legibilidade da info do catálogo sobre as telas, sem bloco escuro */
 .catalog-info {
   text-shadow: 0 2px 18px rgba(7, 7, 11, 0.9), 0 1px 4px rgba(7, 7, 11, 0.8);

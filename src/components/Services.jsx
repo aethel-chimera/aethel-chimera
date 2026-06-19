@@ -68,7 +68,7 @@ export default function Services({ reducedMotion }) {
         {SERVICES.map((s) => {
           const isOpen = openId === s.id
           return (
-            <li key={s.id} className="service-row border-t border-ivory/10 last:border-b">
+            <li key={s.id} className="service-row card-wave relative border-t border-ivory/10 last:border-b">
               <button
                 className="w-full flex items-center gap-6 py-7 text-left group"
                 onClick={() => setOpenId(isOpen ? null : s.id)}

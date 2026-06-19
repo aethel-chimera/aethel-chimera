@@ -149,26 +149,85 @@ export const PROCESS = [
   {
     num: '01',
     title: 'Diagnóstico',
-    description: 'Auditoria completa da presença atual: técnica, conteúdo, concorrência e funil. Saímos com um mapa, não com achismos.',
-    anim: 'scan',
+    description:
+      'Antes de tocar no código, auditamos tudo: Core Web Vitals, SEO técnico, segurança, conteúdo, jornada e concorrência. Você recebe um diagnóstico com nota e um mapa de prioridades — onde o site perde dinheiro hoje e quanto dá para recuperar.',
+    how: [
+      'Auditoria técnica: performance, SEO e segurança',
+      'Análise da jornada e dos pontos de fuga',
+      'Benchmark contra os concorrentes diretos',
+      'Mapa de oportunidades priorizado por impacto',
+    ],
+    chart: {
+      type: 'diagnostic',
+      caption: 'Estado atual × meta',
+      items: [
+        { label: 'Performance', atual: 34, meta: 95 },
+        { label: 'SEO técnico', atual: 41, meta: 90 },
+        { label: 'Acessibilidade', atual: 58, meta: 100 },
+        { label: 'Conversão', atual: 1.1, meta: 3.2, unit: '%', scaleMax: 4 },
+      ],
+    },
   },
   {
     num: '02',
     title: 'Arquitetura e Design',
-    description: 'Wireframes, design system e protótipo navegável. Cada tela aprovada antes de uma linha de código.',
-    anim: 'wireframe',
+    description:
+      'Arquitetura de informação, design system da marca e protótipo navegável — cada tela aprovada antes de uma linha de código. O foco é cortar fricção: menos passos até a ação, hierarquia que guia o olho e copy que converte.',
+    how: [
+      'Arquitetura de informação e fluxo de conversão',
+      'Design system com a identidade da marca',
+      'Protótipo navegável aprovado por você',
+      'Copy orientado a objeção e decisão',
+    ],
+    chart: {
+      type: 'beforeAfter',
+      caption: 'Menos fricção, mais ação',
+      items: [
+        { label: 'Passos até o contato', antes: 6, depois: 2, lowerBetter: true },
+        { label: 'Taxa de rejeição', antes: 68, depois: 31, unit: '%', lowerBetter: true },
+        { label: 'Clareza da jornada', antes: 42, depois: 92, unit: '/100' },
+      ],
+    },
   },
   {
     num: '03',
     title: 'Construção e Integração',
-    description: 'Build de alta performance com as integrações do seu negócio: pagamentos, WhatsApp, CRM, agendamento.',
-    anim: 'blocks',
+    description:
+      'Build de alta performance (LCP abaixo de 2,5s) com as integrações do seu negócio: Pix, cartão e boleto, WhatsApp Business, CRM, agendamento e automações. Velocidade e conversão deixam de ser promessa e viram número.',
+    how: [
+      'Build otimizado, LCP abaixo de 2,5s',
+      'Pagamentos: Pix, cartão e boleto (Asaas)',
+      'WhatsApp Business + CRM e funis',
+      'Agendamento e automações sob demanda',
+    ],
+    chart: {
+      type: 'beforeAfter',
+      caption: 'Antes × depois de um build de qualidade',
+      items: [
+        { label: 'LCP (carregamento)', antes: 6.2, depois: 1.8, unit: 's', lowerBetter: true },
+        { label: 'Lighthouse', antes: 38, depois: 98 },
+        { label: 'Conversão', antes: 1.1, depois: 3.2, unit: '%' },
+      ],
+    },
   },
   {
     num: '04',
     title: 'Operação Contínua',
-    description: 'Monitoramento, manutenção, tráfego e conteúdo em ciclo mensal. O organismo evolui todos os meses.',
-    anim: 'ekg',
+    description:
+      'Monitoramento 24/7, manutenção, SEO, tráfego pago e conteúdo em ciclo mensal. O site vira um ativo que cresce: cada mês mais leads, mais velocidade, mais autoridade — com relatório transparente do que foi feito e do retorno.',
+    how: [
+      'Monitoramento de uptime e backups',
+      'SEO e performance evoluídos todo mês',
+      'Tráfego pago e produção de conteúdo',
+      'Relatório mensal com resultados',
+    ],
+    chart: {
+      type: 'growth',
+      caption: 'Leads por mês — índice 100 = mês 1',
+      months: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6'],
+      data: [100, 126, 152, 184, 214, 240],
+      delta: '+140%',
+    },
   },
 ]
 

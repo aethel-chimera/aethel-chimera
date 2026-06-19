@@ -18,7 +18,7 @@ export default function Plans() {
         {PLANS.map((plan) => (
           <div
             key={plan.name}
-            className={`relative rounded-2xl p-8 md:p-10 flex flex-col ${
+            className={`card-wave overflow-hidden relative rounded-2xl p-8 md:p-10 flex flex-col ${
               plan.featured
                 ? 'bg-ivory text-obsidian md:-translate-y-4'
                 : 'bg-obsidian-deep border border-ivory/10 text-ivory'
