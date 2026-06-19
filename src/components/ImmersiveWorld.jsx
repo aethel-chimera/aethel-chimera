@@ -31,16 +31,16 @@ import * as THREE from 'three'
 
 // peso de cada elemento + câmera por seção
 const ACTS = {
-  hero:       { glass: 1.0,  fluid: 0.0,  panels: 0.0, logo: 0, camZ: 6.0 },
-  manifesto:  { glass: 0.35, fluid: 0.9,  panels: 0.0, logo: 0, camZ: 5.3 },
-  servicos:   { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 0, camZ: 6.2 },
-  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, logo: 0, camZ: 6.0 },
-  processo:   { glass: 0.0,  fluid: 0.85, panels: 0.0, logo: 0, camZ: 6.0 },
-  resultados: { glass: 0.0,  fluid: 0.8,  panels: 0.0, logo: 0, camZ: 6.4 },
-  planos:     { glass: 0.0,  fluid: 0.65, panels: 0.0, logo: 0, camZ: 6.0 },
-  // clímax: as partículas se MONTAM na logo da Aethel
-  contato:    { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 1, camZ: 5.6 },
-  footer:     { glass: 0.0,  fluid: 0.9,  panels: 0.0, logo: 1, camZ: 6.2 },
+  hero:       { glass: 1.0,  fluid: 0.0,  panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') },
+  manifesto:  { glass: 0.35, fluid: 0.9,  panels: 0.0, logo: 0, camZ: 5.3, color: new THREE.Color('#e8b36a') },
+  servicos:   { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#3ddc97') },
+  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, logo: 0, camZ: 6.0, color: new THREE.Color('#7aa2ff') },
+  processo:   { glass: 0.0,  fluid: 0.85, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#56cfe1') },
+  resultados: { glass: 0.0,  fluid: 0.8,  panels: 0.0, logo: 0, camZ: 6.4, color: new THREE.Color('#b58bff') },
+  planos:     { glass: 0.0,  fluid: 0.65, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#5ad1b0') },
+  // clímax: as partículas se MONTAM na logo da Aethel (volta ao âmbar da marca)
+  contato:    { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 1, camZ: 5.6, color: new THREE.Color('#E0A458') },
+  footer:     { glass: 0.0,  fluid: 0.9,  panels: 0.0, logo: 1, camZ: 6.2, color: new THREE.Color('#E0A458') },
 }
 const ORDER = Object.keys(ACTS)
 
@@ -101,7 +101,7 @@ uniform float uTime; uniform vec2 uMouse; uniform float uSize; uniform float uAm
 attribute float aRand; attribute vec3 aLogo; varying float vR;
 void main(){
   vec3 base = position;
-  float amp = uAmp * (1.0 - uLogo * 0.85); // segura a forma ao virar logo
+  float amp = uAmp * (1.0 - uLogo * 0.93); // segura bem a forma ao virar logo
   float r = aRand * 6.2831;
   base.x += sin(uTime*0.5 + position.y*1.4 + r) * amp;
   base.y += cos(uTime*0.4 + position.x*1.4 + r) * amp;
@@ -113,26 +113,38 @@ void main(){
   float d = length(toM);
   p.xy += normalize(toM + 0.0001) * smoothstep(2.6, 0.0, d) * 1.3 * (1.0 - uLogo);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  gl_PointSize = uSize * (300.0 / -mv.z) * (0.6 + aRand*0.8);
+  // ao formar a logo, pontos MENORES → silhueta densa e nítida, sem estourar
+  gl_PointSize = uSize * (300.0 / -mv.z) * (0.6 + aRand*0.8) * (1.0 - uLogo*0.45);
   gl_Position = projectionMatrix * mv;
   vR = aRand;
 }
 `
 const FLUID_FRAG = /* glsl */ `
-precision mediump float; uniform float uOpacity; varying float vR;
+precision highp float;
+uniform float uOpacity; uniform float uLogo; uniform vec3 uColor;
+varying float vR;
 void main(){
   vec2 uv = gl_PointCoord - 0.5; float d = length(uv);
   if (d > 0.5) discard;
   float a = pow(smoothstep(0.5, 0.0, d), 1.4);
-  vec3 ivory = vec3(0.957,0.949,0.925); vec3 amber = vec3(0.95,0.66,0.32);
-  vec3 col = mix(ivory, amber, step(0.82, vR) + vR*0.25);
-  gl_FragColor = vec4(col, a * uOpacity * 0.5);
+  // mistura tri-cor: marfim + a cor da seção (muda ao rolar) + âmbar
+  vec3 ivory = vec3(0.957, 0.949, 0.925);
+  vec3 amber = vec3(0.95, 0.66, 0.32);
+  vec3 col;
+  if (vR < 0.40) col = ivory;
+  else if (vR < 0.74) col = uColor;
+  else col = amber;
+  // ao formar a logo, converge para âmbar/marfim (marca) e fica mais nítida
+  col = mix(col, mix(ivory, amber, step(0.5, vR)), uLogo * 0.8);
+  // alpha por partícula MENOR ao formar a logo; a densidade (22k) dá a nitidez
+  float brightness = 0.42 - uLogo * 0.08;
+  gl_FragColor = vec4(col, a * uOpacity * brightness);
 }
 `
 function Fluid({ shared }) {
   const ref = useRef()
   const logoReady = useRef(false)
-  const COUNT = 13000
+  const COUNT = 22000
   const { geo, uniforms } = useMemo(() => {
     const pos = new Float32Array(COUNT * 3)
     const rand = new Float32Array(COUNT)
@@ -158,6 +170,7 @@ function Fluid({ shared }) {
       uAmp: { value: 0.4 },
       uOpacity: { value: 0 },
       uLogo: { value: 0 },
+      uColor: { value: new THREE.Color('#E0A458') },
     }
     return { geo: g, uniforms: u }
   }, [])
@@ -212,6 +225,12 @@ function Fluid({ shared }) {
     const logoTarget = logoReady.current ? shared.current.logo : 0
     uniforms.uLogo.value = THREE.MathUtils.damp(uniforms.uLogo.value, logoTarget, 3, d)
     uniforms.uMouse.value.set(shared.current.mx, -shared.current.my)
+    // cor da seção (transiciona suave entre as cores ao rolar)
+    if (shared.current.color) {
+      uniforms.uColor.value.r = THREE.MathUtils.damp(uniforms.uColor.value.r, shared.current.color.r, 2.5, d)
+      uniforms.uColor.value.g = THREE.MathUtils.damp(uniforms.uColor.value.g, shared.current.color.g, 2.5, d)
+      uniforms.uColor.value.b = THREE.MathUtils.damp(uniforms.uColor.value.b, shared.current.color.b, 2.5, d)
+    }
     if (ref.current) {
       ref.current.visible = uniforms.uOpacity.value > 0.01
       // quase não gira quando está formando a logo (mantém legível)
@@ -338,6 +357,11 @@ function Director({ shared, target }) {
     s.panels = THREE.MathUtils.damp(s.panels, t.panels, 3.5, d)
     s.logo = THREE.MathUtils.damp(s.logo, t.logo, 3, d)
     s.camZ = THREE.MathUtils.damp(s.camZ, t.camZ, 2.5, d)
+    if (t.color) {
+      s.color.r = THREE.MathUtils.damp(s.color.r, t.color.r, 2.5, d)
+      s.color.g = THREE.MathUtils.damp(s.color.g, t.color.g, 2.5, d)
+      s.color.b = THREE.MathUtils.damp(s.color.b, t.color.b, 2.5, d)
+    }
     camera.position.x = THREE.MathUtils.damp(camera.position.x, s.mx * 0.5, 2.5, d)
     camera.position.y = THREE.MathUtils.damp(camera.position.y, -s.my * 0.35, 2.5, d)
     camera.position.z = s.camZ
@@ -347,7 +371,7 @@ function Director({ shared, target }) {
 }
 
 export default function ImmersiveWorld() {
-  const shared = useRef({ glass: 1, fluid: 0, panels: 0, logo: 0, camZ: 6, mx: 0, my: 0 })
+  const shared = useRef({ glass: 1, fluid: 0, panels: 0, logo: 0, camZ: 6, mx: 0, my: 0, color: new THREE.Color('#E0A458') })
   const target = useRef({ ...ACTS.hero })
 
   useEffect(() => {
