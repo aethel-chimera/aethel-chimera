@@ -36,7 +36,7 @@ const ACTS = {
   hero:       { glass: 1.0,  fluid: 0.0,  panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') }, // champagne/âmbar
   manifesto:  { glass: 0.18, fluid: 0.42, panels: 0.0, logo: 0, camZ: 5.3, color: new THREE.Color('#C9A66B') }, // bronze
   servicos:   { glass: 0.0,  fluid: 0.52, panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#5FA391') }, // jade
-  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, logo: 0, camZ: 6.0, color: new THREE.Color('#B9AED6') }, // platina/ametista
+  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, logo: 0, camZ: 7.6, color: new THREE.Color('#B9AED6') }, // platina/ametista
   processo:   { glass: 0.0,  fluid: 0.48, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#9A85C4') }, // ametista
   resultados: { glass: 0.0,  fluid: 0.5,  panels: 0.0, logo: 0, camZ: 6.4, color: new THREE.Color('#C77B4A') }, // cobre
   planos:     { glass: 0.0,  fluid: 0.42, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#D9A38E') }, // rosé/cobre claro
@@ -272,39 +272,39 @@ function Panels({ shared }) {
   }, [textures])
 
   const N = CATALOG.length
-  const GAP = 5.2 // profundidade entre as telas no corredor
-  // telas flutuando em PROFUNDIDADE, escalonadas no espaço (não numa linha
-  // plana). O scroll faz a câmera voar pelo corredor de telas.
+  const ANGLE = 2.0 // rad entre cards ao redor da coluna
+  const VSTEP = 2.25 // descida vertical entre cards
+  const RADIUS = 3.1 // raio da espiral
+  // cada tela fica num ponto da HÉLICE em torno da coluna vertebral central,
+  // encarando para fora. O scroll gira e desce a hélice.
   const layout = useMemo(
     () =>
       CATALOG.map((_, i) => ({
-        x: (i % 2 === 0 ? 1.7 : -1.7) + ((i % 3) - 1) * 0.5,
-        y: (i % 2 === 0 ? 0.45 : -0.5) + ((i % 3) - 1) * 0.25,
-        z: -i * GAP,
+        x: Math.sin(i * ANGLE) * RADIUS,
+        y: -i * VSTEP,
+        z: Math.cos(i * ANGLE) * RADIUS,
+        ry: i * ANGLE,
       })),
     [N]
   )
 
-  useFrame((state, dt) => {
+  useFrame((_, dt) => {
     const w = shared.current.panels
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
     grp.current.visible = w > 0.02
-    // FLY-THROUGH: o grupo avança em direção à câmera conforme o scroll, então
-    // cada tela se aproxima, ganha foco e passa — sensação de voar pelas telas.
-    const targetZ = bus.catalogP * (N - 1) * GAP
-    grp.current.position.z = THREE.MathUtils.damp(grp.current.position.z, targetZ, 4.5, d)
+    // ESPIRAL: o scroll gira a hélice e a desce, trazendo cada card à frente
+    const active = bus.catalogP * (N - 1)
+    grp.current.rotation.y = THREE.MathUtils.damp(grp.current.rotation.y, -active * ANGLE, 4, d)
+    grp.current.position.y = THREE.MathUtils.damp(grp.current.position.y, active * VSTEP, 4, d)
     grp.current.children.forEach((m, i) => {
-      const worldZ = layout[i].z + grp.current.position.z
-      // aparece da profundidade e some ao passar pela câmera
-      const far = THREE.MathUtils.smoothstep(worldZ, -GAP * 2.4, -GAP * 0.25)
-      const near = 1 - THREE.MathUtils.smoothstep(worldZ, 0, GAP * 0.8)
-      const vis = far * near
-      const focus = Math.max(0, 1 - Math.abs(worldZ) / (GAP * 0.7)) // 1 no plano focal
+      const wa = layout[i].ry + grp.current.rotation.y // ângulo no mundo
+      const front = (Math.cos(wa) + 1) / 2 // 1 = de frente para a câmera
+      const wy = layout[i].y + grp.current.position.y // altura no mundo
+      const vFade = Math.max(0, 1 - Math.abs(wy) / (VSTEP * 2.6))
+      const vis = Math.pow(front, 1.5) * vFade
       m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * vis, 6, d)
-      m.material.color.setScalar(0.7 + focus * 0.6)
-      m.rotation.y = THREE.MathUtils.damp(m.rotation.y, -layout[i].x * 0.06 + shared.current.mx * 0.05, 4, d)
-      m.position.y = layout[i].y + Math.sin(state.clock.elapsedTime * 0.4 + i) * 0.05
+      m.material.color.setScalar(0.62 + front * 0.6)
       const edge = m.children[0]
       if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * vis * 0.9, 6, d)
     })
@@ -313,16 +313,9 @@ function Panels({ shared }) {
   return (
     <group ref={grp}>
       {CATALOG.map((p, i) => (
-        <mesh key={p.name} position={[layout[i].x, layout[i].y, layout[i].z]} scale={[5.0, 3.1, 1]}>
+        <mesh key={p.name} position={[layout[i].x, layout[i].y, layout[i].z]} rotation={[0, layout[i].ry, 0]} scale={[3.7, 2.3, 1]}>
           <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial
-            map={textures[i]}
-            color="#cccccc"
-            transparent
-            opacity={0}
-            side={THREE.DoubleSide}
-            toneMapped={false}
-          />
+          <meshBasicMaterial map={textures[i]} color="#cccccc" transparent opacity={0} side={THREE.DoubleSide} toneMapped={false} />
           {/* moldura âmbar da tela */}
           <lineSegments>
             <edgesGeometry args={[new THREE.PlaneGeometry(1.015, 1.03)]} />
@@ -330,6 +323,46 @@ function Panels({ shared }) {
           </lineSegments>
         </mesh>
       ))}
+    </group>
+  )
+}
+
+// ---- coluna vertebral: eixo central luminoso com vértebras, cor da seção ----
+function Spine({ shared }) {
+  const grp = useRef()
+  const rings = useRef()
+  const RINGS = 11
+  const tmp = useMemo(() => new THREE.Color(), [])
+  useFrame((_, dt) => {
+    const w = shared.current.panels
+    if (!grp.current) return
+    const d = Math.min(dt, 0.1)
+    grp.current.visible = w > 0.02
+    tmp.copy(shared.current.color).multiplyScalar(1.5) // brilha no bloom
+    grp.current.traverse((o) => {
+      if (o.material) {
+        o.material.color.copy(tmp)
+        o.material.opacity = THREE.MathUtils.damp(o.material.opacity, w, 5, d)
+      }
+    })
+    if (rings.current) rings.current.rotation.y += dt * 0.35
+  })
+  return (
+    <group ref={grp}>
+      {/* eixo */}
+      <mesh>
+        <cylinderGeometry args={[0.045, 0.045, 22, 12]} />
+        <meshBasicMaterial color="#E0A458" transparent opacity={0} toneMapped={false} />
+      </mesh>
+      {/* vértebras */}
+      <group ref={rings}>
+        {Array.from({ length: RINGS }).map((_, i) => (
+          <mesh key={i} position={[0, (i - (RINGS - 1) / 2) * 1.9, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.3 + (i % 2) * 0.07, 0.018, 8, 28]} />
+            <meshBasicMaterial color="#E0A458" transparent opacity={0} toneMapped={false} />
+          </mesh>
+        ))}
+      </group>
     </group>
   )
 }
@@ -418,6 +451,7 @@ export default function ImmersiveWorld() {
         <Director shared={shared} target={target} />
         <Glass shared={shared} />
         <Fluid shared={shared} />
+        <Spine shared={shared} />
         <Suspense fallback={null}>
           <Panels shared={shared} />
         </Suspense>
