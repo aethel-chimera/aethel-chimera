@@ -31,14 +31,16 @@ import * as THREE from 'three'
 
 // peso de cada elemento + câmera por seção
 const ACTS = {
+  // Paleta enxuta da MARCA: só âmbar (#E0A458) e verde-sinal (#3DDC97),
+  // alternando. Fluido reduzido nas seções de leitura (menos alcance no texto).
   hero:       { glass: 1.0,  fluid: 0.0,  panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') },
-  manifesto:  { glass: 0.35, fluid: 0.9,  panels: 0.0, logo: 0, camZ: 5.3, color: new THREE.Color('#e8b36a') },
-  servicos:   { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#3ddc97') },
-  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, logo: 0, camZ: 6.0, color: new THREE.Color('#7aa2ff') },
-  processo:   { glass: 0.0,  fluid: 0.85, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#56cfe1') },
-  resultados: { glass: 0.0,  fluid: 0.8,  panels: 0.0, logo: 0, camZ: 6.4, color: new THREE.Color('#b58bff') },
-  planos:     { glass: 0.0,  fluid: 0.65, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#5ad1b0') },
-  // clímax: as partículas se MONTAM na logo da Aethel (volta ao âmbar da marca)
+  manifesto:  { glass: 0.18, fluid: 0.42, panels: 0.0, logo: 0, camZ: 5.3, color: new THREE.Color('#E0A458') },
+  servicos:   { glass: 0.0,  fluid: 0.52, panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#3DDC97') },
+  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') },
+  processo:   { glass: 0.0,  fluid: 0.48, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#3DDC97') },
+  resultados: { glass: 0.0,  fluid: 0.5,  panels: 0.0, logo: 0, camZ: 6.4, color: new THREE.Color('#E0A458') },
+  planos:     { glass: 0.0,  fluid: 0.42, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#3DDC97') },
+  // clímax: as partículas se MONTAM na logo da Aethel (âmbar da marca)
   contato:    { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 1, camZ: 5.6, color: new THREE.Color('#E0A458') },
   footer:     { glass: 0.0,  fluid: 0.9,  panels: 0.0, logo: 1, camZ: 6.2, color: new THREE.Color('#E0A458') },
 }
@@ -150,8 +152,8 @@ function Fluid({ shared }) {
     const rand = new Float32Array(COUNT)
     const logo = new Float32Array(COUNT * 3)
     for (let i = 0; i < COUNT; i++) {
-      // distribuição em volume esférico macio (lembra o organismo desfeito)
-      const r = 1.4 + Math.pow(Math.random(), 0.5) * 1.8
+      // distribuição em volume esférico macio (mais contida = menos alcance no texto)
+      const r = 1.25 + Math.pow(Math.random(), 0.5) * 1.45
       const a = Math.random() * Math.PI * 2
       const z = Math.acos(2 * Math.random() - 1)
       pos[i * 3] = r * Math.sin(z) * Math.cos(a)
@@ -421,7 +423,7 @@ export default function ImmersiveWorld() {
         </Suspense>
         <EffectComposer multisampling={0}>
           <Bloom intensity={0.65} luminanceThreshold={0.3} luminanceSmoothing={0.4} mipmapBlur />
-          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0009, 0.0011]} />
+          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0016, 0.0018]} />
           <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.45} />
           <Vignette eskil={false} offset={0.18} darkness={0.92} />
         </EffectComposer>
