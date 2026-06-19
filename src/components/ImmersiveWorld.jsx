@@ -31,15 +31,16 @@ import * as THREE from 'three'
 
 // peso de cada elemento + câmera por seção
 const ACTS = {
-  hero:       { glass: 1.0,  fluid: 0.0, panels: 0.0, camZ: 6.0 },
-  manifesto:  { glass: 0.35, fluid: 0.9, panels: 0.0, camZ: 5.3 },
-  servicos:   { glass: 0.0,  fluid: 1.0, panels: 0.0, camZ: 6.2 },
-  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, camZ: 6.0 },
-  processo:   { glass: 0.0,  fluid: 0.85, panels: 0.0, camZ: 6.0 },
-  resultados: { glass: 0.0,  fluid: 0.8, panels: 0.0, camZ: 6.4 },
-  planos:     { glass: 0.0,  fluid: 0.65, panels: 0.0, camZ: 6.0 },
-  contato:    { glass: 1.0,  fluid: 0.0, panels: 0.0, camZ: 5.4 },
-  footer:     { glass: 0.9,  fluid: 0.0, panels: 0.0, camZ: 6.0 },
+  hero:       { glass: 1.0,  fluid: 0.0,  panels: 0.0, logo: 0, camZ: 6.0 },
+  manifesto:  { glass: 0.35, fluid: 0.9,  panels: 0.0, logo: 0, camZ: 5.3 },
+  servicos:   { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 0, camZ: 6.2 },
+  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, logo: 0, camZ: 6.0 },
+  processo:   { glass: 0.0,  fluid: 0.85, panels: 0.0, logo: 0, camZ: 6.0 },
+  resultados: { glass: 0.0,  fluid: 0.8,  panels: 0.0, logo: 0, camZ: 6.4 },
+  planos:     { glass: 0.0,  fluid: 0.65, panels: 0.0, logo: 0, camZ: 6.0 },
+  // clímax: as partículas se MONTAM na logo da Aethel
+  contato:    { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 1, camZ: 5.6 },
+  footer:     { glass: 0.0,  fluid: 0.9,  panels: 0.0, logo: 1, camZ: 6.2 },
 }
 const ORDER = Object.keys(ACTS)
 
@@ -96,18 +97,21 @@ function Glass({ shared }) {
 
 // ---- Ato 2: fluido de partículas físicas reativo ao cursor ----
 const FLUID_VERT = /* glsl */ `
-uniform float uTime; uniform vec2 uMouse; uniform float uSize; uniform float uAmp;
-attribute float aRand; varying float vR;
+uniform float uTime; uniform vec2 uMouse; uniform float uSize; uniform float uAmp; uniform float uLogo;
+attribute float aRand; attribute vec3 aLogo; varying float vR;
 void main(){
-  vec3 p = position;
+  vec3 base = position;
+  float amp = uAmp * (1.0 - uLogo * 0.85); // segura a forma ao virar logo
   float r = aRand * 6.2831;
-  p.x += sin(uTime*0.5 + position.y*1.4 + r) * uAmp;
-  p.y += cos(uTime*0.4 + position.x*1.4 + r) * uAmp;
-  p.z += sin(uTime*0.45 + position.z*1.4 + r) * uAmp;
-  // repulsão física do cursor (no plano XY projetado)
+  base.x += sin(uTime*0.5 + position.y*1.4 + r) * amp;
+  base.y += cos(uTime*0.4 + position.x*1.4 + r) * amp;
+  base.z += sin(uTime*0.45 + position.z*1.4 + r) * amp;
+  // mistura da nuvem para a LOGO da marca
+  vec3 p = mix(base, aLogo, uLogo);
+  // repulsão do cursor (desliga quando forma a logo, para manter legível)
   vec2 toM = p.xy - uMouse * 4.2;
   float d = length(toM);
-  p.xy += normalize(toM + 0.0001) * smoothstep(2.6, 0.0, d) * 1.3;
+  p.xy += normalize(toM + 0.0001) * smoothstep(2.6, 0.0, d) * 1.3 * (1.0 - uLogo);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_PointSize = uSize * (300.0 / -mv.z) * (0.6 + aRand*0.8);
   gl_Position = projectionMatrix * mv;
@@ -127,10 +131,12 @@ void main(){
 `
 function Fluid({ shared }) {
   const ref = useRef()
-  const COUNT = 9000
+  const logoReady = useRef(false)
+  const COUNT = 13000
   const { geo, uniforms } = useMemo(() => {
     const pos = new Float32Array(COUNT * 3)
     const rand = new Float32Array(COUNT)
+    const logo = new Float32Array(COUNT * 3)
     for (let i = 0; i < COUNT; i++) {
       // distribuição em volume esférico macio (lembra o organismo desfeito)
       const r = 1.4 + Math.pow(Math.random(), 0.5) * 1.8
@@ -144,24 +150,72 @@ function Fluid({ shared }) {
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
     g.setAttribute('aRand', new THREE.BufferAttribute(rand, 1))
+    g.setAttribute('aLogo', new THREE.BufferAttribute(logo, 3))
     const u = {
       uTime: { value: 0 },
       uMouse: { value: new THREE.Vector2(0, 0) },
       uSize: { value: 0.12 },
       uAmp: { value: 0.4 },
       uOpacity: { value: 0 },
+      uLogo: { value: 0 },
     }
     return { geo: g, uniforms: u }
   }, [])
 
+  // amostra os pixels da logo da Aethel → posições-alvo das partículas
+  useEffect(() => {
+    const img = new Image()
+    img.src = '/logo-mark.png'
+    img.onload = () => {
+      const maxW = 200
+      const s = Math.min(1, maxW / img.width)
+      const w = Math.max(1, Math.round(img.width * s))
+      const h = Math.max(1, Math.round(img.height * s))
+      const cnv = document.createElement('canvas')
+      cnv.width = w
+      cnv.height = h
+      const c2 = cnv.getContext('2d', { willReadFrequently: true })
+      c2.drawImage(img, 0, 0, w, h)
+      const data = c2.getImageData(0, 0, w, h).data
+      const pts = []
+      let minX = w, minY = h, maxX = 0, maxY = 0
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        if (data[(y * w + x) * 4 + 3] > 60) {
+          pts.push(x, y)
+          if (x < minX) minX = x; if (x > maxX) maxX = x
+          if (y < minY) minY = y; if (y > maxY) maxY = y
+        }
+      }
+      if (!pts.length) return
+      const bh = maxY - minY || 1
+      const cx = (minX + maxX) / 2
+      const cy = (minY + maxY) / 2
+      const k = 3.6 / bh
+      const arr = geo.attributes.aLogo.array
+      const n = pts.length / 2
+      for (let i = 0; i < COUNT; i++) {
+        const p = Math.floor(Math.random() * n) * 2
+        arr[i * 3] = (pts[p] + (Math.random() - 0.5) - cx) * k
+        arr[i * 3 + 1] = -(pts[p + 1] + (Math.random() - 0.5) - cy) * k
+        arr[i * 3 + 2] = (Math.random() - 0.5) * 0.3
+      }
+      geo.attributes.aLogo.needsUpdate = true
+      logoReady.current = true
+    }
+  }, [geo])
+
   useFrame((_, dt) => {
     const w = shared.current.fluid
+    const d = Math.min(dt, 0.1)
     uniforms.uTime.value += dt
-    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w, 4, Math.min(dt, 0.1))
+    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w, 4, d)
+    const logoTarget = logoReady.current ? shared.current.logo : 0
+    uniforms.uLogo.value = THREE.MathUtils.damp(uniforms.uLogo.value, logoTarget, 3, d)
     uniforms.uMouse.value.set(shared.current.mx, -shared.current.my)
     if (ref.current) {
       ref.current.visible = uniforms.uOpacity.value > 0.01
-      ref.current.rotation.y += dt * 0.03
+      // quase não gira quando está formando a logo (mantém legível)
+      ref.current.rotation.y += dt * 0.03 * (1 - uniforms.uLogo.value)
     }
   })
 
@@ -282,6 +336,7 @@ function Director({ shared, target }) {
     s.glass = THREE.MathUtils.damp(s.glass, t.glass, 3.5, d)
     s.fluid = THREE.MathUtils.damp(s.fluid, t.fluid, 3.5, d)
     s.panels = THREE.MathUtils.damp(s.panels, t.panels, 3.5, d)
+    s.logo = THREE.MathUtils.damp(s.logo, t.logo, 3, d)
     s.camZ = THREE.MathUtils.damp(s.camZ, t.camZ, 2.5, d)
     camera.position.x = THREE.MathUtils.damp(camera.position.x, s.mx * 0.5, 2.5, d)
     camera.position.y = THREE.MathUtils.damp(camera.position.y, -s.my * 0.35, 2.5, d)
@@ -292,7 +347,7 @@ function Director({ shared, target }) {
 }
 
 export default function ImmersiveWorld() {
-  const shared = useRef({ glass: 1, fluid: 0, panels: 0, camZ: 6, mx: 0, my: 0 })
+  const shared = useRef({ glass: 1, fluid: 0, panels: 0, logo: 0, camZ: 6, mx: 0, my: 0 })
   const target = useRef({ ...ACTS.hero })
 
   useEffect(() => {

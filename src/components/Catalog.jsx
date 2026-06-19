@@ -55,8 +55,12 @@ function ProjectCard({ project, index, dimmed, onOpen }) {
               </span>
             ))}
           </div>
-          <button onClick={() => onOpen(index)} className="arrow-link" data-no-drag>
-            Ver projeto
+          <button
+            onClick={() => onOpen(index)}
+            data-no-drag
+            className="mono-label inline-flex items-center gap-3 rounded-full border border-amber/60 text-amber px-6 py-3 hover:bg-amber hover:text-obsidian transition-colors duration-300"
+          >
+            Ver case do projeto →
           </button>
         </div>
       </div>
@@ -159,8 +163,12 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
                 </span>
               ))}
             </div>
-            <button onClick={() => onOpenProject?.(active)} className="arrow-link" data-no-drag>
-              Ver projeto
+            <button
+              onClick={() => onOpenProject?.(active)}
+              data-no-drag
+              className="mono-label mt-1 inline-flex items-center gap-3 rounded-full border border-amber/60 text-amber px-7 py-3.5 hover:bg-amber hover:text-obsidian transition-colors duration-300"
+            >
+              Ver case do projeto →
             </button>
           </div>
         </div>
