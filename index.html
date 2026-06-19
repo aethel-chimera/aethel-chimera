@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/logo-mark.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aethel Chimera — Engenharia de Presença Digital</title>
+    <meta
+      name="description"
+      content="A Aethel Chimera projeta, constrói e mantém o ecossistema digital completo da sua empresa: sites de alta performance, tráfego pago, conteúdo e manutenção mensal contínua."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Aethel Chimera — Engenharia de Presença Digital" />
+    <meta
+      property="og:description"
+      content="Site, tráfego, conteúdo e evolução contínua. Um único organismo digital para a sua empresa."
+    />
+    <meta property="og:image" content="/og.png" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta name="theme-color" content="#0B0B10" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- fontes carregadas de forma assíncrona (não bloqueiam o render); o texto
+         aparece de imediato com a fonte de sistema e troca via display=swap -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      />
+    </noscript>
+  </head>
+  <body class="bg-obsidian">
+    <div id="root">
+      <!-- splash estático: pinta instantaneamente (antes do JS), para FCP/LCP
+           baixos; o React substitui por seu próprio preloader ao montar -->
+      <div
+        id="boot-splash"
+        style="position:fixed;inset:0;background:#0B0B10;display:flex;align-items:center;justify-content:center;z-index:9999"
+      >
+        <span style="font-family:'Space Grotesk',system-ui,sans-serif;font-size:48px;font-weight:600;color:#F4F2EC;letter-spacing:-0.02em">Æ</span>
+      </div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

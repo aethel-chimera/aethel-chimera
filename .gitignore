@@ -1,0 +1,23 @@
+# dependências
+node_modules
+
+# build
+dist
+dist-ssr
+*.local
+
+# logs
+*.log
+npm-debug.log*
+
+# ambiente
+.env
+.env.*
+!.env.example
+
+# ferramentas locais / temporários
+.claude/
+.playwright-mcp/
+.vite/
+.DS_Store
+Thumbs.db
