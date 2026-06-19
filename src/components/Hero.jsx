@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ArrowRight, ArrowDown } from 'lucide-react'
 import { TICKER_ITEMS } from '../data'
@@ -7,6 +7,14 @@ import Scramble from './Scramble'
 
 export default function Hero({ ready, reducedMotion }) {
   const rootRef = useRef(null)
+  const [hideHint, setHideHint] = useState(false)
+
+  // a dica de scroll some assim que o usuário começa a rolar
+  useEffect(() => {
+    const onScroll = () => setHideHint(window.scrollY > 60)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     if (!ready || reducedMotion) return
@@ -69,6 +77,16 @@ export default function Hero({ ready, reducedMotion }) {
             </a>
           </div>
         </div>
+      </div>
+
+      {/* dica de interação: cue de scroll (intuitivo, some ao rolar) */}
+      <div
+        className="hero-cta pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-24 flex flex-col items-center gap-3 transition-opacity duration-500"
+        style={{ opacity: hideHint ? 0 : 1 }}
+        aria-hidden="true"
+      >
+        <span className="mono-label text-titanium/70">role para explorar</span>
+        <span className="scroll-cue" />
       </div>
 
       {/* ticker de serviços */}

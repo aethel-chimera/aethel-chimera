@@ -20,6 +20,7 @@ import Results from './components/Results'
 import Plans from './components/Plans'
 import FinalCTA from './components/FinalCTA'
 import Footer from './components/Footer'
+import ProjectDetail from './components/ProjectDetail'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -39,6 +40,7 @@ export default function App() {
   )
   const alreadyLoaded = useMemo(() => sessionStorage.getItem('aethel-preloaded') === '1', [])
   const [loaded, setLoaded] = useState(alreadyLoaded)
+  const [detail, setDetail] = useState(null) // índice do projeto aberto (ou null)
 
   const handlePreloaderDone = useCallback(() => setLoaded(true), [])
 
@@ -104,7 +106,7 @@ export default function App() {
         <Hero ready={loaded} reducedMotion={reducedMotion} />
         <Manifesto reducedMotion={reducedMotion} />
         <Services reducedMotion={reducedMotion} />
-        <Catalog reducedMotion={reducedMotion} />
+        <Catalog reducedMotion={reducedMotion} onOpenProject={setDetail} />
         <Process reducedMotion={reducedMotion} />
         <Results reducedMotion={reducedMotion} />
         <Plans />
@@ -112,6 +114,10 @@ export default function App() {
       </main>
 
       <Footer />
+
+      {detail !== null && (
+        <ProjectDetail index={detail} onClose={() => setDetail(null)} onNav={setDetail} />
+      )}
     </>
   )
 }

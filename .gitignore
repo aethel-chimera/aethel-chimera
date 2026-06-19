@@ -21,3 +21,7 @@ npm-debug.log*
 .vite/
 .DS_Store
 Thumbs.db
+_refframes/
+
+# gravações do portfólio (binários grandes — adicionar no deploy)
+public/portfolio/*.mp4

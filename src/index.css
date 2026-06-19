@@ -458,6 +458,29 @@ button:focus-visible {
   content: attr(data-num);
 }
 
+/* indicador de scroll do hero: uma luz âmbar desce por um trilho fino */
+.scroll-cue {
+  position: relative;
+  width: 1px;
+  height: 46px;
+  background: rgba(244, 242, 236, 0.18);
+  overflow: hidden;
+}
+.scroll-cue::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 40%;
+  background: linear-gradient(to bottom, transparent, var(--amber));
+  animation: scroll-cue-run 1.8s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+}
+@keyframes scroll-cue-run {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(250%); }
+}
+
 /* troca da info do slide ativo do catálogo */
 @keyframes catalog-in {
   from { opacity: 0; transform: translateY(14px); }

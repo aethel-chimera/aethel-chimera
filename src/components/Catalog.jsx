@@ -11,7 +11,7 @@ gsap.registerPlugin(ScrollTrigger)
 const FILTERS = ['Todos', 'WhatsApp', 'Pix', 'Agendamento', 'CRM']
 
 // Card usado APENAS no mobile (onde não há mundo 3D): mantém a imagem.
-function ProjectCard({ project, index, dimmed }) {
+function ProjectCard({ project, index, dimmed, onOpen }) {
   return (
     <article
       data-tags={project.tags.join('|')}
@@ -55,16 +55,16 @@ function ProjectCard({ project, index, dimmed }) {
               </span>
             ))}
           </div>
-          <a href={project.url} className="arrow-link">
-            Visitar site
-          </a>
+          <button onClick={() => onOpen(index)} className="arrow-link" data-no-drag>
+            Ver projeto
+          </button>
         </div>
       </div>
     </article>
   )
 }
 
-export default function Catalog({ reducedMotion }) {
+export default function Catalog({ reducedMotion, onOpenProject }) {
   const sectionRef = useRef(null)
   const progressRef = useRef(null)
   const stRef = useRef(null)
@@ -166,9 +166,9 @@ export default function Catalog({ reducedMotion }) {
                 </span>
               ))}
             </div>
-            <a href={p.url} className="arrow-link">
-              Visitar site
-            </a>
+            <button onClick={() => onOpenProject?.(active)} className="arrow-link" data-no-drag>
+              Ver projeto
+            </button>
           </div>
         </div>
 
@@ -203,7 +203,7 @@ export default function Catalog({ reducedMotion }) {
         </div>
         <div className="flex flex-col gap-14 px-5">
           {CATALOG.map((proj, i) => (
-            <ProjectCard key={proj.name} project={proj} index={i} dimmed={!matches(proj)} />
+            <ProjectCard key={proj.name} project={proj} index={i} dimmed={!matches(proj)} onOpen={onOpenProject} />
           ))}
         </div>
       </div>
