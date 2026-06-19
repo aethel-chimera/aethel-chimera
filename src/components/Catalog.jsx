@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { CATALOG } from '../data'
 import { blip } from '../audio'
 import SectionHead from './SectionHead'
+import { bus } from '../scrollBus'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -142,6 +143,7 @@ export default function Catalog({ reducedMotion }) {
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             if (progressRef.current) progressRef.current.style.transform = `scaleX(${self.progress})`
+            bus.catalogP = self.progress // alimenta os painéis 3D do fundo
           },
         },
       })

@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import {
   MeshTransmissionMaterial,
   Environment,
   Lightformer,
   Float,
+  useTexture,
 } from '@react-three/drei'
+import { CATALOG } from '../data'
+import { bus } from '../scrollBus'
 import {
   EffectComposer,
   Bloom,
@@ -184,47 +187,66 @@ function Fluid({ shared }) {
 // ---- Ato 3: painéis 3D flutuantes (atmosféricos atrás do catálogo em DOM) ----
 function Panels({ shared }) {
   const grp = useRef()
-  const panels = useMemo(
-    () => [
-      { p: [-2.6, 0.6, -1], r: [0, 0.5, 0.04], s: [2.2, 1.4, 1] },
-      { p: [2.7, -0.4, -1.6], r: [0, -0.5, -0.03], s: [2.4, 1.5, 1] },
-      { p: [0, 1.4, -2.6], r: [0, 0.1, 0.02], s: [2.6, 1.6, 1] },
-      { p: [-3.4, -1.3, -2.2], r: [0, 0.6, 0.05], s: [2.0, 1.25, 1] },
-      { p: [3.4, 1.2, -2.8], r: [0, -0.6, -0.04], s: [2.0, 1.25, 1] },
-    ],
-    []
+  // imagens dos projetos do catálogo como textura (os "slides lá atrás")
+  const textures = useTexture(CATALOG.map((p) => p.image))
+  useMemo(() => {
+    textures.forEach((t) => {
+      t.colorSpace = THREE.SRGBColorSpace
+      t.anisotropy = 4
+    })
+  }, [textures])
+
+  const N = CATALOG.length
+  const SP = 3.8 // espaçamento horizontal entre os slides
+  const layout = useMemo(
+    () =>
+      CATALOG.map((_, i) => ({
+        x: i * SP,
+        y: i % 2 === 0 ? 0.55 : -0.65,
+        z: -2.3 - (i % 3) * 0.55,
+        ry: i % 2 === 0 ? 0.32 : -0.32,
+      })),
+    [N]
   )
+
   useFrame((state, dt) => {
     const w = shared.current.panels
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
     grp.current.visible = w > 0.02
+    // EFEITO DE SCROLL: o trilho 3D desliza conforme o progresso do catálogo,
+    // sincronizado ao scroll horizontal dos cards em DOM.
+    const targetX = 2.0 - bus.catalogP * (N - 1) * SP
+    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, targetX, 3, d)
     grp.current.children.forEach((m, i) => {
-      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * 0.92, 4, d)
+      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w, 4, d)
       const edge = m.children[0]
-      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w, 4, d)
-      m.position.y = panels[i].p[1] + Math.sin(state.clock.elapsedTime * 0.5 + i) * 0.12
+      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * 0.85, 4, d)
+      m.position.y = layout[i].y + Math.sin(state.clock.elapsedTime * 0.4 + i) * 0.1
     })
-    grp.current.rotation.y = THREE.MathUtils.damp(grp.current.rotation.y, shared.current.mx * 0.15, 2.5, d)
   })
+
   return (
     <group ref={grp}>
-      {panels.map((pn, i) => (
-        <mesh key={i} position={pn.p} rotation={pn.r} scale={pn.s}>
+      {CATALOG.map((p, i) => (
+        <mesh
+          key={p.name}
+          position={[layout[i].x, layout[i].y, layout[i].z]}
+          rotation={[0, layout[i].ry, 0]}
+          scale={[2.9, 1.82, 1]}
+        >
           <planeGeometry args={[1, 1]} />
-          <meshStandardMaterial
-            color="#0c0c13"
-            metalness={0.9}
-            roughness={0.25}
-            emissive="#E0A458"
-            emissiveIntensity={0.06}
+          <meshBasicMaterial
+            map={textures[i]}
+            color="#7c7c7c"
             transparent
             opacity={0}
             side={THREE.DoubleSide}
+            toneMapped={false}
           />
-          {/* moldura âmbar do painel */}
+          {/* moldura âmbar do slide */}
           <lineSegments>
-            <edgesGeometry args={[new THREE.PlaneGeometry(1, 1)]} />
+            <edgesGeometry args={[new THREE.PlaneGeometry(1.02, 1.04)]} />
             <lineBasicMaterial color="#E0A458" transparent opacity={0} />
           </lineSegments>
         </mesh>
@@ -311,7 +333,9 @@ export default function ImmersiveWorld() {
         <Director shared={shared} target={target} />
         <Glass shared={shared} />
         <Fluid shared={shared} />
-        <Panels shared={shared} />
+        <Suspense fallback={null}>
+          <Panels shared={shared} />
+        </Suspense>
         <EffectComposer multisampling={0}>
           <Bloom intensity={0.65} luminanceThreshold={0.3} luminanceSmoothing={0.4} mipmapBlur />
           <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0009, 0.0011]} />
