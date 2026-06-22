@@ -193,7 +193,7 @@ function DnaHelix({ shared }) {
 // ---- Ato 2: fluido de partículas físicas reativo ao cursor ----
 const FLUID_VERT = /* glsl */ `
 uniform float uTime; uniform vec2 uMouse; uniform float uSize; uniform float uAmp; uniform float uLogo;
-attribute float aRand; attribute vec3 aLogo; varying float vR;
+attribute float aRand; attribute vec3 aLogo; varying float vR; varying float vX;
 void main(){
   vec3 base = position;
   float amp = uAmp * (1.0 - uLogo * 0.93); // segura bem a forma ao virar logo
@@ -212,12 +212,13 @@ void main(){
   gl_PointSize = uSize * (300.0 / -mv.z) * (0.6 + aRand*0.8) * (1.0 - uLogo*0.45);
   gl_Position = projectionMatrix * mv;
   vR = aRand;
+  vX = gl_Position.x / gl_Position.w;
 }
 `
 const FLUID_FRAG = /* glsl */ `
 precision highp float;
 uniform float uOpacity; uniform float uLogo; uniform vec3 uColor;
-varying float vR;
+varying float vR; varying float vX;
 void main(){
   vec2 uv = gl_PointCoord - 0.5; float d = length(uv);
   if (d > 0.5) discard;
@@ -227,18 +228,20 @@ void main(){
   float a = core * 0.85 + halo * 0.15;
   // paleta premium: família tonal COESA da cor da seção
   // (sombra -> cor base -> realce champanhe quente), sem branco puro
-  vec3 amber  = vec3(0.93, 0.64, 0.31);          // brasa âmbar da marca
+  vec3 amber  = vec3(0.99, 0.59, 0.14);          // brasa âmbar saturada (joia)
   vec3 warm   = vec3(0.96, 0.89, 0.76);          // champanhe (não estoura no chromatic)
   vec3 darkC  = uColor * 0.5;                     // sombra da cor da seção
   vec3 lightC = mix(uColor, warm, 0.62);         // realce quente da cor
   vec3 col = mix(darkC, uColor, smoothstep(0.0, 0.45, vR));
   col = mix(col, lightC, smoothstep(0.45, 0.92, vR));
   // poucas brasas âmbar dão o acento premium sem poluir
-  col = mix(col, amber, smoothstep(0.9, 1.0, vR) * 0.6);
+  col = mix(col, amber, smoothstep(0.88, 1.0, vR) * 0.78);
   // ao formar a logo, converge para âmbar/champanhe (marca) e fica mais nítida
   col = mix(col, mix(warm, amber, step(0.5, vR)), uLogo * 0.8);
   float brightness = 0.40 - uLogo * 0.08;
-  gl_FragColor = vec4(col, a * uOpacity * brightness);
+  // área de leitura (esquerda) com menos pó = ar minimalista; normaliza ao formar a logo
+  float readMask = mix(mix(0.26, 1.0, smoothstep(-0.52, 0.04, vX)), 1.0, uLogo);
+  gl_FragColor = vec4(col, a * uOpacity * brightness * readMask);
 }
 `
 function Fluid({ shared }) {
