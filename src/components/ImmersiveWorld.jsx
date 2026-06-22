@@ -327,42 +327,55 @@ function Panels({ shared }) {
   )
 }
 
-// ---- coluna vertebral: eixo central luminoso com vértebras, cor da seção ----
+// ---- coluna vertebral: dupla hélice orgânica (espinha/DNA), cor da seção.
+// Recua quando um card está frontal (não cruza o card); brilha nas transições.
 function Spine({ shared }) {
-  const grp = useRef()
-  const rings = useRef()
-  const RINGS = 11
+  const ref = useRef()
   const tmp = useMemo(() => new THREE.Color(), [])
+  const geos = useMemo(() => {
+    const make = (phase) => {
+      const TURNS = 6.5
+      const H = 17
+      const R = 0.26
+      const SEG = 260
+      const pts = []
+      for (let i = 0; i <= SEG; i++) {
+        const t = i / SEG
+        const a = t * TURNS * Math.PI * 2 + phase
+        pts.push(new THREE.Vector3(Math.cos(a) * R, (t - 0.5) * H, Math.sin(a) * R))
+      }
+      return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), SEG, 0.022, 6, false)
+    }
+    return [make(0), make(Math.PI)]
+  }, [])
+
   useFrame((_, dt) => {
-    const w = shared.current.panels
-    if (!grp.current) return
+    if (!ref.current) return
     const d = Math.min(dt, 0.1)
-    grp.current.visible = w > 0.02
-    tmp.copy(shared.current.color).multiplyScalar(1.5) // brilha no bloom
-    grp.current.traverse((o) => {
+    const w = shared.current.panels
+    ref.current.visible = w > 0.02
+    // fade conforme a proximidade de um card frontal: ~0 no card, cheio no meio
+    const active = bus.catalogP * (CATALOG.length - 1)
+    const frac = Math.abs(active - Math.round(active))
+    const between = THREE.MathUtils.smoothstep(frac, 0.08, 0.4)
+    const target = w * (0.08 + between * 0.92)
+    tmp.copy(shared.current.color).multiplyScalar(1.6)
+    ref.current.traverse((o) => {
       if (o.material) {
         o.material.color.copy(tmp)
-        o.material.opacity = THREE.MathUtils.damp(o.material.opacity, w, 5, d)
+        o.material.opacity = THREE.MathUtils.damp(o.material.opacity, target, 6, d)
       }
     })
-    if (rings.current) rings.current.rotation.y += dt * 0.35
+    ref.current.rotation.y += dt * 0.2
   })
+
   return (
-    <group ref={grp}>
-      {/* eixo */}
-      <mesh>
-        <cylinderGeometry args={[0.045, 0.045, 22, 12]} />
-        <meshBasicMaterial color="#E0A458" transparent opacity={0} toneMapped={false} />
-      </mesh>
-      {/* vértebras */}
-      <group ref={rings}>
-        {Array.from({ length: RINGS }).map((_, i) => (
-          <mesh key={i} position={[0, (i - (RINGS - 1) / 2) * 1.9, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.3 + (i % 2) * 0.07, 0.018, 8, 28]} />
-            <meshBasicMaterial color="#E0A458" transparent opacity={0} toneMapped={false} />
-          </mesh>
-        ))}
-      </group>
+    <group ref={ref}>
+      {geos.map((g, i) => (
+        <mesh key={i} geometry={g}>
+          <meshBasicMaterial color="#E0A458" transparent opacity={0} toneMapped={false} depthWrite={false} />
+        </mesh>
+      ))}
     </group>
   )
 }
