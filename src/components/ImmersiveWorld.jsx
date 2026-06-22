@@ -221,18 +221,23 @@ varying float vR;
 void main(){
   vec2 uv = gl_PointCoord - 0.5; float d = length(uv);
   if (d > 0.5) discard;
-  float a = pow(smoothstep(0.5, 0.0, d), 1.4);
-  // mistura tri-cor: marfim + a cor da seção (muda ao rolar) + âmbar
-  vec3 ivory = vec3(0.957, 0.949, 0.925);
-  vec3 amber = vec3(0.95, 0.66, 0.32);
-  vec3 col;
-  if (vR < 0.40) col = ivory;
-  else if (vR < 0.74) col = uColor;
-  else col = amber;
-  // ao formar a logo, converge para âmbar/marfim (marca) e fica mais nítida
-  col = mix(col, mix(ivory, amber, step(0.5, vR)), uLogo * 0.8);
-  // alpha por partícula MENOR ao formar a logo; a densidade (22k) dá a nitidez
-  float brightness = 0.42 - uLogo * 0.08;
+  // núcleo macio + halo enfeitado: borda suave reduz o "ruído" do chromatic
+  float core = pow(smoothstep(0.5, 0.0, d), 1.9);
+  float halo = pow(smoothstep(0.5, 0.0, d), 3.5);
+  float a = core * 0.85 + halo * 0.15;
+  // paleta premium: família tonal COESA da cor da seção
+  // (sombra -> cor base -> realce champanhe quente), sem branco puro
+  vec3 amber  = vec3(0.93, 0.64, 0.31);          // brasa âmbar da marca
+  vec3 warm   = vec3(0.96, 0.89, 0.76);          // champanhe (não estoura no chromatic)
+  vec3 darkC  = uColor * 0.5;                     // sombra da cor da seção
+  vec3 lightC = mix(uColor, warm, 0.62);         // realce quente da cor
+  vec3 col = mix(darkC, uColor, smoothstep(0.0, 0.45, vR));
+  col = mix(col, lightC, smoothstep(0.45, 0.92, vR));
+  // poucas brasas âmbar dão o acento premium sem poluir
+  col = mix(col, amber, smoothstep(0.9, 1.0, vR) * 0.6);
+  // ao formar a logo, converge para âmbar/champanhe (marca) e fica mais nítida
+  col = mix(col, mix(warm, amber, step(0.5, vR)), uLogo * 0.8);
+  float brightness = 0.40 - uLogo * 0.08;
   gl_FragColor = vec4(col, a * uOpacity * brightness);
 }
 `
@@ -563,7 +568,7 @@ export default function ImmersiveWorld() {
         </Suspense>
         <EffectComposer multisampling={4}>
           <Bloom intensity={0.7} luminanceThreshold={0.28} luminanceSmoothing={0.5} mipmapBlur />
-          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0009, 0.001]} />
+          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0004, 0.00045]} />
           <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.45} />
           <Vignette eskil={false} offset={0.18} darkness={0.92} />
         </EffectComposer>
