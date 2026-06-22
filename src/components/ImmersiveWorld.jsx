@@ -489,10 +489,11 @@ function Fluid({ shared }) {
   )
 }
 
-// ---- Ato 3: painéis 3D flutuantes (atmosféricos atrás do catálogo em DOM) ----
+// ---- Ato 3: cada projeto do catálogo é uma FOLHA que se desprende da COPA da
+// árvore, voa crescendo até virar o CARD de leitura, e depois CAI como folha. ----
+const WHITE = new THREE.Color('#ffffff')
 function Panels({ shared }) {
   const grp = useRef()
-  // imagens dos projetos do catálogo como textura (os "slides lá atrás")
   const textures = useTexture(CATALOG.map((p) => p.image))
   useMemo(() => {
     textures.forEach((t) => {
@@ -502,21 +503,25 @@ function Panels({ shared }) {
   }, [textures])
 
   const N = CATALOG.length
-  const ANGLE = 2.0 // rad entre cards ao redor da coluna
-  const VSTEP = 2.25 // descida vertical entre cards
-  const RADIUS = 3.1 // raio da espiral
-  // cada tela fica num ponto da HÉLICE em torno da coluna vertebral central,
-  // encarando para fora. O scroll gira e desce a hélice.
-  const layout = useMemo(
+  const tmpC = useMemo(() => new THREE.Color(), [])
+  // âncora de cada folha na COPA (de onde ela se desprende) + cor da folha
+  const anchors = useMemo(
     () =>
-      CATALOG.map((_, i) => ({
-        x: Math.sin(i * ANGLE) * RADIUS,
-        y: -i * VSTEP,
-        z: Math.cos(i * ANGLE) * RADIUS,
-        ry: i * ANGLE,
-      })),
+      CATALOG.map((_, i) => {
+        const ang = i * 1.7 + 0.6
+        return {
+          cx: Math.cos(ang) * 1.7,
+          cz: Math.sin(ang) * 1.7 - 0.3,
+          cy: 2.2 + (i % 3) * 0.4,
+          leaf: CATALOG_COLORS[i % CATALOG_COLORS.length],
+        }
+      }),
     [N]
   )
+  // posição de LEITURA do card (à direita; as infos do projeto ficam à esquerda em DOM)
+  const RX = 1.55
+  const RY = 0.0
+  const RZ = 2.8
 
   useFrame((state, dt) => {
     const w = shared.current.panels
@@ -524,46 +529,66 @@ function Panels({ shared }) {
     const d = Math.min(dt, 0.1)
     const t = state.clock.elapsedTime
     grp.current.visible = w > 0.02
-    // ESPIRAL: o scroll gira a hélice e a desce, trazendo cada card à frente
-    const active = bus.catalogP * (N - 1)
-    grp.current.rotation.y = THREE.MathUtils.damp(grp.current.rotation.y, -active * ANGLE, 4, d)
-    grp.current.position.y = THREE.MathUtils.damp(grp.current.position.y, active * VSTEP, 4, d)
+    const activeF = bus.catalogP * (N - 1)
     grp.current.children.forEach((m, i) => {
-      const wa = layout[i].ry + grp.current.rotation.y // ângulo no mundo
-      const front = (Math.cos(wa) + 1) / 2 // 1 = de frente para a câmera
-      const wy = layout[i].y + grp.current.position.y // altura no mundo
-      const vFade = Math.max(0, 1 - Math.abs(wy) / (VSTEP * 2.6))
-      const vis = Math.pow(front, 1.5) * vFade
+      const a = anchors[i]
+      const prog = activeF - i // <0: ainda na copa (a chegar); 0: card; >0: já caiu
+      const cardness = Math.max(0, 1 - Math.abs(prog)) // 1 = card pleno de frente
+      const open = THREE.MathUtils.smoothstep(cardness, 0.12, 0.95)
+      const tumble = 1 - open
+
+      // FONTE da folha: na COPA (incoming, prog<=0) ou CAÍDA abaixo (outgoing, prog>0)
+      let sx, sy, sz
+      if (prog <= 0) {
+        const up = Math.max(0, -prog - 1) // folhas distantes ficam mais altas/escondidas
+        sx = a.cx + Math.sin(t * 0.8 + i) * 0.15
+        sy = a.cy + up * 1.6 + Math.sin(t * 0.9 + i * 2.0) * 0.12
+        sz = a.cz
+      } else {
+        sx = a.cx * 0.7 + Math.sin(t * 0.8 + i) * 0.2
+        sy = -2.6 - prog * 1.7 // cai cada vez mais fundo
+        sz = a.cz * 0.7
+      }
+      // posição = interpola da folha (copa/caída) até a leitura conforme abre
+      // (amortecimento mais suave = voo da folha mais visível)
+      m.position.x = THREE.MathUtils.damp(m.position.x, sx + (RX - sx) * open, 4.5, d)
+      m.position.y = THREE.MathUtils.damp(m.position.y, sy + (RY - sy) * open, 4.5, d)
+      m.position.z = THREE.MathUtils.damp(m.position.z, sz + (RZ - sz) * open, 4.5, d)
+
+      // rotação: folha tomba/gira no ar → card deita de FRENTE (plano) ao abrir
+      m.rotation.x = THREE.MathUtils.damp(m.rotation.x, tumble * (0.5 + Math.sin(t * 1.4 + i) * 0.7), 6, d)
+      m.rotation.y = THREE.MathUtils.damp(m.rotation.y, tumble * Math.sin(t * 1.0 + i * 2.0) * 0.9, 6, d)
+      m.rotation.z = THREE.MathUtils.damp(
+        m.rotation.z,
+        tumble * (Math.sin(t * 1.2 + i * 1.5) * 0.5 + (prog > 0 ? 0.4 : -0.2)),
+        6,
+        d
+      )
+
+      // escala: FOLHINHA (0.3) → tamanho de leitura
+      const sc = 0.3 + open * 0.7
+      m.scale.x = THREE.MathUtils.damp(m.scale.x, 3.5 * sc, 5, d)
+      m.scale.y = THREE.MathUtils.damp(m.scale.y, 2.2 * sc, 5, d)
+
+      // cor: FOLHA colorida (cor do projeto) → revela a IMAGEM (branco) ao virar card
+      tmpC.copy(a.leaf).lerp(WHITE, open)
+      m.material.color.lerp(tmpC, 1 - Math.exp(-8 * d))
+
+      // opacidade: surge ao se aproximar; some quando a folha está longe/funda
+      const vis = 1 - THREE.MathUtils.smoothstep(Math.abs(prog), 0.0, 1.7)
       m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * vis, 6, d)
-      m.material.color.setScalar(0.62 + front * 0.6)
-      // CICLO "PÉTALA→CARD→FOLHA CAÍDA" (bem visível):
-      // chega como PÉTALA minúscula e tombada → CRESCE até o tamanho de leitura
-      // de frente → encolhe e TOMBA como folha caída ao sair.
-      const open = THREE.MathUtils.smoothstep(front, 0.32, 0.9) // 0=pétala, 1=card pleno
-      const leaf = 1 - open
-      // rotação: deita plana ao abrir; muito tombada/girando quando é pétala
-      const rxT = leaf * 1.5 + Math.sin(t * 1.6 + i * 1.7) * leaf * 0.5
-      const rzT = (leaf * 0.6 + Math.sin(t * 1.2 + i * 1.1) * 0.45) * leaf
-      m.rotation.x = THREE.MathUtils.damp(m.rotation.x, rxT, 7, d)
-      m.rotation.z = THREE.MathUtils.damp(m.rotation.z, rzT, 7, d)
-      // escala: PÉTALA minúscula (0.14) → tamanho máximo de leitura (1.0)
-      const scT = 0.14 + open * 0.86
-      m.scale.x = THREE.MathUtils.damp(m.scale.x, 3.7 * scT, 8, d)
-      m.scale.y = THREE.MathUtils.damp(m.scale.y, 2.3 * scT, 8, d)
-      // queda quando vira folha (cai da árvore); sobe ao centralizar para leitura
-      m.position.y = THREE.MathUtils.damp(m.position.y, layout[i].y - leaf * 0.7, 6, d)
       const edge = m.children[0]
-      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * vis * 0.9, 6, d)
+      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * vis * open * 0.9, 6, d)
     })
   })
 
   return (
     <group ref={grp}>
       {CATALOG.map((p, i) => (
-        <mesh key={p.name} position={[layout[i].x, layout[i].y, layout[i].z]} rotation={[0, layout[i].ry, 0]} scale={[3.7, 2.3, 1]}>
+        <mesh key={p.name} scale={[0.3, 0.3, 1]}>
           <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial map={textures[i]} color="#cccccc" transparent opacity={0} side={THREE.DoubleSide} toneMapped={false} />
-          {/* moldura âmbar da tela */}
+          <meshBasicMaterial map={textures[i]} color="#E0A458" transparent opacity={0} side={THREE.DoubleSide} toneMapped={false} />
+          {/* moldura âmbar do card */}
           <lineSegments>
             <edgesGeometry args={[new THREE.PlaneGeometry(1.015, 1.03)]} />
             <lineBasicMaterial color="#E0A458" transparent opacity={0} />
