@@ -458,11 +458,14 @@ precision highp float;
 uniform vec3 uColor; uniform float uTime; uniform float uOpacity;
 varying vec2 vUv; varying float vY;
 void main(){
+  // forma 3D: lado iluminado/sombreado ao redor do tubo (dá volume ao galho)
+  float around = vUv.x * 6.2831;
+  float shade = 0.42 + 0.58 * (0.5 + 0.5 * cos(around - 1.1));
   // seiva subindo: pulso viajando ao longo do galho (vUv.y = base->ponta)
   float flow = smoothstep(0.16, 0.0, abs(fract(vUv.y * 2.2 - uTime * 0.32) - 0.5));
-  float base = 0.34 + 0.10 * sin(vY * 1.6 + uTime * 0.5);
-  vec3 col = uColor * (base + flow * 1.8);
-  gl_FragColor = vec4(col, uOpacity * (base * 0.8 + flow));
+  float base = (0.30 + 0.08 * sin(vY * 1.6 + uTime * 0.5)) * shade;
+  vec3 col = uColor * (base + flow * 1.6);
+  gl_FragColor = vec4(col, uOpacity * (base * 0.9 + flow));
 }
 `
 function Tree3D({ shared }) {
@@ -477,33 +480,89 @@ function Tree3D({ shared }) {
   )
 
   const { geo, tipPts } = useMemo(() => {
-    const tubes = []
+    const branches = []
     const tipPts = []
-    const BASE = new THREE.Vector3(0, -8.2, 0)
+    const RADIAL = 7
+    const randAxis = () =>
+      new THREE.Vector3(Math.random() - 0.5, (Math.random() - 0.5) * 0.3, Math.random() - 0.5).normalize()
+    // tubo com AFINAMENTO real (r0 na base -> r1 na ponta) + UV.y ao longo do galho
+    const taperedTube = (pts, r0, r1) => {
+      const curve = new THREE.CatmullRomCurve3(pts)
+      const SEG = 9
+      const frames = curve.computeFrenetFrames(SEG, false)
+      const position = []
+      const uv = []
+      const index = []
+      for (let i = 0; i <= SEG; i++) {
+        const t = i / SEG
+        const p = curve.getPoint(t)
+        const r = r0 + (r1 - r0) * t
+        const N = frames.normals[i]
+        const B = frames.binormals[i]
+        for (let j = 0; j <= RADIAL; j++) {
+          const a = (j / RADIAL) * Math.PI * 2
+          const cx = Math.cos(a)
+          const cy = Math.sin(a)
+          position.push(p.x + (N.x * cx + B.x * cy) * r, p.y + (N.y * cx + B.y * cy) * r, p.z + (N.z * cx + B.z * cy) * r)
+          uv.push(j / RADIAL, t)
+        }
+      }
+      for (let i = 0; i < SEG; i++) {
+        for (let j = 0; j < RADIAL; j++) {
+          const a = i * (RADIAL + 1) + j
+          const b = a + RADIAL + 1
+          index.push(a, b, a + 1, b, b + 1, a + 1)
+        }
+      }
+      const g = new THREE.BufferGeometry()
+      g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+      g.setIndex(index)
+      g.computeVertexNormals()
+      return g
+    }
+    // galho como caminho levemente curvo (gravidade/vento) com vários passos
     const grow = (origin, dir, len, rad, depth) => {
-      const end = origin.clone().addScaledVector(dir, len)
-      const mid = origin
-        .clone()
-        .addScaledVector(dir, len * 0.5)
-        .add(new THREE.Vector3((Math.random() - 0.5) * 0.4, 0, (Math.random() - 0.5) * 0.4))
-      const curve = new THREE.CatmullRomCurve3([origin.clone(), mid, end])
-      tubes.push(new THREE.TubeGeometry(curve, 8, rad, 7, false))
-      if (depth >= 4 || len < 0.5) {
-        tipPts.push(end.clone())
+      const STEPS = 3
+      const pts = [origin.clone()]
+      let p = origin.clone()
+      const dcur = dir.clone()
+      for (let k = 1; k <= STEPS; k++) {
+        dcur.y += 0.05 // leve viés para cima ao longo do galho
+        dcur.x += (Math.random() - 0.5) * 0.06
+        dcur.z += (Math.random() - 0.5) * 0.06
+        dcur.normalize()
+        p = p.clone().addScaledVector(dcur, len / STEPS)
+        pts.push(p.clone())
+      }
+      const end = pts[pts.length - 1]
+      branches.push(taperedTube(pts, rad, rad * 0.66))
+      if (depth >= 5 || len < 0.45) {
+        // cacho de botões/folhas luminosas na ponta (copa densa)
+        const nb = 1 + Math.floor(Math.random() * 3)
+        for (let b = 0; b < nb; b++) {
+          tipPts.push(
+            end
+              .clone()
+              .add(new THREE.Vector3((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4))
+          )
+        }
         return
       }
-      const nb = depth === 0 ? 3 : 2
-      for (let i = 0; i < nb; i++) {
-        const ax = new THREE.Vector3(Math.random() - 0.5, (Math.random() - 0.5) * 0.3, Math.random() - 0.5).normalize()
-        const ang = 0.45 + Math.random() * 0.5
-        const nd = dir.clone().applyAxisAngle(ax, ang).normalize()
-        nd.y = Math.abs(nd.y) * 0.5 + 0.5 // viés para cima (árvore)
+      // galho-LÍDER continua subindo (mantém o tronco/eixo) + galhos LATERAIS
+      const leader = dir.clone().applyAxisAngle(randAxis(), 0.16 + Math.random() * 0.12).normalize()
+      grow(end, leader, len * 0.82, rad * 0.72, depth + 1)
+      const nLat = depth < 3 ? 2 : 1
+      for (let i = 0; i < nLat; i++) {
+        const ang = 0.5 + Math.random() * 0.5
+        const nd = dir.clone().applyAxisAngle(randAxis(), ang)
+        nd.y = nd.y * 0.4 + 0.5 // lateral ainda sobe um pouco
         nd.normalize()
-        grow(end, nd, len * 0.72, rad * 0.64, depth + 1)
+        grow(end, nd, len * 0.62, rad * 0.5, depth + 1)
       }
     }
-    grow(BASE, new THREE.Vector3(0, 1, 0), 3.4, 0.16, 0)
-    return { geo: mergeGeometries(tubes, false), tipPts }
+    grow(new THREE.Vector3(0, -8.2, 0), new THREE.Vector3(0, 1, 0), 3.0, 0.32, 0)
+    return { geo: mergeGeometries(branches, false), tipPts }
   }, [])
 
   useLayoutEffect(() => {
