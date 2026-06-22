@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Environment, Lightformer, useTexture } from '@react-three/drei'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { CATALOG } from '../data'
 import { bus } from '../scrollBus'
 import {
@@ -428,57 +429,158 @@ function Panels({ shared }) {
   )
 }
 
-// ---- coluna vertebral: dupla hélice orgânica (espinha/DNA), cor da seção.
-// Recua quando um card está frontal (não cruza o card); brilha nas transições.
-function Spine({ shared }) {
-  const ref = useRef()
+// cor premium distinta por projeto do catálogo; a árvore (e o fundo) assumem
+// a cor do projeto que está girando à frente, transicionando suavemente.
+const CATALOG_COLORS = ['#E0A458', '#5FA391', '#B9AED6', '#C77B4A', '#6FA8D9', '#D98EA8'].map(
+  (c) => new THREE.Color(c)
+)
+function catalogTint(out, p) {
+  const n = CATALOG_COLORS.length
+  const f = Math.max(0, Math.min(1, p)) * (n - 1)
+  const i = Math.floor(f)
+  const a = CATALOG_COLORS[Math.min(i, n - 1)]
+  const b = CATALOG_COLORS[Math.min(i + 1, n - 1)]
+  return out.copy(a).lerp(b, f - i)
+}
+
+// ---- coluna vertebral: ÁRVORE 3D (galhos com seiva luminosa subindo).
+// Troca de cor conforme cada projeto do catálogo gira à frente. Recua nas
+// posições frontais para não cruzar o card.
+const TREE_VERT = /* glsl */ `
+varying vec2 vUv; varying float vY;
+void main(){
+  vUv = uv; vY = position.y;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`
+const TREE_FRAG = /* glsl */ `
+precision highp float;
+uniform vec3 uColor; uniform float uTime; uniform float uOpacity;
+varying vec2 vUv; varying float vY;
+void main(){
+  // seiva subindo: pulso viajando ao longo do galho (vUv.y = base->ponta)
+  float flow = smoothstep(0.16, 0.0, abs(fract(vUv.y * 2.2 - uTime * 0.32) - 0.5));
+  float base = 0.34 + 0.10 * sin(vY * 1.6 + uTime * 0.5);
+  vec3 col = uColor * (base + flow * 1.8);
+  gl_FragColor = vec4(col, uOpacity * (base * 0.8 + flow));
+}
+`
+function Tree3D({ shared }) {
+  const grp = useRef()
+  const mat = useRef()
+  const tips = useRef()
   const tmp = useMemo(() => new THREE.Color(), [])
-  const geos = useMemo(() => {
-    const make = (phase) => {
-      const TURNS = 6.5
-      const H = 17
-      const R = 0.26
-      const SEG = 260
-      const pts = []
-      for (let i = 0; i <= SEG; i++) {
-        const t = i / SEG
-        const a = t * TURNS * Math.PI * 2 + phase
-        pts.push(new THREE.Vector3(Math.cos(a) * R, (t - 0.5) * H, Math.sin(a) * R))
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+  const uniforms = useMemo(
+    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#E0A458') }, uOpacity: { value: 0 } }),
+    []
+  )
+
+  const { geo, tipPts } = useMemo(() => {
+    const tubes = []
+    const tipPts = []
+    const BASE = new THREE.Vector3(0, -8.2, 0)
+    const grow = (origin, dir, len, rad, depth) => {
+      const end = origin.clone().addScaledVector(dir, len)
+      const mid = origin
+        .clone()
+        .addScaledVector(dir, len * 0.5)
+        .add(new THREE.Vector3((Math.random() - 0.5) * 0.4, 0, (Math.random() - 0.5) * 0.4))
+      const curve = new THREE.CatmullRomCurve3([origin.clone(), mid, end])
+      tubes.push(new THREE.TubeGeometry(curve, 8, rad, 7, false))
+      if (depth >= 4 || len < 0.5) {
+        tipPts.push(end.clone())
+        return
       }
-      return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), SEG, 0.022, 6, false)
+      const nb = depth === 0 ? 3 : 2
+      for (let i = 0; i < nb; i++) {
+        const ax = new THREE.Vector3(Math.random() - 0.5, (Math.random() - 0.5) * 0.3, Math.random() - 0.5).normalize()
+        const ang = 0.45 + Math.random() * 0.5
+        const nd = dir.clone().applyAxisAngle(ax, ang).normalize()
+        nd.y = Math.abs(nd.y) * 0.5 + 0.5 // viés para cima (árvore)
+        nd.normalize()
+        grow(end, nd, len * 0.72, rad * 0.64, depth + 1)
+      }
     }
-    return [make(0), make(Math.PI)]
+    grow(BASE, new THREE.Vector3(0, 1, 0), 3.4, 0.16, 0)
+    return { geo: mergeGeometries(tubes, false), tipPts }
   }, [])
 
+  useLayoutEffect(() => {
+    if (!tips.current) return
+    tipPts.forEach((p, i) => {
+      dummy.position.copy(p)
+      dummy.scale.setScalar(0.06 + Math.random() * 0.05)
+      dummy.updateMatrix()
+      tips.current.setMatrixAt(i, dummy.matrix)
+    })
+    tips.current.instanceMatrix.needsUpdate = true
+  }, [tipPts, dummy])
+
   useFrame((_, dt) => {
-    if (!ref.current) return
+    if (!grp.current) return
     const d = Math.min(dt, 0.1)
     const w = shared.current.panels
-    ref.current.visible = w > 0.02
-    // fade conforme a proximidade de um card frontal: ~0 no card, cheio no meio
+    grp.current.visible = w > 0.02
+    grp.current.rotation.y += dt * 0.12
+    uniforms.uTime.value += dt
+    // cor = projeto ativo do catálogo (transição suave); guardada no bus p/ o fundo
+    catalogTint(tmp, bus.catalogP)
+    uniforms.uColor.value.r = THREE.MathUtils.damp(uniforms.uColor.value.r, tmp.r, 3, d)
+    uniforms.uColor.value.g = THREE.MathUtils.damp(uniforms.uColor.value.g, tmp.g, 3, d)
+    uniforms.uColor.value.b = THREE.MathUtils.damp(uniforms.uColor.value.b, tmp.b, 3, d)
+    // recua perto de uma posição frontal para não cruzar o card
     const active = bus.catalogP * (CATALOG.length - 1)
     const frac = Math.abs(active - Math.round(active))
-    const between = THREE.MathUtils.smoothstep(frac, 0.08, 0.4)
-    const target = w * (0.08 + between * 0.92)
-    tmp.copy(shared.current.color).multiplyScalar(1.6)
-    ref.current.traverse((o) => {
-      if (o.material) {
-        o.material.color.copy(tmp)
-        o.material.opacity = THREE.MathUtils.damp(o.material.opacity, target, 6, d)
-      }
-    })
-    ref.current.rotation.y += dt * 0.2
+    const between = THREE.MathUtils.smoothstep(frac, 0.06, 0.4)
+    const target = w * (0.18 + between * 0.82)
+    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, target, 5, d)
+    if (tips.current) {
+      tips.current.material.opacity = THREE.MathUtils.damp(tips.current.material.opacity, target * 1.1, 5, d)
+      tips.current.material.color.copy(uniforms.uColor.value)
+    }
   })
 
   return (
-    <group ref={ref}>
-      {geos.map((g, i) => (
-        <mesh key={i} geometry={g}>
-          <meshBasicMaterial color="#E0A458" transparent opacity={0} toneMapped={false} depthWrite={false} />
-        </mesh>
-      ))}
+    <group ref={grp}>
+      <mesh geometry={geo}>
+        <shaderMaterial
+          ref={mat}
+          args={[
+            {
+              vertexShader: TREE_VERT,
+              fragmentShader: TREE_FRAG,
+              uniforms,
+              transparent: true,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending,
+            },
+          ]}
+        />
+      </mesh>
+      <instancedMesh ref={tips} args={[null, null, tipPts.length]}>
+        <sphereGeometry args={[1, 12, 12]} />
+        <meshBasicMaterial color="#E0A458" transparent opacity={0} toneMapped={false} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </instancedMesh>
     </group>
   )
+}
+
+// sincroniza a aurora de fundo (DOM/CSS) com a cor de exibição atual (bus.tint)
+function AuraSync() {
+  const f = useRef(0)
+  useFrame(() => {
+    f.current++
+    if (f.current % 8 !== 0) return
+    const t = bus.tint
+    const r = Math.round(t.r * 255)
+    const g = Math.round(t.g * 255)
+    const b = Math.round(t.b * 255)
+    const root = document.documentElement.style
+    root.setProperty('--aura-1', `rgba(${r}, ${g}, ${b}, 0.14)`)
+    root.setProperty('--aura-2', `rgba(${g}, ${b}, ${r}, 0.09)`) // hue relacionada, deslocada
+  })
+  return null
 }
 
 // ambiente procedural (reflexos sem baixar HDRI)
@@ -494,10 +596,14 @@ function Studio() {
 }
 
 // controlador: lê o alvo (act) e interpola câmera + estado compartilhado
+const OBSIDIAN = new THREE.Color('#07070b')
 function Director({ shared, target }) {
+  const tint = useMemo(() => new THREE.Color('#E0A458'), [])
+  const cat = useMemo(() => new THREE.Color(), [])
+  const bg = useMemo(() => new THREE.Color(), [])
   // damp = suavização independente de frame-rate (converge no mesmo TEMPO
   // a 30 ou 144 fps), ao contrário do lerp por-frame.
-  useFrame(({ camera }, dt) => {
+  useFrame(({ camera, scene }, dt) => {
     const d = Math.min(dt, 0.1)
     const s = shared.current
     const t = target.current
@@ -511,6 +617,16 @@ function Director({ shared, target }) {
       s.color.g = THREE.MathUtils.damp(s.color.g, t.color.g, 2.5, d)
       s.color.b = THREE.MathUtils.damp(s.color.b, t.color.b, 2.5, d)
     }
+    // cor de EXIBIÇÃO: cor da seção, misturando p/ a cor do projeto no catálogo
+    tint.copy(s.color)
+    if (s.panels > 0.02) tint.lerp(catalogTint(cat, bus.catalogP), s.panels)
+    bus.tint.r = tint.r
+    bus.tint.g = tint.g
+    bus.tint.b = tint.b
+    // FUNDO da cena reage à cor ativa (tinta sutil sobre a obsidiana)
+    bg.copy(OBSIDIAN).lerp(tint, 0.1)
+    if (scene.background) scene.background.copy(bg)
+    if (scene.fog) scene.fog.color.copy(OBSIDIAN).lerp(tint, 0.16)
     camera.position.x = THREE.MathUtils.damp(camera.position.x, s.mx * 0.5, 2.5, d)
     camera.position.y = THREE.MathUtils.damp(camera.position.y, -s.my * 0.35, 2.5, d)
     camera.position.z = s.camZ
@@ -563,15 +679,16 @@ export default function ImmersiveWorld() {
         <directionalLight position={[-5, -2, -4]} intensity={0.7} color="#6a7bd6" />
         <Studio />
         <Director shared={shared} target={target} />
+        <AuraSync />
         <DnaHelix shared={shared} />
         <Fluid shared={shared} />
-        <Spine shared={shared} />
+        <Tree3D shared={shared} />
         <Suspense fallback={null}>
           <Panels shared={shared} />
         </Suspense>
         <EffectComposer multisampling={4}>
           <Bloom intensity={0.7} luminanceThreshold={0.28} luminanceSmoothing={0.5} mipmapBlur />
-          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0004, 0.00045]} />
+          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0006, 0.0007]} />
           <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.45} />
           <Vignette eskil={false} offset={0.18} darkness={0.92} />
         </EffectComposer>

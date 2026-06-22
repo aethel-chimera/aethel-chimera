@@ -415,9 +415,9 @@ button:focus-visible {
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 55% 45% at 22% 28%, rgba(224, 164, 88, 0.1), transparent 62%),
-    radial-gradient(ellipse 50% 55% at 82% 72%, rgba(61, 220, 151, 0.07), transparent 62%),
-    radial-gradient(ellipse 70% 60% at 60% 110%, rgba(224, 164, 88, 0.06), transparent 70%);
+    radial-gradient(ellipse 55% 45% at 22% 28%, var(--aura-1, rgba(224, 164, 88, 0.1)), transparent 62%),
+    radial-gradient(ellipse 50% 55% at 82% 72%, var(--aura-2, rgba(61, 220, 151, 0.07)), transparent 62%),
+    radial-gradient(ellipse 70% 60% at 60% 110%, var(--aura-1, rgba(224, 164, 88, 0.06)), transparent 70%);
   filter: blur(8px);
   animation: aurora-drift 22s ease-in-out infinite alternate;
 }
