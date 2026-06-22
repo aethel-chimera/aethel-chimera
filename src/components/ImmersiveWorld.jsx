@@ -628,28 +628,68 @@ precision highp float;
 uniform vec3 uColor; uniform float uTime; uniform float uOpacity;
 varying vec2 vUv; varying float vY;
 void main(){
-  // forma 3D: lado iluminado/sombreado ao redor do tubo (dá volume ao galho)
+  // volume do tubo (lado iluminado/sombreado)
   float around = vUv.x * 6.2831;
-  float shade = 0.42 + 0.58 * (0.5 + 0.5 * cos(around - 1.1));
-  // seiva subindo: pulso viajando ao longo do galho (vUv.y = base->ponta)
-  float flow = smoothstep(0.16, 0.0, abs(fract(vUv.y * 2.2 - uTime * 0.32) - 0.5));
-  float base = (0.48 + 0.10 * sin(vY * 1.6 + uTime * 0.5)) * shade;
-  vec3 col = uColor * (base + flow * 1.4);
-  gl_FragColor = vec4(col, uOpacity * (base + flow * 0.8));
+  float shade = 0.35 + 0.65 * (0.5 + 0.5 * cos(around - 1.1));
+  // CASCA amadeirada escura, com leve tinta da cor do projeto (não estoura)
+  vec3 bark = vec3(0.13, 0.10, 0.08);
+  vec3 base = mix(bark, uColor * 0.55, 0.42) * shade;
+  // SEIVA luminosa subindo: veias brilhantes ao longo do galho (o glow vem daqui)
+  float flow = smoothstep(0.09, 0.0, abs(fract(vUv.y * 2.4 - uTime * 0.3) - 0.5));
+  vec3 col = base + uColor * flow * 1.7;
+  gl_FragColor = vec4(col, uOpacity);
+}
+`
+// ---- FOLHAS da COPA: mesmos formato/cores das folhas que caem, ancoradas nas
+// pontas dos galhos, balançando ao vento (copa real, não bolas de luz). ----
+const CANOPY_LEAF_VERT = /* glsl */ `
+uniform float uTime; uniform float uScale;
+attribute vec3 aAnchor; attribute vec2 aCorner; attribute float aSeed; attribute float aTone;
+varying vec2 vUv; varying float vTone;
+void main(){
+  vUv = aCorner + 0.5;
+  vTone = aTone;
+  float s = aSeed;
+  vec3 pos = aAnchor;
+  pos.x += sin(uTime * 1.2 + s * 6.2831) * 0.06; // balanço ao vento
+  pos.y += sin(uTime * 0.9 + s * 6.2831) * 0.05;
+  vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+  // billboard + leve tombo (sempre mostra a silhueta da folha)
+  float a = sin(uTime * 0.6 + s * 20.0) * 0.5 + s * 6.2831;
+  vec2 c = aCorner * uScale * (0.65 + fract(s * 1.7) * 0.8);
+  mv.xy += vec2(c.x * cos(a) - c.y * sin(a), c.x * sin(a) + c.y * cos(a));
+  gl_Position = projectionMatrix * mv;
+}
+`
+const CANOPY_LEAF_FRAG = /* glsl */ `
+precision highp float;
+uniform float uOpacity;
+varying vec2 vUv; varying float vTone;
+void main(){
+  vec2 p = vUv - 0.5;
+  float r = length(vec2(p.x * 1.9, p.y));
+  float leaf = 1.0 - smoothstep(0.32, 0.46, r);
+  leaf *= smoothstep(0.5, 0.42, abs(p.y) + abs(p.x) * 0.6);
+  if (leaf < 0.04) discard;
+  vec3 laranja = vec3(0.90, 0.46, 0.12);
+  vec3 tijolo  = vec3(0.68, 0.17, 0.07);
+  vec3 ouro    = vec3(0.92, 0.72, 0.26);
+  vec3 col = mix(tijolo, laranja, smoothstep(0.0, 0.5, vTone));
+  col = mix(col, ouro, smoothstep(0.5, 1.0, vTone));
+  col *= 1.0 - smoothstep(0.04, 0.0, abs(p.x)) * 0.35; // nervura central
+  gl_FragColor = vec4(col, leaf * uOpacity * 0.98);
 }
 `
 function Tree3D({ shared }) {
   const grp = useRef()
-  const mat = useRef()
-  const tips = useRef()
   const tmp = useMemo(() => new THREE.Color(), [])
-  const dummy = useMemo(() => new THREE.Object3D(), [])
   const uniforms = useMemo(
     () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#E0A458') }, uOpacity: { value: 0 } }),
     []
   )
+  const leafU = useMemo(() => ({ uTime: { value: 0 }, uScale: { value: 0.2 }, uOpacity: { value: 0 } }), [])
 
-  const { geo, tipPts } = useMemo(() => {
+  const { geo, leafGeo } = useMemo(() => {
     const branches = []
     const tipPts = []
     const RADIAL = 8
@@ -770,19 +810,45 @@ function Tree3D({ shared }) {
       grow(JUNC, nd, 1.5, 0.22, 1, -1, 4, false)
     }
 
-    return { geo: mergeGeometries(branches, false), tipPts }
-  }, [])
-
-  useLayoutEffect(() => {
-    if (!tips.current) return
-    tipPts.forEach((p, i) => {
-      dummy.position.copy(p)
-      dummy.scale.setScalar(0.04 + Math.random() * 0.04)
-      dummy.updateMatrix()
-      tips.current.setMatrixAt(i, dummy.matrix)
+    // FOLHAS da copa: 2 por ponta de galho, ancoradas com leve dispersão
+    const corner = []
+    const anchor = []
+    const seed = []
+    const tone = []
+    const lindex = []
+    const quad = [
+      [-0.5, -0.5],
+      [0.5, -0.5],
+      [0.5, 0.5],
+      [-0.5, 0.5],
+    ]
+    let q = 0
+    tipPts.forEach((p) => {
+      for (let l = 0; l < 2; l++) {
+        const s = Math.random()
+        const tn = Math.random()
+        const ax = p.x + (Math.random() - 0.5) * 0.55
+        const ay = p.y + (Math.random() - 0.5) * 0.55
+        const az = p.z + (Math.random() - 0.5) * 0.55
+        for (let v = 0; v < 4; v++) {
+          corner.push(quad[v][0], quad[v][1])
+          anchor.push(ax, ay, az)
+          seed.push(s)
+          tone.push(tn)
+        }
+        lindex.push(q, q + 1, q + 2, q, q + 2, q + 3)
+        q += 4
+      }
     })
-    tips.current.instanceMatrix.needsUpdate = true
-  }, [tipPts, dummy])
+    const leafGeo = new THREE.BufferGeometry()
+    leafGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array((corner.length / 2) * 3), 3))
+    leafGeo.setAttribute('aCorner', new THREE.Float32BufferAttribute(corner, 2))
+    leafGeo.setAttribute('aAnchor', new THREE.Float32BufferAttribute(anchor, 3))
+    leafGeo.setAttribute('aSeed', new THREE.Float32BufferAttribute(seed, 1))
+    leafGeo.setAttribute('aTone', new THREE.Float32BufferAttribute(tone, 1))
+    leafGeo.setIndex(lindex)
+    return { geo: mergeGeometries(branches, false), leafGeo }
+  }, [])
 
   useFrame((_, dt) => {
     if (!grp.current) return
@@ -792,6 +858,7 @@ function Tree3D({ shared }) {
     grp.current.scale.setScalar(0.6)
     grp.current.rotation.y += dt * 0.1
     uniforms.uTime.value += dt
+    leafU.uTime.value += dt
     // cor = projeto ativo do catálogo (transição suave); guardada no bus p/ o fundo
     catalogTint(tmp, bus.catalogP)
     uniforms.uColor.value.r = THREE.MathUtils.damp(uniforms.uColor.value.r, tmp.r, 3, d)
@@ -803,33 +870,23 @@ function Tree3D({ shared }) {
     const between = THREE.MathUtils.smoothstep(frac, 0.06, 0.4)
     const target = w * (0.18 + between * 0.82)
     uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, target, 5, d)
-    if (tips.current) {
-      tips.current.material.opacity = THREE.MathUtils.damp(tips.current.material.opacity, target * 1.1, 5, d)
-      tips.current.material.color.copy(uniforms.uColor.value)
-    }
+    leafU.uOpacity.value = THREE.MathUtils.damp(leafU.uOpacity.value, target, 5, d)
   })
 
   return (
     <group ref={grp}>
+      {/* tronco/galhos/raízes: CASCA com seiva luminosa (sólido, não estoura) */}
       <mesh geometry={geo}>
         <shaderMaterial
-          ref={mat}
-          args={[
-            {
-              vertexShader: TREE_VERT,
-              fragmentShader: TREE_FRAG,
-              uniforms,
-              transparent: true,
-              depthWrite: false,
-              blending: THREE.AdditiveBlending,
-            },
-          ]}
+          args={[{ vertexShader: TREE_VERT, fragmentShader: TREE_FRAG, uniforms, transparent: true, depthWrite: true }]}
         />
       </mesh>
-      <instancedMesh ref={tips} args={[null, null, tipPts.length]}>
-        <sphereGeometry args={[1, 12, 12]} />
-        <meshBasicMaterial color="#E0A458" transparent opacity={0} toneMapped={false} blending={THREE.AdditiveBlending} depthWrite={false} />
-      </instancedMesh>
+      {/* COPA: folhas de verdade (mesmo formato/cores das que caem) */}
+      <mesh geometry={leafGeo}>
+        <shaderMaterial
+          args={[{ vertexShader: CANOPY_LEAF_VERT, fragmentShader: CANOPY_LEAF_FRAG, uniforms: leafU, transparent: true, depthWrite: false, side: THREE.DoubleSide }]}
+        />
+      </mesh>
     </group>
   )
 }
