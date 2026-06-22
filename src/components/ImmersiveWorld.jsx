@@ -631,12 +631,12 @@ void main(){
   // volume do tubo (lado iluminado/sombreado)
   float around = vUv.x * 6.2831;
   float shade = 0.35 + 0.65 * (0.5 + 0.5 * cos(around - 1.1));
-  // CASCA amadeirada escura, com leve tinta da cor do projeto (não estoura)
-  vec3 bark = vec3(0.13, 0.10, 0.08);
-  vec3 base = mix(bark, uColor * 0.55, 0.42) * shade;
-  // SEIVA luminosa subindo: veias brilhantes ao longo do galho (o glow vem daqui)
-  float flow = smoothstep(0.09, 0.0, abs(fract(vUv.y * 2.4 - uTime * 0.3) - 0.5));
-  vec3 col = base + uColor * flow * 1.7;
+  // CASCA amadeirada (sólida, lê a forma), com leve tinta da cor do projeto
+  vec3 bark = vec3(0.17, 0.13, 0.10);
+  vec3 base = mix(bark, uColor * 0.5, 0.36) * shade;
+  // SEIVA: veias luminosas SUTIS subindo (acento, não listra de plasma)
+  float flow = smoothstep(0.06, 0.0, abs(fract(vUv.y * 2.0 - uTime * 0.28) - 0.5));
+  vec3 col = base + uColor * flow * 0.9;
   gl_FragColor = vec4(col, uOpacity);
 }
 `
@@ -731,6 +731,42 @@ function Tree3D({ shared }) {
       g.computeVertexNormals()
       return g
     }
+    // tubo com PERFIL de raio livre (radiusFn(t)) — base alargada, afinamento, etc.
+    const profiledTube = (pts, radiusFn, radial) => {
+      const curve = new THREE.CatmullRomCurve3(pts)
+      const SEG = Math.max(12, pts.length * 3)
+      const frames = curve.computeFrenetFrames(SEG, false)
+      const position = []
+      const uv = []
+      const index = []
+      for (let i = 0; i <= SEG; i++) {
+        const t = i / SEG
+        const p = curve.getPoint(t)
+        const r = radiusFn(t)
+        const N = frames.normals[i]
+        const B = frames.binormals[i]
+        for (let j = 0; j <= radial; j++) {
+          const a = (j / radial) * Math.PI * 2
+          const cx = Math.cos(a)
+          const cy = Math.sin(a)
+          position.push(p.x + (N.x * cx + B.x * cy) * r, p.y + (N.y * cx + B.y * cy) * r, p.z + (N.z * cx + B.z * cy) * r)
+          uv.push(j / radial, t)
+        }
+      }
+      for (let i = 0; i < SEG; i++) {
+        for (let j = 0; j < radial; j++) {
+          const a = i * (radial + 1) + j
+          const b = a + radial + 1
+          index.push(a, b, a + 1, b, b + 1, a + 1)
+        }
+      }
+      const g = new THREE.BufferGeometry()
+      g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+      g.setIndex(index)
+      g.computeVertexNormals()
+      return g
+    }
     // galho/raiz como caminho curvo (gravidade/vento) — vbias: +1 copa, -1 raiz.
     // collectTips: só a copa ganha botões/folhas luminosas.
     const grow = (origin, dir, len, rad, depth, vbias, maxDepth, collectTips) => {
@@ -774,41 +810,52 @@ function Tree3D({ shared }) {
       }
     }
 
-    // ÁRVORE DA VIDA: tronco torcido/entrelaçado (2 fitas) + copa densa em cima
-    // + raízes espelhando embaixo. Junção (tronco↔raiz) perto do centro da tela.
-    const JUNC = new THREE.Vector3(0, -1.0, 0)
-    const TRUNK_TOP_Y = 1.5
-    const makeTrunkStrand = (phase) => {
-      const path = []
-      const SEG = 12
-      for (let k = 0; k <= SEG; k++) {
-        const t = k / SEG
-        const y = JUNC.y + (TRUNK_TOP_Y - JUNC.y) * t
-        const tw = 0.24 * (1 - t * 0.45) // torção que afrouxa em cima
-        const a = t * Math.PI * 2.1 + phase
-        path.push(new THREE.Vector3(Math.cos(a) * tw, y, Math.sin(a) * tw))
-      }
-      return path
+    // ---- TRONCO ÚNICO, grosso, com BASE ALARGADA (raiz-crown) e curva orgânica
+    const TRUNK_BASE_Y = -1.15
+    const TRUNK_TOP_Y = 1.35
+    const trunkPath = []
+    const TS = 14
+    for (let k = 0; k <= TS; k++) {
+      const t = k / TS
+      const y = TRUNK_BASE_Y + (TRUNK_TOP_Y - TRUNK_BASE_Y) * t
+      const bend = Math.sin(t * Math.PI * 0.9) * 0.13 // leve curva orgânica (não torção)
+      trunkPath.push(new THREE.Vector3(bend, y, Math.cos(t * Math.PI * 0.7) * 0.05))
     }
-    const trunkA = makeTrunkStrand(0)
-    const trunkB = makeTrunkStrand(Math.PI)
-    branches.push(taperedTube(trunkA, 0.46, 0.26))
-    branches.push(taperedTube(trunkB, 0.46, 0.26))
+    // perfil: base ALARGADA (flare) que afina suave até o topo
+    const trunkR = (t) => 0.25 + 0.42 * Math.pow(1 - t, 2.1)
+    branches.push(profiledTube(trunkPath, trunkR, 14))
+    const trunkTop = trunkPath[trunkPath.length - 1]
+    const trunkBase = trunkPath[0]
 
-    // COPA: do topo de cada fita do tronco, 5 boughs que ramificam para cima
-    // (copa MAIOR e mais densa — é a estrela da árvore)
-    ;[trunkA[trunkA.length - 1], trunkB[trunkB.length - 1]].forEach((top) => {
-      for (let i = 0; i < 5; i++) {
-        const nd = new THREE.Vector3(0, 1, 0).applyAxisAngle(randAxis(), 0.45 + Math.random() * 0.6).normalize()
-        grow(top, nd, 1.7, 0.2, 1, 1, 5, true)
+    // ---- COPA: do topo do tronco, 5 boughs densos para cima (a estrela da árvore)
+    for (let i = 0; i < 5; i++) {
+      const nd = new THREE.Vector3(0, 1, 0).applyAxisAngle(randAxis(), 0.45 + Math.random() * 0.6).normalize()
+      grow(trunkTop, nd, 1.7, 0.22, 1, 1, 5, true)
+    }
+
+    // ---- RAÍZES: saem de DENTRO da base alargada, arcando p/ baixo-fora e
+    // afinando — transição CONTÍNUA com o tronco (sem emenda seca)
+    const NROOTS = 7
+    for (let i = 0; i < NROOTS; i++) {
+      const ang = (i / NROOTS) * Math.PI * 2 + 0.25
+      const out = new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang))
+      // começa embutida na base (raio < flare) e levemente acima → funde no tronco
+      const start = trunkBase.clone().addScaledVector(out, 0.32).add(new THREE.Vector3(0, 0.16, 0))
+      const path = [start.clone()]
+      let p = start.clone()
+      const dir = out.clone().multiplyScalar(0.75).add(new THREE.Vector3(0, -0.5, 0)).normalize()
+      const STEPS = 6
+      const len = 1.2
+      for (let s = 1; s <= STEPS; s++) {
+        dir.y -= 0.14 // gravidade: arca para baixo ao se afastar
+        dir.x += (Math.random() - 0.5) * 0.05
+        dir.z += (Math.random() - 0.5) * 0.05
+        dir.normalize()
+        p = p.clone().addScaledVector(dir, len / STEPS)
+        path.push(p.clone())
       }
-    })
-
-    // RAÍZES: da junção para baixo — CURTAS e compactas (base, não dominam a cena)
-    for (let i = 0; i < 6; i++) {
-      const ang = (i / 6) * Math.PI * 2 + 0.3
-      const nd = new THREE.Vector3(Math.cos(ang) * 0.9, -0.6, Math.sin(ang) * 0.9).normalize()
-      grow(JUNC, nd, 0.8, 0.2, 1, -1, 3, false)
+      // grossa na base (casa com o flare) → ponta fina
+      branches.push(profiledTube(path, (t) => 0.3 * Math.pow(1 - t, 1.5) + 0.025, 9))
     }
 
     // FOLHAS da copa: 2 por ponta de galho, ancoradas com leve dispersão
