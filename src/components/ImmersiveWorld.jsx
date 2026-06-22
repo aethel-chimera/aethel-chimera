@@ -430,7 +430,7 @@ function Fluid({ shared }) {
       const bh = maxY - minY || 1
       const cx = (minX + maxX) / 2
       const cy = (minY + maxY) / 2
-      const k = 3.6 / bh
+      const k = 3.0 / bh
       const arr = geo.attributes.aLogo.array
       const n = pts.length / 2
       for (let i = 0; i < COUNT; i++) {
@@ -459,12 +459,15 @@ function Fluid({ shared }) {
       uniforms.uColor.value.b = THREE.MathUtils.damp(uniforms.uColor.value.b, shared.current.color.b, 2.5, d)
     }
     if (ref.current) {
+      const lg = uniforms.uLogo.value
       ref.current.visible = uniforms.uOpacity.value > 0.01
-      // quase não gira quando está formando a logo (mantém legível)
-      ref.current.rotation.y += dt * 0.03 * (1 - uniforms.uLogo.value)
-      // ao formar a logo, SOBE o conjunto → a quimera fica emoldurada acima do
-      // rodapé (não desce para baixo da parte preta no fim da página)
-      ref.current.position.y = THREE.MathUtils.damp(ref.current.position.y, uniforms.uLogo.value * 1.05, 3, d)
+      // gira devagar quando NÃO é logo; ao formar a logo VOLTA DE FRENTE (sem
+      // rotação acumulada) e centraliza em X → a quimera fica frontal, não torta
+      ref.current.rotation.y += dt * 0.03 * (1 - lg)
+      ref.current.rotation.y = THREE.MathUtils.damp(ref.current.rotation.y, 0, lg * 5, d)
+      ref.current.position.x = THREE.MathUtils.damp(ref.current.position.x, 0, lg * 4, d)
+      // sobe e emoldura ao formar a logo (acima do rodapé)
+      ref.current.position.y = THREE.MathUtils.damp(ref.current.position.y, lg * 0.8, 3, d)
     }
   })
 
