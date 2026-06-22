@@ -461,13 +461,12 @@ function Fluid({ shared }) {
     if (ref.current) {
       const lg = uniforms.uLogo.value
       ref.current.visible = uniforms.uOpacity.value > 0.01
-      // gira devagar quando NÃO é logo; ao formar a logo VOLTA DE FRENTE (sem
-      // rotação acumulada) e centraliza em X → a quimera fica frontal, não torta
-      ref.current.rotation.y += dt * 0.03 * (1 - lg)
-      ref.current.rotation.y = THREE.MathUtils.damp(ref.current.rotation.y, 0, lg * 5, d)
+      // logo 100% ESTÁTICO: sem rotação de deriva — sempre de FRENTE e centralizado
+      // (a vida vem do brilho/deriva por-partícula no shader, não do giro do grupo)
+      ref.current.rotation.y = THREE.MathUtils.damp(ref.current.rotation.y, 0, 4, d)
       ref.current.position.x = THREE.MathUtils.damp(ref.current.position.x, 0, lg * 4, d)
-      // sobe e emoldura ao formar a logo (acima do rodapé)
-      ref.current.position.y = THREE.MathUtils.damp(ref.current.position.y, lg * 0.8, 3, d)
+      // altura emoldurada acima do rodapé (um pouco mais alta)
+      ref.current.position.y = THREE.MathUtils.damp(ref.current.position.y, lg * 0.95, 3, d)
     }
   })
 
