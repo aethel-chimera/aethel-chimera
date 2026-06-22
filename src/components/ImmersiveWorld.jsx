@@ -36,7 +36,8 @@ const ACTS = {
   planos:     { glass: 0.0,  fluid: 0.42, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#D9A38E') }, // rosé/cobre claro
   // clímax: as partículas se MONTAM na logo da Aethel (âmbar da marca)
   contato:    { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 1, camZ: 5.6, color: new THREE.Color('#E0A458') },
-  footer:     { glass: 0.0,  fluid: 0.9,  panels: 0.0, logo: 1, camZ: 6.2, color: new THREE.Color('#E0A458') },
+  // rodapé: MESMO ato do contato → o logo fica FIXO (não encolhe nem desloca no fim)
+  rodape:     { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 1, camZ: 5.6, color: new THREE.Color('#E0A458') },
 }
 const ORDER = Object.keys(ACTS)
 
@@ -331,7 +332,7 @@ void main(){
   p.xy += normalize(toM + 0.0001) * smoothstep(2.6, 0.0, d) * 1.3 * (1.0 - uLogo);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   // ao formar a logo, pontos MENORES → silhueta densa e nítida, sem estourar
-  gl_PointSize = uSize * (300.0 / -mv.z) * (0.6 + aRand*0.8) * (1.0 - uLogo*0.45);
+  gl_PointSize = uSize * (300.0 / -mv.z) * (0.6 + aRand*0.8) * (1.0 - uLogo*0.18);
   gl_Position = projectionMatrix * mv;
   vR = aRand;
   vX = gl_Position.x / gl_Position.w;
@@ -360,7 +361,7 @@ void main(){
   col = mix(col, amber, smoothstep(0.88, 1.0, vR) * 0.78);
   // ao formar a logo, converge para âmbar/champanhe (marca) e fica mais nítida
   col = mix(col, mix(warm, amber, step(0.5, vR)), uLogo * 0.8);
-  float brightness = 0.40 - uLogo * 0.08;
+  float brightness = 0.40 + uLogo * 0.24;
   // área de leitura (esquerda) com menos pó = ar minimalista; normaliza ao formar a logo
   float readMask = mix(mix(0.26, 1.0, smoothstep(-0.52, 0.04, vX)), 1.0, uLogo);
   gl_FragColor = vec4(col, a * uOpacity * brightness * readMask);
@@ -369,7 +370,7 @@ void main(){
 function Fluid({ shared }) {
   const ref = useRef()
   const logoReady = useRef(false)
-  const COUNT = 22000
+  const COUNT = 28000
   const { geo, uniforms } = useMemo(() => {
     const pos = new Float32Array(COUNT * 3)
     const rand = new Float32Array(COUNT)
@@ -435,7 +436,7 @@ function Fluid({ shared }) {
         const p = Math.floor(Math.random() * n) * 2
         arr[i * 3] = (pts[p] + (Math.random() - 0.5) - cx) * k
         arr[i * 3 + 1] = -(pts[p + 1] + (Math.random() - 0.5) - cy) * k
-        arr[i * 3 + 2] = (Math.random() - 0.5) * 0.3
+        arr[i * 3 + 2] = (Math.random() - 0.5) * 0.12
       }
       geo.attributes.aLogo.needsUpdate = true
       logoReady.current = true
@@ -529,14 +530,22 @@ function Panels({ shared }) {
       const vis = Math.pow(front, 1.5) * vFade
       m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * vis, 6, d)
       m.material.color.setScalar(0.62 + front * 0.6)
-      // ENTRADA "FOLHA": o card chega de borda esvoaçando e ABRE plano ao ficar
-      // de frente (rotação x de ~edge-on→0 + balanço; escala que "abre")
-      const open = THREE.MathUtils.smoothstep(front, 0.5, 0.97)
-      const flutter = 1 - open
-      m.rotation.x = flutter * 1.05 + Math.sin(t * 2.0 + i * 1.7) * flutter * 0.3
-      m.rotation.z = Math.sin(t * 1.6 + i * 1.1) * flutter * 0.32
-      const sc = 0.74 + open * 0.26
-      m.scale.set(3.7 * sc, 2.3 * sc, 1)
+      // CICLO "FOLHA": chega como folhinha (pequena, tombada, balançando da árvore)
+      // → CRESCE até o tamanho máximo de leitura ao ficar de frente
+      // → some encolhendo e tombando como folha caída ao sair.
+      const open = THREE.MathUtils.smoothstep(front, 0.46, 0.96) // 0=folha, 1=card pleno
+      const leaf = 1 - open
+      // rotação: deita plana ao abrir; tomba e balança quando é folha (amortecido)
+      const rxT = leaf * 1.15 + Math.sin(t * 1.5 + i * 1.7) * leaf * 0.35
+      const rzT = Math.sin(t * 1.15 + i * 1.1) * leaf * 0.4
+      m.rotation.x = THREE.MathUtils.damp(m.rotation.x, rxT, 5, d)
+      m.rotation.z = THREE.MathUtils.damp(m.rotation.z, rzT, 5, d)
+      // escala: folhinha (0.32) → tamanho máximo de leitura (1.0), suave
+      const scT = 0.32 + open * 0.68
+      m.scale.x = THREE.MathUtils.damp(m.scale.x, 3.7 * scT, 6, d)
+      m.scale.y = THREE.MathUtils.damp(m.scale.y, 2.3 * scT, 6, d)
+      // leve queda quando vira folha (cai da árvore); sobe ao ler
+      m.position.y = THREE.MathUtils.damp(m.position.y, layout[i].y - leaf * 0.45, 5, d)
       const edge = m.children[0]
       if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * vis * 0.9, 6, d)
     })

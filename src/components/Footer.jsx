@@ -22,7 +22,7 @@ function BrasiliaClock() {
 
 export default function Footer() {
   return (
-    <footer id="rodape" className="relative z-[3] bg-obsidian-deep rounded-t-[3rem] mt-12 px-5 md:px-10 pt-20 pb-10">
+    <footer id="rodape" className="relative z-[3] bg-gradient-to-b from-obsidian-deep/45 via-obsidian-deep/85 to-obsidian-deep rounded-t-[3rem] mt-12 px-5 md:px-10 pt-20 pb-10">
       <div className="grid md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-12 mb-20">
         <div>
           <img src="/logo-white.png" alt="Aethel Chimera" className="h-28 w-auto mb-6" loading="lazy" />
