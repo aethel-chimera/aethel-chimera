@@ -1,12 +1,6 @@
-import { Suspense, useEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import {
-  MeshTransmissionMaterial,
-  Environment,
-  Lightformer,
-  Float,
-  useTexture,
-} from '@react-three/drei'
+import { Environment, Lightformer, useTexture } from '@react-three/drei'
 import { CATALOG } from '../data'
 import { bus } from '../scrollBus'
 import {
@@ -46,53 +40,143 @@ const ACTS = {
 }
 const ORDER = Object.keys(ACTS)
 
-// ---- Ato 1: organismo de vidro ----
-function Glass({ shared }) {
-  const ref = useRef()
+// ---- Ato 1: REDE NEURAL / ECOSSISTEMA DIGITAL ----
+// Nós (canais: site, tráfego, conteúdo, CRM...) conectados por arestas com
+// pacotes de DADOS pulsando pelas conexões. Tech, complexo e ligado a marketing.
+const NET_VERT = /* glsl */ `
+uniform float uTime;
+attribute float aProg;
+attribute float aSeed;
+varying float vProg;
+varying float vSeed;
+void main(){
+  vProg = aProg; vSeed = aSeed;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`
+const NET_FRAG = /* glsl */ `
+precision highp float;
+uniform vec3 uColor;
+uniform float uOpacity;
+uniform float uTime;
+varying float vProg;
+varying float vSeed;
+void main(){
+  // pacote de dados viajando pela aresta
+  float p = fract(uTime * 0.32 + vSeed);
+  float pulse = smoothstep(0.16, 0.0, abs(vProg - p));
+  float base = 0.26;
+  vec3 col = uColor * (base + pulse * 1.9);
+  gl_FragColor = vec4(col, uOpacity * (base * 0.9 + pulse));
+}
+`
+
+function NodeNetwork({ shared }) {
   const grp = useRef()
-  useFrame((_, dt) => {
-    const w = shared.current.glass
-    if (grp.current) {
-      grp.current.visible = w > 0.02
-      const s = 0.2 + w * 1.0
-      grp.current.scale.setScalar(s)
+  const inst = useRef()
+  const tmp = useMemo(() => new THREE.Color(), [])
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+
+  const { nodes, sizes, lineGeo, uniforms } = useMemo(() => {
+    const N = 58
+    const R = 1.55
+    const GOLD = Math.PI * (1 + Math.sqrt(5))
+    const nodes = []
+    const sizes = []
+    for (let i = 0; i < N; i++) {
+      const phi = Math.acos(1 - (2 * (i + 0.5)) / N)
+      const theta = GOLD * i
+      const r = R * (0.9 + Math.random() * 0.18)
+      nodes.push(new THREE.Vector3(r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(theta)))
+      sizes.push(0.5 + Math.random() * 0.7)
     }
-    const m = ref.current
-    if (!m) return
+    // nós internos (hubs) — dão profundidade e densidade
+    for (let k = 0; k < 7; k++) {
+      nodes.push(new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(1.0))
+      sizes.push(1.4 + Math.random() * 0.7)
+    }
+    // arestas: 3 vizinhos mais próximos de cada nó (malha tipo "data-globe")
+    const edges = new Set()
+    nodes.forEach((a, i) => {
+      const near = nodes
+        .map((b, j) => [j, a.distanceToSquared(b)])
+        .filter(([j]) => j !== i)
+        .sort((p, q) => p[1] - q[1])
+      for (let n = 0; n < 3; n++) {
+        const j = near[n][0]
+        edges.add(i < j ? `${i}_${j}` : `${j}_${i}`)
+      }
+    })
+    const pos = []
+    const prog = []
+    const seed = []
+    edges.forEach((e) => {
+      const [i, j] = e.split('_').map(Number)
+      const a = nodes[i]
+      const b = nodes[j]
+      pos.push(a.x, a.y, a.z, b.x, b.y, b.z)
+      prog.push(0, 1)
+      const s = Math.random()
+      seed.push(s, s)
+    })
+    const lineGeo = new THREE.BufferGeometry()
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    lineGeo.setAttribute('aProg', new THREE.Float32BufferAttribute(prog, 1))
+    lineGeo.setAttribute('aSeed', new THREE.Float32BufferAttribute(seed, 1))
+    const uniforms = { uTime: { value: 0 }, uColor: { value: new THREE.Color('#E0A458') }, uOpacity: { value: 0 } }
+    return { nodes, sizes, lineGeo, uniforms }
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!inst.current) return
+    nodes.forEach((p, i) => {
+      dummy.position.copy(p)
+      dummy.scale.setScalar(0.04 * sizes[i])
+      dummy.updateMatrix()
+      inst.current.setMatrixAt(i, dummy.matrix)
+    })
+    inst.current.instanceMatrix.needsUpdate = true
+  }, [nodes, sizes, dummy])
+
+  useFrame((_, dt) => {
+    if (!grp.current) return
     const d = Math.min(dt, 0.1)
-    m.rotation.y += dt * 0.12
-    m.rotation.x = THREE.MathUtils.damp(m.rotation.x, -shared.current.my * 0.35, 4, d)
-    m.position.x = THREE.MathUtils.damp(m.position.x, shared.current.mx * 0.4, 4, d)
+    const w = shared.current.glass // reaproveita o peso de cena do antigo "vidro"
+    grp.current.visible = w > 0.02
+    grp.current.scale.setScalar(0.35 + w * 1.05)
+    grp.current.rotation.y += dt * 0.09
+    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.32, 3, d)
+    grp.current.rotation.z = THREE.MathUtils.damp(grp.current.rotation.z, shared.current.mx * 0.22, 3, d)
+    uniforms.uTime.value += dt
+    tmp.copy(shared.current.color)
+    uniforms.uColor.value.copy(tmp)
+    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w, 4, d)
+    if (inst.current) {
+      inst.current.material.opacity = THREE.MathUtils.damp(inst.current.material.opacity, w, 4, d)
+      inst.current.material.emissive.copy(tmp).multiplyScalar(1.0)
+    }
   })
+
   return (
     <group ref={grp}>
-      <Float speed={1.4} rotationIntensity={0.5} floatIntensity={0.7}>
-        <mesh ref={ref}>
-          <icosahedronGeometry args={[1.55, 6]} />
-          <MeshTransmissionMaterial
-            samples={4}
-            resolution={256}
-            transmission={1}
-            thickness={1.4}
-            roughness={0.08}
-            ior={1.42}
-            chromaticAberration={0.7}
-            anisotropy={0.3}
-            distortion={0.4}
-            distortionScale={0.5}
-            temporalDistortion={0.15}
-            iridescence={1}
-            iridescenceIOR={1.3}
-            iridescenceThicknessRange={[120, 520]}
-            color="#cdb79a"
-            attenuationColor="#E0A458"
-            attenuationDistance={1.8}
-            clearcoat={1}
-            clearcoatRoughness={0.12}
-            background={new THREE.Color('#07070b')}
-          />
-        </mesh>
-      </Float>
+      <lineSegments geometry={lineGeo}>
+        <shaderMaterial
+          args={[
+            {
+              vertexShader: NET_VERT,
+              fragmentShader: NET_FRAG,
+              uniforms,
+              transparent: true,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending,
+            },
+          ]}
+        />
+      </lineSegments>
+      <instancedMesh ref={inst} args={[null, null, nodes.length]}>
+        <icosahedronGeometry args={[1, 1]} />
+        <meshStandardMaterial color="#0d0d12" emissive="#E0A458" emissiveIntensity={1.5} transparent opacity={0} toneMapped={false} />
+      </instancedMesh>
     </group>
   )
 }
@@ -462,7 +546,7 @@ export default function ImmersiveWorld() {
         <directionalLight position={[-5, -2, -4]} intensity={0.7} color="#6a7bd6" />
         <Studio />
         <Director shared={shared} target={target} />
-        <Glass shared={shared} />
+        <NodeNetwork shared={shared} />
         <Fluid shared={shared} />
         <Spine shared={shared} />
         <Suspense fallback={null}>
