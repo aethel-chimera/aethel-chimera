@@ -27,6 +27,9 @@ function useShown() {
 const fmt = (v, unit = '') =>
   (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ',')) + unit
 
+// cor distinta por métrica (premium, alto contraste) — facilita ler cada barra
+const DIAG_COLORS = ['#3DDC97', '#7FB2E8', '#E2A6C0', '#E0A458', '#C58BD6']
+
 function Diagnostic({ chart, shown }) {
   return (
     <div className="space-y-5">
@@ -34,20 +37,28 @@ function Diagnostic({ chart, shown }) {
         const max = it.scaleMax || 100
         const atualW = Math.min(100, (it.atual / max) * 100)
         const metaW = Math.min(100, (it.meta / max) * 100)
+        const c = DIAG_COLORS[i % DIAG_COLORS.length]
         return (
           <div key={it.label}>
             <div className="flex justify-between items-baseline mb-2">
-              <span className="mono-label text-[0.6rem] text-titanium/80">{it.label}</span>
-              <span className="font-mono text-[0.62rem]">
-                <span className="text-titanium/55">{fmt(it.atual, it.unit)}</span>
-                <span className="text-titanium/30 mx-1.5">→</span>
+              <span className="mono-label text-[0.62rem] flex items-center gap-1.5 text-ivory/90">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
+                {it.label}
+              </span>
+              <span className="font-mono text-[0.64rem]">
+                <span style={{ color: c }}>{fmt(it.atual, it.unit)}</span>
+                <span className="text-titanium/45 mx-1.5">→</span>
                 <span className="text-amber">meta {fmt(it.meta, it.unit)}</span>
               </span>
             </div>
-            <div className="relative h-2.5 rounded-full bg-ivory/[0.07] overflow-hidden">
+            <div className="relative h-2.5 rounded-full bg-ivory/[0.08] overflow-hidden">
               <div
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-titanium/30 to-titanium/55 transition-[width] duration-[1100ms] ease-out"
-                style={{ width: shown ? `${atualW}%` : '0%', transitionDelay: `${i * 90}ms` }}
+                className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-[1100ms] ease-out"
+                style={{
+                  width: shown ? `${atualW}%` : '0%',
+                  transitionDelay: `${i * 90}ms`,
+                  background: `linear-gradient(90deg, ${c}55, ${c})`,
+                }}
               />
             </div>
             <div className="relative">

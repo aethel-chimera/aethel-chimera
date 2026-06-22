@@ -16,6 +16,7 @@ import Manifesto from './components/Manifesto'
 import Services from './components/Services'
 import Catalog from './components/Catalog'
 import Process from './components/Process'
+import RoiDashboard from './components/RoiDashboard'
 import Results from './components/Results'
 import Plans from './components/Plans'
 import FinalCTA from './components/FinalCTA'
@@ -108,6 +109,7 @@ export default function App() {
         <Services reducedMotion={reducedMotion} />
         <Catalog reducedMotion={reducedMotion} onOpenProject={setDetail} />
         <Process reducedMotion={reducedMotion} />
+        <RoiDashboard />
         <Results reducedMotion={reducedMotion} />
         <Plans />
         <FinalCTA reducedMotion={reducedMotion} />

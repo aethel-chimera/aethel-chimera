@@ -406,6 +406,39 @@ button:focus-visible {
 }
 .at-panel:hover .panel-media::after { opacity: 1; }
 
+/* slider da calculadora de retorno (ROI) */
+.roi-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(224, 164, 88, 0.55), rgba(61, 220, 151, 0.55));
+  outline: none;
+  cursor: pointer;
+}
+.roi-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ivory, #f4f2ec);
+  border: 3px solid var(--amber, #e0a458);
+  box-shadow: 0 0 0 4px rgba(224, 164, 88, 0.18), 0 2px 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease;
+}
+.roi-range::-webkit-slider-thumb:hover { transform: scale(1.12); }
+.roi-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ivory, #f4f2ec);
+  border: 3px solid var(--amber, #e0a458);
+  box-shadow: 0 0 0 4px rgba(224, 164, 88, 0.18);
+  cursor: pointer;
+}
+.roi-range:focus-visible { box-shadow: 0 0 0 3px rgba(61, 220, 151, 0.4); }
+
 /* grade técnica de fundo (sutil, reativa ao tema) */
 /* fundo imersivo: aurora suave que respira nas cores da marca (âmbar +
    verde-sinal), no lugar da antiga grade quadriculada */
