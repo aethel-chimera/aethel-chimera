@@ -108,10 +108,11 @@ void main(){
   float around = vUv.x * 6.2831;
   float shade = 0.5 + 0.5 * (0.5 + 0.5 * cos(around - 1.1));
   vec3 col = mix(uColorA, uColorB, vH);
-  // poeira/glitter cintilando na superfície
+  // poeira/glitter CONTÍNUO (cada grão pulsa suave, sem degraus = sem travar)
   vec2 cell = floor(vUv * vec2(38.0, 240.0));
-  float tw = hash(cell + floor(uTime * 3.0));
-  float sparkle = smoothstep(0.86, 1.0, tw) * uSparkle;
+  float ph = hash(cell) * 6.2831;
+  float tw = 0.5 + 0.5 * sin(uTime * 3.5 + ph);
+  float sparkle = smoothstep(0.72, 1.0, tw) * uSparkle;
   // seiva/luz subindo
   float flow = smoothstep(0.12, 0.0, abs(fract(vH * 3.0 - uTime * 0.22) - 0.5));
   float b = (0.55 + uHover * 0.5) * shade + flow * 0.5;
@@ -251,7 +252,7 @@ function DnaHelix({ shared }) {
     const w = shared.current.glass // reaproveita o peso de cena do antigo "vidro"
     grp.current.visible = w > 0.02
     grp.current.scale.setScalar(0.32 + w * 0.78)
-    grp.current.rotation.y += dt * 0.2
+    grp.current.rotation.y += dt * 0.32
     grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.28, 3, d)
     grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, shared.current.mx * 0.28, 3, d)
 
@@ -461,6 +462,9 @@ function Fluid({ shared }) {
       ref.current.visible = uniforms.uOpacity.value > 0.01
       // quase não gira quando está formando a logo (mantém legível)
       ref.current.rotation.y += dt * 0.03 * (1 - uniforms.uLogo.value)
+      // ao formar a logo, SOBE o conjunto → a quimera fica emoldurada acima do
+      // rodapé (não desce para baixo da parte preta no fim da página)
+      ref.current.position.y = THREE.MathUtils.damp(ref.current.position.y, uniforms.uLogo.value * 1.05, 3, d)
     }
   })
 
@@ -530,22 +534,22 @@ function Panels({ shared }) {
       const vis = Math.pow(front, 1.5) * vFade
       m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * vis, 6, d)
       m.material.color.setScalar(0.62 + front * 0.6)
-      // CICLO "FOLHA": chega como folhinha (pequena, tombada, balançando da árvore)
-      // → CRESCE até o tamanho máximo de leitura ao ficar de frente
-      // → some encolhendo e tombando como folha caída ao sair.
-      const open = THREE.MathUtils.smoothstep(front, 0.46, 0.96) // 0=folha, 1=card pleno
+      // CICLO "PÉTALA→CARD→FOLHA CAÍDA" (bem visível):
+      // chega como PÉTALA minúscula e tombada → CRESCE até o tamanho de leitura
+      // de frente → encolhe e TOMBA como folha caída ao sair.
+      const open = THREE.MathUtils.smoothstep(front, 0.32, 0.9) // 0=pétala, 1=card pleno
       const leaf = 1 - open
-      // rotação: deita plana ao abrir; tomba e balança quando é folha (amortecido)
-      const rxT = leaf * 1.15 + Math.sin(t * 1.5 + i * 1.7) * leaf * 0.35
-      const rzT = Math.sin(t * 1.15 + i * 1.1) * leaf * 0.4
-      m.rotation.x = THREE.MathUtils.damp(m.rotation.x, rxT, 5, d)
-      m.rotation.z = THREE.MathUtils.damp(m.rotation.z, rzT, 5, d)
-      // escala: folhinha (0.32) → tamanho máximo de leitura (1.0), suave
-      const scT = 0.32 + open * 0.68
-      m.scale.x = THREE.MathUtils.damp(m.scale.x, 3.7 * scT, 6, d)
-      m.scale.y = THREE.MathUtils.damp(m.scale.y, 2.3 * scT, 6, d)
-      // leve queda quando vira folha (cai da árvore); sobe ao ler
-      m.position.y = THREE.MathUtils.damp(m.position.y, layout[i].y - leaf * 0.45, 5, d)
+      // rotação: deita plana ao abrir; muito tombada/girando quando é pétala
+      const rxT = leaf * 1.5 + Math.sin(t * 1.6 + i * 1.7) * leaf * 0.5
+      const rzT = (leaf * 0.6 + Math.sin(t * 1.2 + i * 1.1) * 0.45) * leaf
+      m.rotation.x = THREE.MathUtils.damp(m.rotation.x, rxT, 7, d)
+      m.rotation.z = THREE.MathUtils.damp(m.rotation.z, rzT, 7, d)
+      // escala: PÉTALA minúscula (0.14) → tamanho máximo de leitura (1.0)
+      const scT = 0.14 + open * 0.86
+      m.scale.x = THREE.MathUtils.damp(m.scale.x, 3.7 * scT, 8, d)
+      m.scale.y = THREE.MathUtils.damp(m.scale.y, 2.3 * scT, 8, d)
+      // queda quando vira folha (cai da árvore); sobe ao centralizar para leitura
+      m.position.y = THREE.MathUtils.damp(m.position.y, layout[i].y - leaf * 0.7, 6, d)
       const edge = m.children[0]
       if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * vis * 0.9, 6, d)
     })
