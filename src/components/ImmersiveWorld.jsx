@@ -44,11 +44,12 @@ const ORDER = Object.keys(ACTS)
 // Partículas vivas (motes + poeira/nebulosa) com transições de cor COESAS
 // (estilo Dogstudio): um gradiente que cicla por tons-joia e reage ao hover.
 // Sem RGB genérico — a cor vem da paleta, não de aberração cromática.
-const DNA_PALETTE = ['#3DDC97', '#2FB8C8', '#3A6BE0', '#7A4BD0', '#C84AA0', '#E0A458', '#E8C36B'].map(
+const DNA_PALETTE = ['#6A2CD0', '#9A2FD0', '#C840A0', '#B83BC8', '#7A3BD9', '#5544C0'].map(
   (c) => new THREE.Color(c)
 )
-const DNA_HOT_A = new THREE.Color('#E0A458')
-const DNA_HOT_B = new THREE.Color('#C84AA0')
+const DNA_HOT_A = new THREE.Color('#E8A24E') // âmbar/ouro
+const DNA_HOT_B = new THREE.Color('#C840A0') // magenta
+const DNA_RUNG = new THREE.Color('#E8A24E') // degraus dourados (como na referência)
 
 // motes suaves (núcleo + halo difuso), com hover por proximidade do cursor (tela)
 const DNA_PTS_VERT = /* glsl */ `
@@ -85,24 +86,36 @@ void main(){
   gl_FragColor = vec4(col, a * uOpacity * uAlpha * (0.5 + vHover));
 }
 `
-// filamentos (fitas/degraus): gradiente coeso + seiva sutil subindo
-const DNA_LINE_VERT = /* glsl */ `
+// TUBOS GROSSOS (fitas + degraus): volume 3D + poeira cintilante + seiva.
+// vH = altura (gradiente), uv = coordenada do tubo (u em volta, v ao longo).
+const TUBE_VERT = /* glsl */ `
+uniform float uTime;
 attribute float aH;
-varying float vH;
+varying float vH; varying vec2 vUv; varying float vY;
 void main(){
-  vH = aH;
+  vH = aH; vUv = uv; vY = position.y;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `
-const DNA_LINE_FRAG = /* glsl */ `
+const TUBE_FRAG = /* glsl */ `
 precision highp float;
-uniform vec3 uColorA; uniform vec3 uColorB; uniform float uOpacity; uniform float uTime;
-varying float vH;
+uniform vec3 uColorA; uniform vec3 uColorB; uniform float uOpacity; uniform float uTime; uniform float uHover; uniform float uSparkle;
+varying float vH; varying vec2 vUv; varying float vY;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
 void main(){
+  // volume: lado iluminado/sombreado ao redor do tubo
+  float around = vUv.x * 6.2831;
+  float shade = 0.5 + 0.5 * (0.5 + 0.5 * cos(around - 1.1));
   vec3 col = mix(uColorA, uColorB, vH);
-  float flow = smoothstep(0.5, 0.0, abs(fract(vH * 3.0 - uTime * 0.3) - 0.5));
-  col *= 0.45 + flow * 1.1;
-  gl_FragColor = vec4(col, uOpacity * 0.45);
+  // poeira/glitter cintilando na superfície
+  vec2 cell = floor(vUv * vec2(38.0, 240.0));
+  float tw = hash(cell + floor(uTime * 3.0));
+  float sparkle = smoothstep(0.86, 1.0, tw) * uSparkle;
+  // seiva/luz subindo
+  float flow = smoothstep(0.12, 0.0, abs(fract(vH * 3.0 - uTime * 0.22) - 0.5));
+  float b = (0.55 + uHover * 0.5) * shade + flow * 0.5;
+  vec3 outc = col * b + vec3(1.0, 0.88, 0.62) * sparkle * 0.9; // brilho quente nos grãos
+  gl_FragColor = vec4(outc, uOpacity * (0.82 + sparkle + flow * 0.25));
 }
 `
 
@@ -113,8 +126,10 @@ function DnaHelix({ shared }) {
   const c1 = useMemo(() => new THREE.Color(), [])
   const c2 = useMemo(() => new THREE.Color(), [])
   const ctr = useMemo(() => new THREE.Vector3(), [])
+  const beads = useRef()
+  const dummy = useMemo(() => new THREE.Object3D(), [])
 
-  const { nodeGeo, dustGeo, lineGeo, U, nodeU, dustU, lineU } = useMemo(() => {
+  const { strandGeo, rungGeo, dustGeo, beadPos, U, strandU, rungU, dustU } = useMemo(() => {
     const LEVELS = 24
     const R = 1.05
     const STEP = 0.3
@@ -123,10 +138,7 @@ function DnaHelix({ shared }) {
     const hOf = (y) => (y + yMax) / (2 * yMax)
     const A = []
     const B = []
-    const nPos = []
-    const nH = []
-    const nSize = []
-    const nRand = []
+    const beadPos = []
     for (let i = 0; i < LEVELS; i++) {
       const ang = i * TWIST
       const y = (i - (LEVELS - 1) / 2) * STEP
@@ -134,21 +146,33 @@ function DnaHelix({ shared }) {
       const b = new THREE.Vector3(Math.cos(ang + Math.PI) * R, y, Math.sin(ang + Math.PI) * R)
       A.push(a)
       B.push(b)
-      ;[a, b].forEach((p, k) => {
-        nPos.push(p.x, p.y, p.z)
-        nH.push(hOf(p.y))
-        nSize.push(k === 0 ? 1.5 : 1.2)
-        nRand.push(Math.random())
-      })
+      beadPos.push(a, b)
     }
-    const nodeGeo = new THREE.BufferGeometry()
-    nodeGeo.setAttribute('position', new THREE.Float32BufferAttribute(nPos, 3))
-    nodeGeo.setAttribute('aH', new THREE.Float32BufferAttribute(nH, 1))
-    nodeGeo.setAttribute('aSize', new THREE.Float32BufferAttribute(nSize, 1))
-    nodeGeo.setAttribute('aRand', new THREE.Float32BufferAttribute(nRand, 1))
+    // tubo com atributo de ALTURA (aH) p/ o gradiente de cor
+    const tubeH = (curve, segs, rad, radial) => {
+      const g = new THREE.TubeGeometry(curve, segs, rad, radial, false)
+      const pos = g.attributes.position
+      const h = new Float32Array(pos.count)
+      for (let i = 0; i < pos.count; i++) h[i] = hOf(pos.getY(i))
+      g.setAttribute('aH', new THREE.BufferAttribute(h, 1))
+      return g
+    }
+    // FITAS grossas (backbone) — duas hélices sólidas
+    const curveA = new THREE.CatmullRomCurve3(A)
+    const curveB = new THREE.CatmullRomCurve3(B)
+    const strandGeo = mergeGeometries(
+      [tubeH(curveA, LEVELS * 8, 0.14, 14), tubeH(curveB, LEVELS * 8, 0.14, 14)],
+      false
+    )
+    // DEGRAUS grossos (pares de base) — barras douradas como na referência
+    const rungs = []
+    for (let i = 0; i < LEVELS; i++) {
+      rungs.push(tubeH(new THREE.LineCurve3(A[i].clone(), B[i].clone()), 1, 0.05, 8))
+    }
+    const rungGeo = mergeGeometries(rungs, false)
 
-    // poeira orgânica ao redor das fitas (nebulosa) — densa, dá vida e realismo
-    const DUST = 3600
+    // poeira/glitter ao redor das fitas (nebulosa) — densa
+    const DUST = 3200
     const dPos = []
     const dH = []
     const dSize = []
@@ -158,8 +182,8 @@ function DnaHelix({ shared }) {
       const strand = Math.random() < 0.5 ? 0 : Math.PI
       const ang = lvl * TWIST + strand
       const y = (lvl - (LEVELS - 1) / 2) * STEP
-      const rr = R + (Math.random() - 0.5) * 0.4
-      const jit = 0.22
+      const rr = R + (Math.random() - 0.5) * 0.5
+      const jit = 0.26
       dPos.push(
         Math.cos(ang) * rr + (Math.random() - 0.5) * jit,
         y + (Math.random() - 0.5) * jit,
@@ -175,38 +199,45 @@ function DnaHelix({ shared }) {
     dustGeo.setAttribute('aSize', new THREE.Float32BufferAttribute(dSize, 1))
     dustGeo.setAttribute('aRand', new THREE.Float32BufferAttribute(dRand, 1))
 
-    // linhas: degraus (pares de base) + as duas fitas (backbone), com altura p/ gradiente
-    const lPos = []
-    const lH = []
-    const push = (a, b) => {
-      lPos.push(a.x, a.y, a.z, b.x, b.y, b.z)
-      lH.push(hOf(a.y), hOf(b.y))
-    }
-    for (let i = 0; i < LEVELS; i++) {
-      push(A[i], B[i])
-      if (i > 0) {
-        push(A[i - 1], A[i])
-        push(B[i - 1], B[i])
-      }
-    }
-    const lineGeo = new THREE.BufferGeometry()
-    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(lPos, 3))
-    lineGeo.setAttribute('aH', new THREE.Float32BufferAttribute(lH, 1))
-
-    // uniforms compartilhados por referência (cor/tempo iguais em motes, poeira e linhas)
+    // uniforms — cor/tempo compartilhados por referência
     const U = {
       uTime: { value: 0 },
-      uColorA: { value: new THREE.Color('#3DDC97') },
-      uColorB: { value: new THREE.Color('#3A6BE0') },
+      uColorA: { value: new THREE.Color('#6A2CD0') },
+      uColorB: { value: new THREE.Color('#C840A0') },
       uOpacity: { value: 0 },
       uMouse: { value: new THREE.Vector2() },
       uHover: { value: 0 },
     }
-    const nodeU = { ...U, uSize: { value: 0.5 }, uAlpha: { value: 1.0 } }
-    const dustU = { ...U, uSize: { value: 0.16 }, uAlpha: { value: 0.5 } }
-    const lineU = { uTime: U.uTime, uColorA: U.uColorA, uColorB: U.uColorB, uOpacity: U.uOpacity }
-    return { nodeGeo, dustGeo, lineGeo, U, nodeU, dustU, lineU }
+    const strandU = {
+      uTime: U.uTime,
+      uColorA: U.uColorA,
+      uColorB: U.uColorB,
+      uOpacity: U.uOpacity,
+      uHover: U.uHover,
+      uSparkle: { value: 1.0 },
+    }
+    const rungU = {
+      uTime: U.uTime,
+      uColorA: { value: DNA_RUNG.clone() },
+      uColorB: { value: DNA_RUNG.clone() },
+      uOpacity: U.uOpacity,
+      uHover: U.uHover,
+      uSparkle: { value: 1.5 },
+    }
+    const dustU = { ...U, uSize: { value: 0.15 }, uAlpha: { value: 0.5 } }
+    return { strandGeo, rungGeo, dustGeo, beadPos, U, strandU, rungU, dustU }
   }, [])
+
+  useLayoutEffect(() => {
+    if (!beads.current) return
+    beadPos.forEach((p, i) => {
+      dummy.position.copy(p)
+      dummy.scale.setScalar(0.05 + Math.random() * 0.05)
+      dummy.updateMatrix()
+      beads.current.setMatrixAt(i, dummy.matrix)
+    })
+    beads.current.instanceMatrix.needsUpdate = true
+  }, [beadPos, dummy])
 
   useFrame((state, dt) => {
     if (!grp.current) return
@@ -243,25 +274,35 @@ function DnaHelix({ shared }) {
     const k = 1 - Math.exp(-3 * d)
     U.uColorA.value.lerp(tmpA, k)
     U.uColorB.value.lerp(tmpB, k)
+
+    // contas douradas acendem com o hover
+    if (beads.current) {
+      beads.current.material.opacity = THREE.MathUtils.damp(beads.current.material.opacity, w, 4, d)
+      beads.current.material.color.copy(DNA_RUNG).multiplyScalar(0.8 + U.uHover.value * 1.6)
+    }
   })
 
   return (
     <group ref={grp}>
-      <lineSegments geometry={lineGeo}>
-        <shaderMaterial
-          args={[{ vertexShader: DNA_LINE_VERT, fragmentShader: DNA_LINE_FRAG, uniforms: lineU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
-        />
-      </lineSegments>
+      {/* fitas grossas (backbone) — sólidas, com poeira cintilante */}
+      <mesh geometry={strandGeo}>
+        <shaderMaterial args={[{ vertexShader: TUBE_VERT, fragmentShader: TUBE_FRAG, uniforms: strandU, transparent: true }]} />
+      </mesh>
+      {/* degraus dourados grossos (pares de base) */}
+      <mesh geometry={rungGeo}>
+        <shaderMaterial args={[{ vertexShader: TUBE_VERT, fragmentShader: TUBE_FRAG, uniforms: rungU, transparent: true }]} />
+      </mesh>
+      {/* poeira/nebulosa */}
       <points geometry={dustGeo}>
         <shaderMaterial
           args={[{ vertexShader: DNA_PTS_VERT, fragmentShader: DNA_PTS_FRAG, uniforms: dustU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
         />
       </points>
-      <points geometry={nodeGeo}>
-        <shaderMaterial
-          args={[{ vertexShader: DNA_PTS_VERT, fragmentShader: DNA_PTS_FRAG, uniforms: nodeU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
-        />
-      </points>
+      {/* contas douradas nos nós das fitas */}
+      <instancedMesh ref={beads} args={[null, null, beadPos.length]}>
+        <sphereGeometry args={[1, 12, 12]} />
+        <meshBasicMaterial color="#E8A24E" transparent opacity={0} toneMapped={false} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </instancedMesh>
     </group>
   )
 }
