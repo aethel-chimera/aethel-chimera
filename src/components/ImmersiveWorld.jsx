@@ -71,49 +71,45 @@ void main(){
 }
 `
 
-function NodeNetwork({ shared }) {
+function DnaHelix({ shared }) {
   const grp = useRef()
   const inst = useRef()
   const tmp = useMemo(() => new THREE.Color(), [])
+  const tmpV = useMemo(() => new THREE.Vector3(), [])
   const dummy = useMemo(() => new THREE.Object3D(), [])
 
   const { nodes, sizes, lineGeo, uniforms } = useMemo(() => {
-    const N = 58
-    const R = 1.55
-    const GOLD = Math.PI * (1 + Math.sqrt(5))
+    const LEVELS = 24
+    const R = 1.05
+    const STEP = 0.3
+    const TWIST = 0.5
     const nodes = []
     const sizes = []
-    for (let i = 0; i < N; i++) {
-      const phi = Math.acos(1 - (2 * (i + 0.5)) / N)
-      const theta = GOLD * i
-      const r = R * (0.9 + Math.random() * 0.18)
-      nodes.push(new THREE.Vector3(r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(theta)))
-      sizes.push(0.5 + Math.random() * 0.7)
+    const A = []
+    const B = []
+    for (let i = 0; i < LEVELS; i++) {
+      const ang = i * TWIST
+      const y = (i - (LEVELS - 1) / 2) * STEP
+      const a = new THREE.Vector3(Math.cos(ang) * R, y, Math.sin(ang) * R)
+      const b = new THREE.Vector3(Math.cos(ang + Math.PI) * R, y, Math.sin(ang + Math.PI) * R)
+      A.push(a)
+      B.push(b)
+      nodes.push(a); sizes.push(1.0)
+      nodes.push(b); sizes.push(0.86)
     }
-    // nós internos (hubs) — dão profundidade e densidade
-    for (let k = 0; k < 7; k++) {
-      nodes.push(new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(1.0))
-      sizes.push(1.4 + Math.random() * 0.7)
-    }
-    // arestas: 3 vizinhos mais próximos de cada nó (malha tipo "data-globe")
-    const edges = new Set()
-    nodes.forEach((a, i) => {
-      const near = nodes
-        .map((b, j) => [j, a.distanceToSquared(b)])
-        .filter(([j]) => j !== i)
-        .sort((p, q) => p[1] - q[1])
-      for (let n = 0; n < 3; n++) {
-        const j = near[n][0]
-        edges.add(i < j ? `${i}_${j}` : `${j}_${i}`)
+    // segmentos: degraus (pares de base) + as duas fitas (backbone helicoidal)
+    const segs = []
+    for (let i = 0; i < LEVELS; i++) {
+      segs.push([A[i], B[i]])
+      if (i > 0) {
+        segs.push([A[i - 1], A[i]])
+        segs.push([B[i - 1], B[i]])
       }
-    })
+    }
     const pos = []
     const prog = []
     const seed = []
-    edges.forEach((e) => {
-      const [i, j] = e.split('_').map(Number)
-      const a = nodes[i]
-      const b = nodes[j]
+    segs.forEach(([a, b]) => {
       pos.push(a.x, a.y, a.z, b.x, b.y, b.z)
       prog.push(0, 1)
       const s = Math.random()
@@ -131,30 +127,43 @@ function NodeNetwork({ shared }) {
     if (!inst.current) return
     nodes.forEach((p, i) => {
       dummy.position.copy(p)
-      dummy.scale.setScalar(0.04 * sizes[i])
+      dummy.scale.setScalar(0.058 * sizes[i])
       dummy.updateMatrix()
       inst.current.setMatrixAt(i, dummy.matrix)
+      inst.current.setColorAt(i, tmp.set('#E0A458'))
     })
     inst.current.instanceMatrix.needsUpdate = true
-  }, [nodes, sizes, dummy])
+    if (inst.current.instanceColor) inst.current.instanceColor.needsUpdate = true
+  }, [nodes, sizes, dummy, tmp])
 
-  useFrame((_, dt) => {
-    if (!grp.current) return
+  useFrame((state, dt) => {
+    if (!grp.current || !inst.current) return
     const d = Math.min(dt, 0.1)
     const w = shared.current.glass // reaproveita o peso de cena do antigo "vidro"
     grp.current.visible = w > 0.02
-    grp.current.scale.setScalar(0.35 + w * 1.05)
-    grp.current.rotation.y += dt * 0.09
-    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.32, 3, d)
-    grp.current.rotation.z = THREE.MathUtils.damp(grp.current.rotation.z, shared.current.mx * 0.22, 3, d)
+    grp.current.scale.setScalar(0.32 + w * 0.78)
+    grp.current.rotation.y += dt * 0.22
+    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.3, 3, d)
+    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, shared.current.mx * 0.28, 3, d)
+
     uniforms.uTime.value += dt
-    tmp.copy(shared.current.color)
-    uniforms.uColor.value.copy(tmp)
+    uniforms.uColor.value.copy(shared.current.color)
     uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w, 4, d)
-    if (inst.current) {
-      inst.current.material.opacity = THREE.MathUtils.damp(inst.current.material.opacity, w, 4, d)
-      inst.current.material.emissive.copy(tmp).multiplyScalar(1.0)
+    inst.current.material.opacity = THREE.MathUtils.damp(inst.current.material.opacity, w, 4, d)
+
+    // HOVER REATIVO: nós perto do cursor acendem como neurônios (o "cérebro")
+    grp.current.updateWorldMatrix(true, false)
+    const cam = state.camera
+    const mx = shared.current.mx
+    const my = -shared.current.my // NDC y aponta para cima
+    for (let i = 0; i < nodes.length; i++) {
+      tmpV.copy(nodes[i]).applyMatrix4(grp.current.matrixWorld).project(cam)
+      const dist = Math.hypot(tmpV.x - mx, tmpV.y - my)
+      const glow = 0.85 + THREE.MathUtils.smoothstep(0.34, 0.0, dist) * 3.2
+      tmp.copy(shared.current.color).multiplyScalar(glow)
+      inst.current.setColorAt(i, tmp)
     }
+    if (inst.current.instanceColor) inst.current.instanceColor.needsUpdate = true
   })
 
   return (
@@ -174,8 +183,8 @@ function NodeNetwork({ shared }) {
         />
       </lineSegments>
       <instancedMesh ref={inst} args={[null, null, nodes.length]}>
-        <icosahedronGeometry args={[1, 1]} />
-        <meshStandardMaterial color="#0d0d12" emissive="#E0A458" emissiveIntensity={1.5} transparent opacity={0} toneMapped={false} />
+        <sphereGeometry args={[1, 24, 24]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0} toneMapped={false} blending={THREE.AdditiveBlending} depthWrite={false} />
       </instancedMesh>
     </group>
   )
@@ -535,7 +544,7 @@ export default function ImmersiveWorld() {
     <div className="fixed inset-0 z-[0]" aria-hidden="true">
       <Canvas
         camera={{ position: [0, 0, 6], fov: 42 }}
-        dpr={[1, 1.5]}
+        dpr={[1, 2]}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         onCreated={() => window.dispatchEvent(new Event('chimera:ready'))}
       >
@@ -546,15 +555,15 @@ export default function ImmersiveWorld() {
         <directionalLight position={[-5, -2, -4]} intensity={0.7} color="#6a7bd6" />
         <Studio />
         <Director shared={shared} target={target} />
-        <NodeNetwork shared={shared} />
+        <DnaHelix shared={shared} />
         <Fluid shared={shared} />
         <Spine shared={shared} />
         <Suspense fallback={null}>
           <Panels shared={shared} />
         </Suspense>
-        <EffectComposer multisampling={0}>
-          <Bloom intensity={0.65} luminanceThreshold={0.3} luminanceSmoothing={0.4} mipmapBlur />
-          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0016, 0.0018]} />
+        <EffectComposer multisampling={4}>
+          <Bloom intensity={0.7} luminanceThreshold={0.28} luminanceSmoothing={0.5} mipmapBlur />
+          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0009, 0.001]} />
           <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.45} />
           <Vignette eskil={false} offset={0.18} darkness={0.92} />
         </EffectComposer>
