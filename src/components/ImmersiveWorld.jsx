@@ -795,19 +795,20 @@ function Tree3D({ shared }) {
     branches.push(taperedTube(trunkA, 0.46, 0.26))
     branches.push(taperedTube(trunkB, 0.46, 0.26))
 
-    // COPA: do topo de cada fita do tronco, 4 boughs que ramificam para cima
+    // COPA: do topo de cada fita do tronco, 5 boughs que ramificam para cima
+    // (copa MAIOR e mais densa — é a estrela da árvore)
     ;[trunkA[trunkA.length - 1], trunkB[trunkB.length - 1]].forEach((top) => {
-      for (let i = 0; i < 4; i++) {
-        const nd = new THREE.Vector3(0, 1, 0).applyAxisAngle(randAxis(), 0.45 + Math.random() * 0.55).normalize()
-        grow(top, nd, 1.4, 0.2, 1, 1, 5, true)
+      for (let i = 0; i < 5; i++) {
+        const nd = new THREE.Vector3(0, 1, 0).applyAxisAngle(randAxis(), 0.45 + Math.random() * 0.6).normalize()
+        grow(top, nd, 1.7, 0.2, 1, 1, 5, true)
       }
     })
 
-    // RAÍZES: da junção para baixo, 6 raízes que se espalham e ramificam
+    // RAÍZES: da junção para baixo — CURTAS e compactas (base, não dominam a cena)
     for (let i = 0; i < 6; i++) {
       const ang = (i / 6) * Math.PI * 2 + 0.3
-      const nd = new THREE.Vector3(Math.cos(ang) * 0.8, -0.7, Math.sin(ang) * 0.8).normalize()
-      grow(JUNC, nd, 1.5, 0.22, 1, -1, 4, false)
+      const nd = new THREE.Vector3(Math.cos(ang) * 0.9, -0.6, Math.sin(ang) * 0.9).normalize()
+      grow(JUNC, nd, 0.8, 0.2, 1, -1, 3, false)
     }
 
     // FOLHAS da copa: 2 por ponta de galho, ancoradas com leve dispersão
@@ -856,6 +857,7 @@ function Tree3D({ shared }) {
     const w = shared.current.panels
     grp.current.visible = w > 0.02
     grp.current.scale.setScalar(0.6)
+    grp.current.position.y = -1.5 // desce o conjunto: copa entra no centro, raízes recuam p/ baixo
     grp.current.rotation.y += dt * 0.1
     uniforms.uTime.value += dt
     leafU.uTime.value += dt
