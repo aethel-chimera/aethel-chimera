@@ -147,8 +147,8 @@ function DnaHelix({ shared }) {
     nodeGeo.setAttribute('aSize', new THREE.Float32BufferAttribute(nSize, 1))
     nodeGeo.setAttribute('aRand', new THREE.Float32BufferAttribute(nRand, 1))
 
-    // poeira orgânica ao redor das fitas (nebulosa) — dá vida e realismo
-    const DUST = 1400
+    // poeira orgânica ao redor das fitas (nebulosa) — densa, dá vida e realismo
+    const DUST = 3600
     const dPos = []
     const dH = []
     const dSize = []
@@ -465,10 +465,11 @@ function Panels({ shared }) {
     [N]
   )
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     const w = shared.current.panels
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
+    const t = state.clock.elapsedTime
     grp.current.visible = w > 0.02
     // ESPIRAL: o scroll gira a hélice e a desce, trazendo cada card à frente
     const active = bus.catalogP * (N - 1)
@@ -482,6 +483,14 @@ function Panels({ shared }) {
       const vis = Math.pow(front, 1.5) * vFade
       m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * vis, 6, d)
       m.material.color.setScalar(0.62 + front * 0.6)
+      // ENTRADA "FOLHA": o card chega de borda esvoaçando e ABRE plano ao ficar
+      // de frente (rotação x de ~edge-on→0 + balanço; escala que "abre")
+      const open = THREE.MathUtils.smoothstep(front, 0.5, 0.97)
+      const flutter = 1 - open
+      m.rotation.x = flutter * 1.05 + Math.sin(t * 2.0 + i * 1.7) * flutter * 0.3
+      m.rotation.z = Math.sin(t * 1.6 + i * 1.1) * flutter * 0.32
+      const sc = 0.74 + open * 0.26
+      m.scale.set(3.7 * sc, 2.3 * sc, 1)
       const edge = m.children[0]
       if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * vis * 0.9, 6, d)
     })
@@ -538,9 +547,9 @@ void main(){
   float shade = 0.42 + 0.58 * (0.5 + 0.5 * cos(around - 1.1));
   // seiva subindo: pulso viajando ao longo do galho (vUv.y = base->ponta)
   float flow = smoothstep(0.16, 0.0, abs(fract(vUv.y * 2.2 - uTime * 0.32) - 0.5));
-  float base = (0.30 + 0.08 * sin(vY * 1.6 + uTime * 0.5)) * shade;
-  vec3 col = uColor * (base + flow * 1.6);
-  gl_FragColor = vec4(col, uOpacity * (base * 0.9 + flow));
+  float base = (0.48 + 0.10 * sin(vY * 1.6 + uTime * 0.5)) * shade;
+  vec3 col = uColor * (base + flow * 1.4);
+  gl_FragColor = vec4(col, uOpacity * (base + flow * 0.8));
 }
 `
 function Tree3D({ shared }) {
@@ -557,7 +566,7 @@ function Tree3D({ shared }) {
   const { geo, tipPts } = useMemo(() => {
     const branches = []
     const tipPts = []
-    const RADIAL = 7
+    const RADIAL = 8
     const randAxis = () =>
       new THREE.Vector3(Math.random() - 0.5, (Math.random() - 0.5) * 0.3, Math.random() - 0.5).normalize()
     // tubo com AFINAMENTO real (r0 na base -> r1 na ponta) + UV.y ao longo do galho
@@ -596,47 +605,85 @@ function Tree3D({ shared }) {
       g.computeVertexNormals()
       return g
     }
-    // galho como caminho levemente curvo (gravidade/vento) com vários passos
-    const grow = (origin, dir, len, rad, depth) => {
+    // galho/raiz como caminho curvo (gravidade/vento) — vbias: +1 copa, -1 raiz.
+    // collectTips: só a copa ganha botões/folhas luminosas.
+    const grow = (origin, dir, len, rad, depth, vbias, maxDepth, collectTips) => {
       const STEPS = 3
       const pts = [origin.clone()]
       let p = origin.clone()
       const dcur = dir.clone()
       for (let k = 1; k <= STEPS; k++) {
-        dcur.y += 0.05 // leve viés para cima ao longo do galho
-        dcur.x += (Math.random() - 0.5) * 0.06
-        dcur.z += (Math.random() - 0.5) * 0.06
+        dcur.y += 0.06 * vbias // viés vertical ao longo do galho/raiz
+        dcur.x += (Math.random() - 0.5) * 0.08
+        dcur.z += (Math.random() - 0.5) * 0.08
         dcur.normalize()
         p = p.clone().addScaledVector(dcur, len / STEPS)
         pts.push(p.clone())
       }
       const end = pts[pts.length - 1]
-      branches.push(taperedTube(pts, rad, rad * 0.66))
-      if (depth >= 5 || len < 0.45) {
-        // cacho de botões/folhas luminosas na ponta (copa densa)
-        const nb = 1 + Math.floor(Math.random() * 3)
-        for (let b = 0; b < nb; b++) {
-          tipPts.push(
-            end
-              .clone()
-              .add(new THREE.Vector3((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4))
-          )
+      branches.push(taperedTube(pts, rad, rad * 0.62))
+      if (depth >= maxDepth || len < 0.32) {
+        if (collectTips) {
+          const nb = 2 + Math.floor(Math.random() * 3) // copa densa
+          for (let b = 0; b < nb; b++) {
+            tipPts.push(
+              end
+                .clone()
+                .add(new THREE.Vector3((Math.random() - 0.5) * 0.45, (Math.random() - 0.5) * 0.45, (Math.random() - 0.5) * 0.45))
+            )
+          }
         }
         return
       }
-      // galho-LÍDER continua subindo (mantém o tronco/eixo) + galhos LATERAIS
+      // galho-LÍDER segue o eixo + galhos LATERAIS (ramificação)
       const leader = dir.clone().applyAxisAngle(randAxis(), 0.16 + Math.random() * 0.12).normalize()
-      grow(end, leader, len * 0.82, rad * 0.72, depth + 1)
+      grow(end, leader, len * 0.8, rad * 0.7, depth + 1, vbias, maxDepth, collectTips)
       const nLat = depth < 3 ? 2 : 1
       for (let i = 0; i < nLat; i++) {
         const ang = 0.5 + Math.random() * 0.5
         const nd = dir.clone().applyAxisAngle(randAxis(), ang)
-        nd.y = nd.y * 0.4 + 0.5 // lateral ainda sobe um pouco
+        nd.y = nd.y * 0.4 + 0.45 * vbias // lateral mantém o viés (sobe na copa, desce na raiz)
         nd.normalize()
-        grow(end, nd, len * 0.62, rad * 0.5, depth + 1)
+        grow(end, nd, len * 0.6, rad * 0.5, depth + 1, vbias, maxDepth, collectTips)
       }
     }
-    grow(new THREE.Vector3(0, -8.2, 0), new THREE.Vector3(0, 1, 0), 3.0, 0.32, 0)
+
+    // ÁRVORE DA VIDA: tronco torcido/entrelaçado (2 fitas) + copa densa em cima
+    // + raízes espelhando embaixo. Junção (tronco↔raiz) perto do centro da tela.
+    const JUNC = new THREE.Vector3(0, -1.0, 0)
+    const TRUNK_TOP_Y = 1.5
+    const makeTrunkStrand = (phase) => {
+      const path = []
+      const SEG = 12
+      for (let k = 0; k <= SEG; k++) {
+        const t = k / SEG
+        const y = JUNC.y + (TRUNK_TOP_Y - JUNC.y) * t
+        const tw = 0.24 * (1 - t * 0.45) // torção que afrouxa em cima
+        const a = t * Math.PI * 2.1 + phase
+        path.push(new THREE.Vector3(Math.cos(a) * tw, y, Math.sin(a) * tw))
+      }
+      return path
+    }
+    const trunkA = makeTrunkStrand(0)
+    const trunkB = makeTrunkStrand(Math.PI)
+    branches.push(taperedTube(trunkA, 0.46, 0.26))
+    branches.push(taperedTube(trunkB, 0.46, 0.26))
+
+    // COPA: do topo de cada fita do tronco, 4 boughs que ramificam para cima
+    ;[trunkA[trunkA.length - 1], trunkB[trunkB.length - 1]].forEach((top) => {
+      for (let i = 0; i < 4; i++) {
+        const nd = new THREE.Vector3(0, 1, 0).applyAxisAngle(randAxis(), 0.45 + Math.random() * 0.55).normalize()
+        grow(top, nd, 1.4, 0.2, 1, 1, 5, true)
+      }
+    })
+
+    // RAÍZES: da junção para baixo, 6 raízes que se espalham e ramificam
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2 + 0.3
+      const nd = new THREE.Vector3(Math.cos(ang) * 0.8, -0.7, Math.sin(ang) * 0.8).normalize()
+      grow(JUNC, nd, 1.5, 0.22, 1, -1, 4, false)
+    }
+
     return { geo: mergeGeometries(branches, false), tipPts }
   }, [])
 
@@ -644,7 +691,7 @@ function Tree3D({ shared }) {
     if (!tips.current) return
     tipPts.forEach((p, i) => {
       dummy.position.copy(p)
-      dummy.scale.setScalar(0.06 + Math.random() * 0.05)
+      dummy.scale.setScalar(0.04 + Math.random() * 0.04)
       dummy.updateMatrix()
       tips.current.setMatrixAt(i, dummy.matrix)
     })
@@ -656,7 +703,8 @@ function Tree3D({ shared }) {
     const d = Math.min(dt, 0.1)
     const w = shared.current.panels
     grp.current.visible = w > 0.02
-    grp.current.rotation.y += dt * 0.12
+    grp.current.scale.setScalar(0.6)
+    grp.current.rotation.y += dt * 0.1
     uniforms.uTime.value += dt
     // cor = projeto ativo do catálogo (transição suave); guardada no bus p/ o fundo
     catalogTint(tmp, bus.catalogP)
@@ -697,6 +745,105 @@ function Tree3D({ shared }) {
         <meshBasicMaterial color="#E0A458" transparent opacity={0} toneMapped={false} blending={THREE.AdditiveBlending} depthWrite={false} />
       </instancedMesh>
     </group>
+  )
+}
+
+// ---- folhas de OUTONO caindo da árvore (quads que giram, balançam e caem) ----
+const LEAF_VERT = /* glsl */ `
+uniform float uTime; uniform float uScale;
+attribute vec2 aCorner; attribute float aSeed; attribute float aTone;
+varying vec2 vUv; varying float vTone; varying float vFade;
+void main(){
+  vUv = aCorner + 0.5;
+  vTone = aTone;
+  float s = aSeed;
+  float x = (fract(s * 7.13) - 0.5) * 9.5;
+  float z = (fract(s * 3.71) - 0.5) * 5.0 - 0.5;
+  float fall = mod(uTime * 0.32 + s * 9.0, 1.0); // ciclo de queda
+  float y = 4.6 - fall * 9.2;
+  x += sin(uTime * 0.8 + s * 6.28) * 0.8; // vento (balanço)
+  z += cos(uTime * 0.6 + s * 6.28) * 0.4;
+  vFade = sin(fall * 3.14159); // some no topo e no fim da queda
+  vec4 mv = modelViewMatrix * vec4(x, y, z, 1.0);
+  // tombo da folha (rotação do quad no espaço da câmera)
+  float a = uTime * 1.5 + s * 20.0;
+  vec2 c = aCorner * uScale * (0.7 + fract(s * 1.7) * 0.7);
+  mv.xy += vec2(c.x * cos(a) - c.y * sin(a), c.x * sin(a) + c.y * cos(a));
+  gl_Position = projectionMatrix * mv;
+}
+`
+const LEAF_FRAG = /* glsl */ `
+precision highp float;
+uniform float uOpacity;
+varying vec2 vUv; varying float vTone; varying float vFade;
+void main(){
+  vec2 p = vUv - 0.5;
+  // silhueta de folha: oval alongada e pontuda
+  float r = length(vec2(p.x * 1.9, p.y));
+  float leaf = 1.0 - smoothstep(0.32, 0.46, r);
+  leaf *= smoothstep(0.5, 0.42, abs(p.y) + abs(p.x) * 0.6); // afina nas pontas
+  if (leaf < 0.04) discard;
+  vec3 laranja = vec3(0.90, 0.46, 0.12);
+  vec3 tijolo  = vec3(0.68, 0.17, 0.07);
+  vec3 ouro    = vec3(0.92, 0.72, 0.26);
+  vec3 col = mix(tijolo, laranja, smoothstep(0.0, 0.5, vTone));
+  col = mix(col, ouro, smoothstep(0.5, 1.0, vTone));
+  // nervura central sutil
+  col *= 1.0 - smoothstep(0.04, 0.0, abs(p.x)) * 0.35;
+  gl_FragColor = vec4(col, leaf * uOpacity * vFade * 0.95);
+}
+`
+function FallingLeaves({ shared }) {
+  const ref = useRef()
+  const uniforms = useMemo(() => ({ uTime: { value: 0 }, uScale: { value: 0.16 }, uOpacity: { value: 0 } }), [])
+  const geo = useMemo(() => {
+    const N = 130
+    const corner = []
+    const seed = []
+    const tone = []
+    const index = []
+    const quad = [
+      [-0.5, -0.5],
+      [0.5, -0.5],
+      [0.5, 0.5],
+      [-0.5, 0.5],
+    ]
+    for (let i = 0; i < N; i++) {
+      const s = Math.random()
+      const tn = Math.random()
+      for (let v = 0; v < 4; v++) {
+        corner.push(quad[v][0], quad[v][1])
+        seed.push(s)
+        tone.push(tn)
+      }
+      const o = i * 4
+      index.push(o, o + 1, o + 2, o, o + 2, o + 3)
+    }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('aCorner', new THREE.Float32BufferAttribute(corner, 2))
+    g.setAttribute('aSeed', new THREE.Float32BufferAttribute(seed, 1))
+    g.setAttribute('aTone', new THREE.Float32BufferAttribute(tone, 1))
+    g.setIndex(index)
+    // position dummy (o vertex shader calcula tudo a partir de aSeed/aCorner)
+    g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(N * 4 * 3), 3))
+    return g
+  }, [])
+
+  useFrame((_, dt) => {
+    if (!ref.current) return
+    const d = Math.min(dt, 0.1)
+    const w = shared.current.panels
+    ref.current.visible = w > 0.02
+    uniforms.uTime.value += dt
+    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w, 4, d)
+  })
+
+  return (
+    <mesh ref={ref} geometry={geo} frustumCulled={false}>
+      <shaderMaterial
+        args={[{ vertexShader: LEAF_VERT, fragmentShader: LEAF_FRAG, uniforms, transparent: true, depthWrite: false, side: THREE.DoubleSide }]}
+      />
+    </mesh>
   )
 }
 
@@ -817,6 +964,7 @@ export default function ImmersiveWorld() {
         <DnaHelix shared={shared} />
         <Fluid shared={shared} />
         <Tree3D shared={shared} />
+        <FallingLeaves shared={shared} />
         <Suspense fallback={null}>
           <Panels shared={shared} />
         </Suspense>
