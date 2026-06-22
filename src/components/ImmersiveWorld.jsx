@@ -7,7 +7,6 @@ import { bus } from '../scrollBus'
 import {
   EffectComposer,
   Bloom,
-  ChromaticAberration,
   Noise,
   Vignette,
 } from '@react-three/postprocessing'
@@ -41,53 +40,93 @@ const ACTS = {
 }
 const ORDER = Object.keys(ACTS)
 
-// ---- Ato 1: REDE NEURAL / ECOSSISTEMA DIGITAL ----
-// Nós (canais: site, tráfego, conteúdo, CRM...) conectados por arestas com
-// pacotes de DADOS pulsando pelas conexões. Tech, complexo e ligado a marketing.
-const NET_VERT = /* glsl */ `
-uniform float uTime;
-attribute float aProg;
-attribute float aSeed;
-varying float vProg;
-varying float vSeed;
+// ---- Ato 1: HÉLICE ORGÂNICA (DNA) ----
+// Partículas vivas (motes + poeira/nebulosa) com transições de cor COESAS
+// (estilo Dogstudio): um gradiente que cicla por tons-joia e reage ao hover.
+// Sem RGB genérico — a cor vem da paleta, não de aberração cromática.
+const DNA_PALETTE = ['#3DDC97', '#2FB8C8', '#3A6BE0', '#7A4BD0', '#C84AA0', '#E0A458', '#E8C36B'].map(
+  (c) => new THREE.Color(c)
+)
+const DNA_HOT_A = new THREE.Color('#E0A458')
+const DNA_HOT_B = new THREE.Color('#C84AA0')
+
+// motes suaves (núcleo + halo difuso), com hover por proximidade do cursor (tela)
+const DNA_PTS_VERT = /* glsl */ `
+uniform float uTime; uniform float uSize; uniform vec2 uMouse;
+attribute float aH; attribute float aSize; attribute float aRand;
+varying float vH; varying float vHover;
 void main(){
-  vProg = aProg; vSeed = aSeed;
+  vH = aH;
+  vec3 p = position;
+  float r = aRand * 6.2831;
+  p.x += sin(uTime * 0.6 + r) * 0.035;
+  p.y += cos(uTime * 0.5 + r) * 0.035;
+  p.z += sin(uTime * 0.45 + r) * 0.035;
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  vec4 clip = projectionMatrix * mv;
+  vec2 ndc = clip.xy / clip.w;
+  vHover = smoothstep(0.3, 0.0, distance(ndc, uMouse));
+  gl_PointSize = uSize * aSize * (300.0 / -mv.z) * (1.0 + vHover * 1.3);
+  gl_Position = clip;
+}
+`
+const DNA_PTS_FRAG = /* glsl */ `
+precision highp float;
+uniform vec3 uColorA; uniform vec3 uColorB; uniform float uOpacity; uniform float uHover; uniform float uAlpha;
+varying float vH; varying float vHover;
+void main(){
+  vec2 uv = gl_PointCoord - 0.5; float d = length(uv);
+  if (d > 0.5) discard;
+  float core = pow(smoothstep(0.5, 0.0, d), 2.4); // núcleo brilhante
+  float halo = smoothstep(0.5, 0.0, d) * 0.4;      // halo difuso (orgânico)
+  float a = core + halo;
+  vec3 col = mix(uColorA, uColorB, vH);             // gradiente coeso ao longo da hélice
+  col *= 0.65 + vHover * 1.9 + uHover * 0.35;        // acende perto do cursor
+  gl_FragColor = vec4(col, a * uOpacity * uAlpha * (0.5 + vHover));
+}
+`
+// filamentos (fitas/degraus): gradiente coeso + seiva sutil subindo
+const DNA_LINE_VERT = /* glsl */ `
+attribute float aH;
+varying float vH;
+void main(){
+  vH = aH;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `
-const NET_FRAG = /* glsl */ `
+const DNA_LINE_FRAG = /* glsl */ `
 precision highp float;
-uniform vec3 uColor;
-uniform float uOpacity;
-uniform float uTime;
-varying float vProg;
-varying float vSeed;
+uniform vec3 uColorA; uniform vec3 uColorB; uniform float uOpacity; uniform float uTime;
+varying float vH;
 void main(){
-  // pacote de dados viajando pela aresta
-  float p = fract(uTime * 0.32 + vSeed);
-  float pulse = smoothstep(0.16, 0.0, abs(vProg - p));
-  float base = 0.26;
-  vec3 col = uColor * (base + pulse * 1.9);
-  gl_FragColor = vec4(col, uOpacity * (base * 0.9 + pulse));
+  vec3 col = mix(uColorA, uColorB, vH);
+  float flow = smoothstep(0.5, 0.0, abs(fract(vH * 3.0 - uTime * 0.3) - 0.5));
+  col *= 0.45 + flow * 1.1;
+  gl_FragColor = vec4(col, uOpacity * 0.45);
 }
 `
 
 function DnaHelix({ shared }) {
   const grp = useRef()
-  const inst = useRef()
-  const tmp = useMemo(() => new THREE.Color(), [])
-  const tmpV = useMemo(() => new THREE.Vector3(), [])
-  const dummy = useMemo(() => new THREE.Object3D(), [])
+  const tmpA = useMemo(() => new THREE.Color(), [])
+  const tmpB = useMemo(() => new THREE.Color(), [])
+  const c1 = useMemo(() => new THREE.Color(), [])
+  const c2 = useMemo(() => new THREE.Color(), [])
+  const ctr = useMemo(() => new THREE.Vector3(), [])
 
-  const { nodes, sizes, lineGeo, uniforms } = useMemo(() => {
+  const { nodeGeo, dustGeo, lineGeo, U, nodeU, dustU, lineU } = useMemo(() => {
     const LEVELS = 24
     const R = 1.05
     const STEP = 0.3
     const TWIST = 0.5
-    const nodes = []
-    const sizes = []
+    const yMax = ((LEVELS - 1) / 2) * STEP
+    const hOf = (y) => (y + yMax) / (2 * yMax)
     const A = []
     const B = []
+    const nPos = []
+    const nH = []
+    const nSize = []
+    const nRand = []
     for (let i = 0; i < LEVELS; i++) {
       const ang = i * TWIST
       const y = (i - (LEVELS - 1) / 2) * STEP
@@ -95,98 +134,134 @@ function DnaHelix({ shared }) {
       const b = new THREE.Vector3(Math.cos(ang + Math.PI) * R, y, Math.sin(ang + Math.PI) * R)
       A.push(a)
       B.push(b)
-      nodes.push(a); sizes.push(1.0)
-      nodes.push(b); sizes.push(0.86)
+      ;[a, b].forEach((p, k) => {
+        nPos.push(p.x, p.y, p.z)
+        nH.push(hOf(p.y))
+        nSize.push(k === 0 ? 1.5 : 1.2)
+        nRand.push(Math.random())
+      })
     }
-    // segmentos: degraus (pares de base) + as duas fitas (backbone helicoidal)
-    const segs = []
+    const nodeGeo = new THREE.BufferGeometry()
+    nodeGeo.setAttribute('position', new THREE.Float32BufferAttribute(nPos, 3))
+    nodeGeo.setAttribute('aH', new THREE.Float32BufferAttribute(nH, 1))
+    nodeGeo.setAttribute('aSize', new THREE.Float32BufferAttribute(nSize, 1))
+    nodeGeo.setAttribute('aRand', new THREE.Float32BufferAttribute(nRand, 1))
+
+    // poeira orgânica ao redor das fitas (nebulosa) — dá vida e realismo
+    const DUST = 1400
+    const dPos = []
+    const dH = []
+    const dSize = []
+    const dRand = []
+    for (let i = 0; i < DUST; i++) {
+      const lvl = Math.random() * (LEVELS - 1)
+      const strand = Math.random() < 0.5 ? 0 : Math.PI
+      const ang = lvl * TWIST + strand
+      const y = (lvl - (LEVELS - 1) / 2) * STEP
+      const rr = R + (Math.random() - 0.5) * 0.4
+      const jit = 0.22
+      dPos.push(
+        Math.cos(ang) * rr + (Math.random() - 0.5) * jit,
+        y + (Math.random() - 0.5) * jit,
+        Math.sin(ang) * rr + (Math.random() - 0.5) * jit
+      )
+      dH.push(hOf(y))
+      dSize.push(0.3 + Math.random() * 0.7)
+      dRand.push(Math.random())
+    }
+    const dustGeo = new THREE.BufferGeometry()
+    dustGeo.setAttribute('position', new THREE.Float32BufferAttribute(dPos, 3))
+    dustGeo.setAttribute('aH', new THREE.Float32BufferAttribute(dH, 1))
+    dustGeo.setAttribute('aSize', new THREE.Float32BufferAttribute(dSize, 1))
+    dustGeo.setAttribute('aRand', new THREE.Float32BufferAttribute(dRand, 1))
+
+    // linhas: degraus (pares de base) + as duas fitas (backbone), com altura p/ gradiente
+    const lPos = []
+    const lH = []
+    const push = (a, b) => {
+      lPos.push(a.x, a.y, a.z, b.x, b.y, b.z)
+      lH.push(hOf(a.y), hOf(b.y))
+    }
     for (let i = 0; i < LEVELS; i++) {
-      segs.push([A[i], B[i]])
+      push(A[i], B[i])
       if (i > 0) {
-        segs.push([A[i - 1], A[i]])
-        segs.push([B[i - 1], B[i]])
+        push(A[i - 1], A[i])
+        push(B[i - 1], B[i])
       }
     }
-    const pos = []
-    const prog = []
-    const seed = []
-    segs.forEach(([a, b]) => {
-      pos.push(a.x, a.y, a.z, b.x, b.y, b.z)
-      prog.push(0, 1)
-      const s = Math.random()
-      seed.push(s, s)
-    })
     const lineGeo = new THREE.BufferGeometry()
-    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
-    lineGeo.setAttribute('aProg', new THREE.Float32BufferAttribute(prog, 1))
-    lineGeo.setAttribute('aSeed', new THREE.Float32BufferAttribute(seed, 1))
-    const uniforms = { uTime: { value: 0 }, uColor: { value: new THREE.Color('#E0A458') }, uOpacity: { value: 0 } }
-    return { nodes, sizes, lineGeo, uniforms }
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(lPos, 3))
+    lineGeo.setAttribute('aH', new THREE.Float32BufferAttribute(lH, 1))
+
+    // uniforms compartilhados por referência (cor/tempo iguais em motes, poeira e linhas)
+    const U = {
+      uTime: { value: 0 },
+      uColorA: { value: new THREE.Color('#3DDC97') },
+      uColorB: { value: new THREE.Color('#3A6BE0') },
+      uOpacity: { value: 0 },
+      uMouse: { value: new THREE.Vector2() },
+      uHover: { value: 0 },
+    }
+    const nodeU = { ...U, uSize: { value: 0.5 }, uAlpha: { value: 1.0 } }
+    const dustU = { ...U, uSize: { value: 0.16 }, uAlpha: { value: 0.5 } }
+    const lineU = { uTime: U.uTime, uColorA: U.uColorA, uColorB: U.uColorB, uOpacity: U.uOpacity }
+    return { nodeGeo, dustGeo, lineGeo, U, nodeU, dustU, lineU }
   }, [])
 
-  useLayoutEffect(() => {
-    if (!inst.current) return
-    nodes.forEach((p, i) => {
-      dummy.position.copy(p)
-      dummy.scale.setScalar(0.058 * sizes[i])
-      dummy.updateMatrix()
-      inst.current.setMatrixAt(i, dummy.matrix)
-      inst.current.setColorAt(i, tmp.set('#E0A458'))
-    })
-    inst.current.instanceMatrix.needsUpdate = true
-    if (inst.current.instanceColor) inst.current.instanceColor.needsUpdate = true
-  }, [nodes, sizes, dummy, tmp])
-
   useFrame((state, dt) => {
-    if (!grp.current || !inst.current) return
+    if (!grp.current) return
     const d = Math.min(dt, 0.1)
     const w = shared.current.glass // reaproveita o peso de cena do antigo "vidro"
     grp.current.visible = w > 0.02
     grp.current.scale.setScalar(0.32 + w * 0.78)
-    grp.current.rotation.y += dt * 0.22
-    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.3, 3, d)
+    grp.current.rotation.y += dt * 0.2
+    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.28, 3, d)
     grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, shared.current.mx * 0.28, 3, d)
 
-    uniforms.uTime.value += dt
-    uniforms.uColor.value.copy(shared.current.color)
-    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w, 4, d)
-    inst.current.material.opacity = THREE.MathUtils.damp(inst.current.material.opacity, w, 4, d)
-
-    // HOVER REATIVO: nós perto do cursor acendem como neurônios (o "cérebro")
-    grp.current.updateWorldMatrix(true, false)
-    const cam = state.camera
+    U.uTime.value += dt
     const mx = shared.current.mx
     const my = -shared.current.my // NDC y aponta para cima
-    for (let i = 0; i < nodes.length; i++) {
-      tmpV.copy(nodes[i]).applyMatrix4(grp.current.matrixWorld).project(cam)
-      const dist = Math.hypot(tmpV.x - mx, tmpV.y - my)
-      const glow = 0.85 + THREE.MathUtils.smoothstep(0.34, 0.0, dist) * 3.2
-      tmp.copy(shared.current.color).multiplyScalar(glow)
-      inst.current.setColorAt(i, tmp)
-    }
-    if (inst.current.instanceColor) inst.current.instanceColor.needsUpdate = true
+    U.uMouse.value.set(mx, my)
+    U.uOpacity.value = THREE.MathUtils.damp(U.uOpacity.value, w, 4, d)
+
+    // hover global: proximidade do cursor ao centro da hélice (em tela)
+    grp.current.updateWorldMatrix(true, false)
+    ctr.setFromMatrixPosition(grp.current.matrixWorld).project(state.camera)
+    const hov = 1 - THREE.MathUtils.smoothstep(Math.hypot(ctr.x - mx, ctr.y - my), 0.12, 0.7)
+    U.uHover.value = THREE.MathUtils.damp(U.uHover.value, hov, 4, d)
+
+    // ciclo de cores COESO (paleta-joia) — transições suaves estilo Dogstudio
+    const N = DNA_PALETTE.length
+    const phase = U.uTime.value * 0.07
+    const i0 = Math.floor(phase) % N
+    const f = phase - Math.floor(phase)
+    c1.copy(DNA_PALETTE[i0]).lerp(DNA_PALETTE[(i0 + 1) % N], f)
+    c2.copy(DNA_PALETTE[(i0 + 3) % N]).lerp(DNA_PALETTE[(i0 + 4) % N], f)
+    // hover esquenta/intensifica para o par vibrante (âmbar→magenta)
+    tmpA.copy(c1).lerp(DNA_HOT_A, U.uHover.value * 0.7)
+    tmpB.copy(c2).lerp(DNA_HOT_B, U.uHover.value * 0.7)
+    const k = 1 - Math.exp(-3 * d)
+    U.uColorA.value.lerp(tmpA, k)
+    U.uColorB.value.lerp(tmpB, k)
   })
 
   return (
     <group ref={grp}>
       <lineSegments geometry={lineGeo}>
         <shaderMaterial
-          args={[
-            {
-              vertexShader: NET_VERT,
-              fragmentShader: NET_FRAG,
-              uniforms,
-              transparent: true,
-              depthWrite: false,
-              blending: THREE.AdditiveBlending,
-            },
-          ]}
+          args={[{ vertexShader: DNA_LINE_VERT, fragmentShader: DNA_LINE_FRAG, uniforms: lineU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
         />
       </lineSegments>
-      <instancedMesh ref={inst} args={[null, null, nodes.length]}>
-        <sphereGeometry args={[1, 24, 24]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0} toneMapped={false} blending={THREE.AdditiveBlending} depthWrite={false} />
-      </instancedMesh>
+      <points geometry={dustGeo}>
+        <shaderMaterial
+          args={[{ vertexShader: DNA_PTS_VERT, fragmentShader: DNA_PTS_FRAG, uniforms: dustU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
+        />
+      </points>
+      <points geometry={nodeGeo}>
+        <shaderMaterial
+          args={[{ vertexShader: DNA_PTS_VERT, fragmentShader: DNA_PTS_FRAG, uniforms: nodeU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
+        />
+      </points>
     </group>
   )
 }
@@ -746,9 +821,8 @@ export default function ImmersiveWorld() {
           <Panels shared={shared} />
         </Suspense>
         <EffectComposer multisampling={4}>
-          <Bloom intensity={0.7} luminanceThreshold={0.28} luminanceSmoothing={0.5} mipmapBlur />
-          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0006, 0.0007]} />
-          <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.45} />
+          <Bloom intensity={0.78} luminanceThreshold={0.22} luminanceSmoothing={0.55} mipmapBlur />
+          <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.4} />
           <Vignette eskil={false} offset={0.18} darkness={0.92} />
         </EffectComposer>
       </Canvas>
