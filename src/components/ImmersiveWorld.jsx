@@ -923,6 +923,163 @@ function AuraSync() {
   return null
 }
 
+// ---- SISTEMA NERVOSO: malha de neurônios + sinapses com sinais viajando, ao
+// longo da página INTEIRA. Compartilha a cor da seção (organismo coeso), reage
+// ao cursor (sinapses disparam perto dele) e PULSA nas transições de seção.
+// (Camada atmosférica nova — NÃO altera o DNA, convive com as demais animações.)
+const NEURO_LINE_VERT = /* glsl */ `
+uniform vec2 uMouse;
+attribute float aProg; attribute float aSeed;
+varying float vProg; varying float vSeed; varying float vHover;
+void main(){
+  vProg = aProg; vSeed = aSeed;
+  vec4 clip = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  vHover = smoothstep(0.45, 0.0, distance(clip.xy / clip.w, uMouse));
+  gl_Position = clip;
+}
+`
+const NEURO_LINE_FRAG = /* glsl */ `
+precision highp float;
+uniform vec3 uColor; uniform float uOpacity; uniform float uTime; uniform float uPulse;
+varying float vProg; varying float vSeed; varying float vHover;
+void main(){
+  // impulso nervoso viajando pela sinapse
+  float sp = fract(uTime * 0.22 + vSeed);
+  float pulse = smoothstep(0.12, 0.0, abs(vProg - sp));
+  float base = 0.045 + vHover * 0.28 + uPulse * 0.22;
+  vec3 col = uColor * (base + pulse * (1.1 + vHover * 2.2 + uPulse * 1.5));
+  gl_FragColor = vec4(col, uOpacity * (base + pulse));
+}
+`
+const NEURO_NODE_VERT = /* glsl */ `
+uniform float uTime; uniform float uSize; uniform vec2 uMouse;
+attribute float aRand;
+varying float vHover;
+void main(){
+  vec3 p = position;
+  p.x += sin(uTime * 0.4 + aRand * 6.2831) * 0.13;
+  p.y += cos(uTime * 0.33 + aRand * 6.2831) * 0.13;
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  vec4 clip = projectionMatrix * mv;
+  vHover = smoothstep(0.4, 0.0, distance(clip.xy / clip.w, uMouse));
+  // tamanho SEGURO (divisor e máximo clampados — evita gl_PointSize gigante que
+  // alguns drivers recusam, corrompendo o resto do frame)
+  gl_PointSize = clamp(uSize * (300.0 / max(0.6, -mv.z)) * (0.5 + aRand) * (1.0 + vHover * 2.2), 1.0, 36.0);
+  gl_Position = clip;
+}
+`
+const NEURO_NODE_FRAG = /* glsl */ `
+precision highp float;
+uniform vec3 uColor; uniform float uOpacity; uniform float uPulse;
+varying float vHover;
+void main(){
+  vec2 uv = gl_PointCoord - 0.5; float d = length(uv);
+  if (d > 0.5) discard;
+  float core = pow(smoothstep(0.5, 0.0, d), 2.0);
+  float b = 0.35 + vHover * 2.2 + uPulse * 0.6;
+  gl_FragColor = vec4(uColor * b, core * uOpacity * (0.45 + vHover + uPulse * 0.5));
+}
+`
+function NervousSystem({ shared }) {
+  const grp = useRef()
+  const prevCol = useMemo(() => new THREE.Color('#E0A458'), [])
+
+  const { nodeGeo, lineGeo, U, nodeU, lineU } = useMemo(() => {
+    const N = 130
+    const pts = []
+    const rand = []
+    for (let i = 0; i < N; i++) {
+      pts.push(
+        new THREE.Vector3(
+          (Math.random() - 0.5) * 14,
+          (Math.random() - 0.5) * 9,
+          (Math.random() - 0.5) * 3 - 0.5
+        )
+      )
+      rand.push(Math.random())
+    }
+    const nodeGeo = new THREE.BufferGeometry()
+    nodeGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts.flatMap((p) => [p.x, p.y, p.z]), 3))
+    nodeGeo.setAttribute('aRand', new THREE.Float32BufferAttribute(rand, 1))
+    // sinapses: cada neurônio liga aos 2 vizinhos mais próximos (sem distâncias enormes)
+    const edges = new Set()
+    pts.forEach((a, i) => {
+      const near = pts
+        .map((b, j) => [j, a.distanceToSquared(b)])
+        .filter(([j]) => j !== i)
+        .sort((p, q) => p[1] - q[1])
+      for (let n = 0; n < 2; n++) {
+        const j = near[n][0]
+        if (near[n][1] < 12) edges.add(i < j ? `${i}_${j}` : `${j}_${i}`)
+      }
+    })
+    const lpos = []
+    const prog = []
+    const seed = []
+    edges.forEach((e) => {
+      const [i, j] = e.split('_').map(Number)
+      const a = pts[i]
+      const b = pts[j]
+      lpos.push(a.x, a.y, a.z, b.x, b.y, b.z)
+      prog.push(0, 1)
+      const s = Math.random()
+      seed.push(s, s)
+    })
+    const lineGeo = new THREE.BufferGeometry()
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(lpos, 3))
+    lineGeo.setAttribute('aProg', new THREE.Float32BufferAttribute(prog, 1))
+    lineGeo.setAttribute('aSeed', new THREE.Float32BufferAttribute(seed, 1))
+    const U = {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color('#E0A458') },
+      uOpacity: { value: 0 },
+      uMouse: { value: new THREE.Vector2() },
+      uPulse: { value: 0 },
+    }
+    const nodeU = { ...U, uSize: { value: 0.16 } }
+    const lineU = U
+    return { nodeGeo, lineGeo, U, nodeU, lineU }
+  }, [])
+
+  useFrame((_, dt) => {
+    if (!grp.current) return
+    const d = Math.min(dt, 0.1)
+    U.uTime.value += dt
+    U.uMouse.value.set(shared.current.mx, -shared.current.my)
+    // leve parallax do conjunto seguindo o cursor (profundidade)
+    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, shared.current.mx * 0.5, 2.5, d)
+    grp.current.position.y = THREE.MathUtils.damp(grp.current.position.y, -shared.current.my * 0.35, 2.5, d)
+    // cor da seção (organismo coeso com as demais animações)
+    const c = shared.current.color
+    U.uColor.value.r = THREE.MathUtils.damp(U.uColor.value.r, c.r, 2.5, d)
+    U.uColor.value.g = THREE.MathUtils.damp(U.uColor.value.g, c.g, 2.5, d)
+    U.uColor.value.b = THREE.MathUtils.damp(U.uColor.value.b, c.b, 2.5, d)
+    // PULSO de transição: dispara quando a cor da seção muda (troca de seção)
+    // (guarda contra dt=0 → evita NaN que corromperia o framebuffer aditivo)
+    const vel = (Math.abs(c.r - prevCol.r) + Math.abs(c.g - prevCol.g) + Math.abs(c.b - prevCol.b)) / Math.max(d, 0.001)
+    prevCol.copy(c)
+    const pulseTarget = Math.min(1, vel * 2.6)
+    U.uPulse.value = THREE.MathUtils.damp(U.uPulse.value, Number.isFinite(pulseTarget) ? pulseTarget : 0, 4, d)
+    // presente na página inteira (opacidade-base sutil constante)
+    U.uOpacity.value = THREE.MathUtils.damp(U.uOpacity.value, 0.6, 3, d)
+  })
+
+  return (
+    <group ref={grp} renderOrder={-1}>
+      <lineSegments geometry={lineGeo} renderOrder={-1}>
+        <shaderMaterial
+          args={[{ vertexShader: NEURO_LINE_VERT, fragmentShader: NEURO_LINE_FRAG, uniforms: lineU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
+        />
+      </lineSegments>
+      <points geometry={nodeGeo} renderOrder={-1}>
+        <shaderMaterial
+          args={[{ vertexShader: NEURO_NODE_VERT, fragmentShader: NEURO_NODE_FRAG, uniforms: nodeU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
+        />
+      </points>
+    </group>
+  )
+}
+
 // ambiente procedural (reflexos sem baixar HDRI)
 function Studio() {
   return (
@@ -1020,6 +1177,7 @@ export default function ImmersiveWorld() {
         <Studio />
         <Director shared={shared} target={target} />
         <AuraSync />
+        <NervousSystem shared={shared} />
         <DnaHelix shared={shared} />
         <Fluid shared={shared} />
         <Tree3D shared={shared} />
