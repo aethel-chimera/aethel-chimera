@@ -164,10 +164,15 @@ function DnaHelix({ shared }) {
       [tubeH(curveA, LEVELS * 8, 0.14, 14), tubeH(curveB, LEVELS * 8, 0.14, 14)],
       false
     )
-    // DEGRAUS grossos (pares de base) — barras douradas como na referência
+    // DEGRAUS grossos (pares de base) — barras douradas DENSAS (níveis intermediários)
     const rungs = []
-    for (let i = 0; i < LEVELS; i++) {
-      rungs.push(tubeH(new THREE.LineCurve3(A[i].clone(), B[i].clone()), 1, 0.05, 8))
+    const RUNG_STEP = 0.4 // < 1 = mais barras (passo fracionário ao longo da hélice)
+    for (let lvl = 0; lvl <= LEVELS - 1 + 1e-3; lvl += RUNG_STEP) {
+      const ang = lvl * TWIST
+      const y = (lvl - (LEVELS - 1) / 2) * STEP
+      const a = new THREE.Vector3(Math.cos(ang) * R, y, Math.sin(ang) * R)
+      const b = new THREE.Vector3(Math.cos(ang + Math.PI) * R, y, Math.sin(ang + Math.PI) * R)
+      rungs.push(tubeH(new THREE.LineCurve3(a, b), 1, 0.045, 8))
     }
     const rungGeo = mergeGeometries(rungs, false)
 
