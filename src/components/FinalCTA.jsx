@@ -32,9 +32,23 @@ export default function FinalCTA({ reducedMotion }) {
     <section
       id="contato"
       ref={rootRef}
-      className="relative z-[3] min-h-[92dvh] flex flex-col items-center justify-center text-center px-5 py-32"
+      className="relative z-[3] min-h-[92dvh] flex flex-col items-center justify-center text-center px-5 py-32 overflow-hidden"
     >
-      {/* scrim radial: garante leitura do título sobre a logo de partículas */}
+      {/* VÍDEO da quimera (substitui a logo de partículas): blend de luz sobre a
+          obsidiana + motion (drift) e ciclo de cores (hue) — ver index.css */}
+      <div aria-hidden="true" className="chimera-video-wrap pointer-events-none absolute inset-0 flex items-center justify-center">
+        <video
+          className="chimera-video"
+          src="/video/chimera-logo-3d-video.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        />
+      </div>
+
+      {/* scrim radial: garante leitura do título sobre a logo */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(40rem,90vw)] h-[28rem] rounded-full"

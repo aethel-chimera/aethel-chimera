@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer, useTexture, useGLTF } from '@react-three/drei'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { CATALOG } from '../data'
@@ -501,6 +501,8 @@ const WHITE = new THREE.Color('#ffffff')
 const CARD_FRAME = new THREE.Color('#E6D6AE') // moldura clean (creme dourado)
 function Panels({ shared }) {
   const grp = useRef()
+  const camera = useThree((s) => s.camera)
+  const _v = useMemo(() => new THREE.Vector3(), [])
   const textures = useTexture(CATALOG.map((p) => p.image))
   useMemo(() => {
     textures.forEach((t) => {
@@ -553,6 +555,14 @@ function Panels({ shared }) {
       m.material.opacity = THREE.MathUtils.damp(m.material.opacity, op.current * (0.18 + fr * 0.82), 6, d)
       const edge = m.children[0]
       if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, op.current * (0.1 + fr * 0.7), 6, d)
+      // projeta o centro do card na TELA (%) p/ o DOM posicionar a área clicável
+      m.getWorldPosition(_v).project(camera)
+      bus.cardHits[i] = {
+        x: (_v.x * 0.5 + 0.5) * 100,
+        y: (-_v.y * 0.5 + 0.5) * 100,
+        vis: op.current > 0.02 ? fr : 0, // só clicável quando o catálogo está visível
+        front: fr,
+      }
     })
   })
 
@@ -1470,6 +1480,41 @@ function AtmosphereDust({ shared }) {
   )
 }
 
+// SOMBRA DE CONTATO suave sob a árvore — aterra o modelo (sensação de que ele
+// pertence à cena, não está "colado") sem atrapalhar a visualização. Plano
+// horizontal com gradiente radial escuro, gate por panels (só no catálogo).
+function GroundShadow({ shared }) {
+  const ref = useRef()
+  const tex = useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = c.height = 256
+    const g = c.getContext('2d')
+    const grd = g.createRadialGradient(128, 128, 0, 128, 128, 128)
+    grd.addColorStop(0, 'rgba(0,0,0,0.6)')
+    grd.addColorStop(0.45, 'rgba(0,0,0,0.32)')
+    grd.addColorStop(1, 'rgba(0,0,0,0)')
+    g.fillStyle = grd
+    g.fillRect(0, 0, 256, 256)
+    const t = new THREE.CanvasTexture(c)
+    t.colorSpace = THREE.SRGBColorSpace
+    return t
+  }, [])
+  const op = useRef(0)
+  useFrame((_, dt) => {
+    if (!ref.current) return
+    const d = Math.min(dt, 0.1)
+    op.current = THREE.MathUtils.damp(op.current, shared.current.panels, 4, d)
+    ref.current.visible = op.current > 0.01
+    ref.current.material.opacity = op.current
+  })
+  return (
+    <mesh ref={ref} position={[1.4, -2.15, 0.4]} rotation={[-Math.PI / 2.1, 0, 0]}>
+      <planeGeometry args={[7, 5]} />
+      <meshBasicMaterial map={tex} transparent depthWrite={false} opacity={0} />
+    </mesh>
+  )
+}
+
 export default function ImmersiveWorld() {
   const shared = useRef({ glass: 1, fluid: 0, panels: 0, logo: 0, camZ: 6, mx: 0, my: 0, color: new THREE.Color('#E0A458') })
   const target = useRef({ ...ACTS.hero })
@@ -1515,12 +1560,13 @@ export default function ImmersiveWorld() {
         <Studio />
         <Director shared={shared} target={target} />
         <AuraSync />
-        {/* logo da quimera no fim (contato/rodapé) */}
-        <Fluid shared={shared} />
+        {/* (a logo da quimera no fim virou VÍDEO no DOM — ver FinalCTA) */}
         {/* ambiente imersivo do hero: poeira atmosférica ao redor da criatura */}
         <AtmosphereDust shared={shared} />
         {/* pétalas (cerejeira) caindo no catálogo, em volta da árvore */}
         <FallingLeaves shared={shared} />
+        {/* sombra de contato que aterra a árvore na cena */}
+        <GroundShadow shared={shared} />
         {/* modelos 3D (GLB): criatura no hero + árvore no catálogo + cards orbitando */}
         <Suspense fallback={null}>
           <SceneModels />

@@ -10,6 +10,55 @@ gsap.registerPlugin(ScrollTrigger)
 
 const FILTERS = ['Todos', 'WhatsApp', 'Pix', 'Agendamento', 'CRM']
 
+// Áreas clicáveis (DOM) que seguem cada card 3D na tela: o mundo 3D publica a
+// posição/visibilidade de cada card em bus.cardHits a cada frame, e aqui um rAF
+// reposiciona os botões. Assim QUALQUER card visível é clicável (não só o central).
+function CardHitAreas({ count, onOpen }) {
+  const refs = useRef([])
+  useEffect(() => {
+    let raf
+    const tick = () => {
+      for (let i = 0; i < count; i++) {
+        const el = refs.current[i]
+        if (!el) continue
+        const h = bus.cardHits[i]
+        if (!h || h.vis < 0.12) {
+          el.style.opacity = '0'
+          el.style.pointerEvents = 'none'
+        } else {
+          el.style.left = `${h.x}%`
+          el.style.top = `${h.y}%`
+          el.style.width = `${7 + h.front * 11}%`
+          el.style.height = `${9 + h.front * 20}%`
+          el.style.opacity = '1'
+          el.style.pointerEvents = 'auto'
+        }
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [count])
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <button
+          key={i}
+          ref={(el) => (refs.current[i] = el)}
+          onClick={() => onOpen?.(i)}
+          aria-label={`Abrir case do projeto ${i + 1}`}
+          className="group absolute z-[3] -translate-x-1/2 -translate-y-1/2 cursor-pointer border-0 bg-transparent outline-none focus:outline-none appearance-none"
+          style={{ outline: 'none', opacity: 0, pointerEvents: 'none', WebkitTapHighlightColor: 'transparent' }}
+        >
+          <span className="pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-y-1 absolute -top-3 left-1/2 -translate-x-1/2 -translate-y-full mono-label text-[0.55rem] text-amber bg-obsidian/80 backdrop-blur-sm rounded-full px-4 py-2 whitespace-nowrap">
+            abrir case →
+          </span>
+        </button>
+      ))}
+    </>
+  )
+}
+
 // Card usado APENAS no mobile (onde não há mundo 3D): mantém a imagem.
 function ProjectCard({ project, index, dimmed, onOpen }) {
   return (
@@ -129,18 +178,9 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
     <section id="catalogo" ref={sectionRef} className="relative z-[3] overflow-hidden py-24 md:py-0 md:h-screen">
       {/* ===================== DESKTOP: galeria de slides 3D ===================== */}
       <div className="hidden md:block">
-        {/* área CLICÁVEL sobre o card 3D (atrás) → abre a seção do projeto.
-            Fica antes dos demais elementos no DOM para eles ficarem por cima. */}
-        <button
-          onClick={() => onOpenProject?.(active)}
-          aria-label={`Abrir case do projeto ${p.name}`}
-          className="group absolute z-[3] cursor-pointer border-0 bg-transparent outline-none focus:outline-none focus-visible:outline-none appearance-none"
-          style={{ left: '26%', right: '14%', top: '15%', bottom: '17%', outline: 'none', WebkitTapHighlightColor: 'transparent' }}
-        >
-          <span className="pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-y-1 absolute top-5 left-1/2 -translate-x-1/2 mono-label text-[0.6rem] text-amber bg-obsidian/75 backdrop-blur-sm rounded-full px-5 py-2.5 whitespace-nowrap">
-            abrir case do projeto →
-          </span>
-        </button>
+        {/* áreas CLICÁVEIS sobre CADA card 3D visível (rastreiam a posição na
+            tela) → clicar em qualquer card visível abre o case dele. */}
+        <CardHitAreas count={N} onOpen={onOpenProject} />
 
         {/* topo: título + menu-comando */}
         <div className="absolute top-0 inset-x-0 px-10 pt-24 flex items-end justify-between gap-6 z-[4]">

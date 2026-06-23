@@ -63,8 +63,9 @@ export default function Navbar() {
         <nav className="flex items-center justify-between px-5 md:px-10 h-16" aria-label="Principal">
           {/* pílula de marca + status no estilo AT */}
           <div className="at-pill">
-            <a href="#hero" className="font-display font-semibold text-xl text-ivory leading-none" aria-label="Aethel Chimera — início">
-              Æ
+            <a href="#hero" className="flex items-center gap-2.5 leading-none" aria-label="Aethel Chimera — início">
+              <img src="/logo-white.png" alt="Aethel Chimera" className="h-7 w-auto" />
+              <span className="font-display font-semibold text-xl text-ivory">Æ</span>
             </a>
             <span className="connector" aria-hidden="true" />
             <span className="mono-label text-[0.6rem] text-titanium hidden sm:inline">Aethel//Chimera</span>
