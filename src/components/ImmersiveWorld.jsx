@@ -539,10 +539,10 @@ function Panels({ shared }) {
       const fr = Math.pow(front, 1.5)
       // flutuação orgânica leve (altura) — órbita viva
       m.position.y = THREE.MathUtils.damp(m.position.y, layout[i].y + Math.sin(t * 0.6 + i * 1.3) * 0.12, 3, d)
-      // escala: frontal grande (leitura), laterais menores
+      // escala: frontal (leitura) menor, laterais ainda menores
       const sc = 0.5 + fr * 0.5
-      m.scale.x = THREE.MathUtils.damp(m.scale.x, 2.4 * sc, 6, d)
-      m.scale.y = THREE.MathUtils.damp(m.scale.y, 1.5 * sc, 6, d)
+      m.scale.x = THREE.MathUtils.damp(m.scale.x, 2.0 * sc, 6, d)
+      m.scale.y = THREE.MathUtils.damp(m.scale.y, 1.25 * sc, 6, d)
       // brilho/opacidade: frontal nítido; laterais esmaecidos (não somem)
       m.material.color.setScalar(0.55 + fr * 0.45)
       m.material.opacity = THREE.MathUtils.damp(m.material.opacity, op.current * (0.18 + fr * 0.82), 6, d)
@@ -1383,53 +1383,62 @@ function HeroCreature({ shared }) {
 const ADUST_VERT = /* glsl */ `
 uniform float uTime; uniform float uSize;
 attribute float aRand;
-varying float vR;
+varying float vR; varying float vEnv;
 void main(){
   vR = aRand;
   vec3 p = position;
-  p.y += sin(uTime * 0.25 + aRand * 6.2831) * 0.35;
-  p.x += cos(uTime * 0.2 + aRand * 6.2831) * 0.25;
+  // BRASAS MÁGICAS: sobem lentamente em loop, com deriva senoidal
+  float ph = fract(uTime * (0.03 + aRand * 0.04) + aRand);
+  p.y = position.y * 0.25 + (ph - 0.5) * 8.5;
+  p.x += cos(uTime * 0.18 + aRand * 6.2831) * 0.32;
+  p.z += sin(uTime * 0.13 + aRand * 6.2831) * 0.22;
+  float env = sin(ph * 3.14159);                         // fade no topo/baixo (sem pop)
+  float tw = 0.45 + 0.55 * sin(uTime * 2.2 + aRand * 33.0); // cintilação
+  vEnv = env * tw;
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  gl_PointSize = uSize * (300.0 / -mv.z) * (0.35 + aRand * 0.9);
+  gl_PointSize = uSize * (300.0 / -mv.z) * (0.3 + aRand * 0.95) * (0.7 + tw * 0.5);
   gl_Position = projectionMatrix * mv;
 }
 `
 const ADUST_FRAG = /* glsl */ `
 precision highp float;
 uniform vec3 uColor; uniform float uOpacity;
-varying float vR;
+varying float vR; varying float vEnv;
 void main(){
   vec2 uv = gl_PointCoord - 0.5; float d = length(uv);
   if (d > 0.5) discard;
-  float a = pow(smoothstep(0.5, 0.0, d), 1.8);
-  gl_FragColor = vec4(uColor * (0.7 + vR * 0.5), a * uOpacity);
+  float a = pow(smoothstep(0.5, 0.0, d), 1.9);
+  // núcleo claro + tinta da cor da seção (brasa quente/mágica)
+  vec3 col = mix(uColor, vec3(1.0, 0.95, 0.85), 0.35 + vR * 0.3);
+  gl_FragColor = vec4(col * (0.8 + vR * 0.4), a * uOpacity * vEnv);
 }
 `
+// poeira/brasas MÁGICAS — presentes na PÁGINA INTEIRA (ambiente místico),
+// tingidas pela cor de cada seção, sobindo e cintilando.
 function AtmosphereDust({ shared }) {
   const ref = useRef()
   const { geo, uniforms } = useMemo(() => {
-    const N = 520
+    const N = 700
     const pos = new Float32Array(N * 3)
     const rand = new Float32Array(N)
     for (let i = 0; i < N; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 10
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 6.5
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 5 - 0.5
+      pos[i * 3] = (Math.random() - 0.5) * 14
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 9
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 6 - 0.5
       rand[i] = Math.random()
     }
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
     g.setAttribute('aRand', new THREE.BufferAttribute(rand, 1))
-    const u = { uTime: { value: 0 }, uSize: { value: 0.16 }, uOpacity: { value: 0 }, uColor: { value: new THREE.Color('#E0A458') } }
+    const u = { uTime: { value: 0 }, uSize: { value: 0.15 }, uOpacity: { value: 0 }, uColor: { value: new THREE.Color('#E0A458') } }
     return { geo: g, uniforms: u }
   }, [])
   useFrame((_, dt) => {
     if (!ref.current) return
     const d = Math.min(dt, 0.1)
-    const w = shared.current.glass
-    ref.current.visible = w > 0.01
     uniforms.uTime.value += dt
-    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w * 0.5, 3, d)
+    // SEMPRE presente (ambiente místico), um pouco mais densa no hero
+    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, 0.22 + shared.current.glass * 0.32, 3, d)
     uniforms.uColor.value.lerp(shared.current.color, 1 - Math.exp(-2 * d))
   })
   return (
@@ -1500,7 +1509,7 @@ export default function ImmersiveWorld() {
           <Panels shared={shared} />
         </Suspense>
         <EffectComposer multisampling={4}>
-          <Bloom intensity={0.78} luminanceThreshold={0.22} luminanceSmoothing={0.55} mipmapBlur />
+          <Bloom intensity={1.0} luminanceThreshold={0.2} luminanceSmoothing={0.6} mipmapBlur />
           <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.4} />
           <Vignette eskil={false} offset={0.18} darkness={0.92} />
         </EffectComposer>

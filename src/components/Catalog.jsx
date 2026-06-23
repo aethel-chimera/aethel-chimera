@@ -124,6 +124,19 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
     <section id="catalogo" ref={sectionRef} className="relative z-[3] overflow-hidden py-24 md:py-0 md:h-screen">
       {/* ===================== DESKTOP: galeria de slides 3D ===================== */}
       <div className="hidden md:block">
+        {/* área CLICÁVEL sobre o card 3D (atrás) → abre a seção do projeto.
+            Fica antes dos demais elementos no DOM para eles ficarem por cima. */}
+        <button
+          onClick={() => onOpenProject?.(active)}
+          aria-label={`Abrir case do projeto ${p.name}`}
+          className="group absolute z-[3] cursor-pointer"
+          style={{ left: '26%', right: '14%', top: '15%', bottom: '17%' }}
+        >
+          <span className="pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-y-1 absolute top-5 left-1/2 -translate-x-1/2 mono-label text-[0.6rem] text-amber bg-obsidian/75 backdrop-blur-sm rounded-full px-5 py-2.5 whitespace-nowrap">
+            abrir case do projeto →
+          </span>
+        </button>
+
         {/* topo: título + menu-comando */}
         <div className="absolute top-0 inset-x-0 px-10 pt-24 flex items-end justify-between gap-6 z-[4]">
           <SectionHead index="04" title="Catálogo" accent="vivo" />
