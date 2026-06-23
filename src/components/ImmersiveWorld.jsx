@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Environment, Lightformer, useTexture } from '@react-three/drei'
+import { Environment, Lightformer, useTexture, useGLTF } from '@react-three/drei'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { CATALOG } from '../data'
 import { bus } from '../scrollBus'
@@ -23,21 +23,23 @@ import * as THREE from 'three'
 // O elemento pesado (vidro) só renderiza onde aparece, preservando o FPS.
 // ---------------------------------------------------------------------------
 
-// peso de cada elemento + câmera por seção
+// peso de cada elemento + câmera por seção.
+// NOTA: os efeitos 3D procedurais (DNA, sistema nervoso, árvore, folhas, cards)
+// foram REMOVIDOS — serão substituídos por modelos GLB (ver GLB_MODELS abaixo).
+// O ÚNICO efeito de partículas que permanece é o LOGO da quimera no fim
+// (contato/rodapé). Por isso `fluid` só é ligado nessas duas seções.
 const ACTS = {
-  // Paleta PREMIUM (tons joia/metálico) — uma cor distinta por seção, coesa
-  // com o dark/âmbar. Fluido reduzido nas seções de leitura.
-  hero:       { glass: 1.0,  fluid: 0.0,  panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') }, // champagne/âmbar
-  manifesto:  { glass: 0.18, fluid: 0.42, panels: 0.0, logo: 0, camZ: 5.3, color: new THREE.Color('#C9A66B') }, // bronze
-  servicos:   { glass: 0.0,  fluid: 0.52, panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#5FA391') }, // jade
-  catalogo:   { glass: 0.0,  fluid: 0.12, panels: 1.0, logo: 0, camZ: 7.6, color: new THREE.Color('#B9AED6') }, // platina/ametista
-  processo:   { glass: 0.0,  fluid: 0.48, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#9A85C4') }, // ametista
-  resultados: { glass: 0.0,  fluid: 0.5,  panels: 0.0, logo: 0, camZ: 6.4, color: new THREE.Color('#C77B4A') }, // cobre
-  planos:     { glass: 0.0,  fluid: 0.42, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#D9A38E') }, // rosé/cobre claro
+  hero:       { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') },
+  manifesto:  { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 5.3, color: new THREE.Color('#C9A66B') },
+  servicos:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#5FA391') },
+  catalogo:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 7.6, color: new THREE.Color('#B9AED6') },
+  processo:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#9A85C4') },
+  resultados: { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.4, color: new THREE.Color('#C77B4A') },
+  planos:     { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#D9A38E') },
   // clímax: as partículas se MONTAM na logo da Aethel (âmbar da marca)
-  contato:    { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 1, camZ: 5.6, color: new THREE.Color('#E0A458') },
+  contato:    { glass: 0.0, fluid: 1.0, panels: 0.0, logo: 1, camZ: 5.6, color: new THREE.Color('#E0A458') },
   // rodapé: MESMO ato do contato → o logo fica FIXO (não encolhe nem desloca no fim)
-  rodape:     { glass: 0.0,  fluid: 1.0,  panels: 0.0, logo: 1, camZ: 5.6, color: new THREE.Color('#E0A458') },
+  rodape:     { glass: 0.0, fluid: 1.0, panels: 0.0, logo: 1, camZ: 5.6, color: new THREE.Color('#E0A458') },
 }
 const ORDER = Object.keys(ACTS)
 
@@ -1285,6 +1287,39 @@ function Director({ shared, target }) {
   return null
 }
 
+// ===========================================================================
+// MODELOS 3D (GLB) — slot pronto para receber os 3D que serão incorporados.
+//
+// COMO ADICIONAR UM MODELO:
+//   1) Solte o arquivo .glb em  public/models/   (ex.: public/models/arvore.glb)
+//   2) Registre abaixo em GLB_MODELS (descomente e ajuste url/posição/escala).
+//      Opcional: `section` documenta a qual seção ele pertence.
+//   3) (Recomendado) pré-carregue: useGLTF.preload('/models/arvore.glb')
+//
+// Enquanto a lista estiver VAZIA, nada é carregado (sem erro). O <Suspense> no
+// Canvas segura o carregamento assíncrono sem travar o paint.
+// ===========================================================================
+const GLB_MODELS = [
+  // { key: 'arvore',  url: '/models/arvore.glb',  section: 'catalogo', position: [0, -1, 0], scale: 0.6, rotation: [0, 0, 0] },
+  // { key: 'hero',    url: '/models/hero.glb',    section: 'hero',     position: [0, 0, 0],  scale: 1.0, rotation: [0, 0, 0] },
+]
+
+// pré-carrega os GLB registrados (no-op se a lista estiver vazia)
+GLB_MODELS.forEach((m) => m.url && useGLTF.preload(m.url))
+
+function GLBModel({ url, position = [0, 0, 0], scale = 1, rotation = [0, 0, 0] }) {
+  const { scene } = useGLTF(url)
+  // clona para permitir reuso/instâncias e não mutar o cache do drei
+  const obj = useMemo(() => scene.clone(true), [scene])
+  return <primitive object={obj} position={position} scale={scale} rotation={rotation} />
+}
+
+// renderiza todos os modelos GLB registrados (nada enquanto a lista estiver vazia)
+function SceneModels() {
+  if (!GLB_MODELS.length) return null
+  return GLB_MODELS.map((m) => <GLBModel key={m.key || m.url} {...m} />)
+}
+
 export default function ImmersiveWorld() {
   const shared = useRef({ glass: 1, fluid: 0, panels: 0, logo: 0, camZ: 6, mx: 0, my: 0, color: new THREE.Color('#E0A458') })
   const target = useRef({ ...ACTS.hero })
@@ -1330,13 +1365,12 @@ export default function ImmersiveWorld() {
         <Studio />
         <Director shared={shared} target={target} />
         <AuraSync />
-        <NervousSystem shared={shared} />
-        <DnaHelix shared={shared} />
+        {/* ÚNICO efeito de partículas mantido: o LOGO da quimera no fim (contato/rodapé) */}
         <Fluid shared={shared} />
-        <Tree3D shared={shared} />
-        <FallingLeaves shared={shared} />
+        {/* Efeitos 3D procedurais REMOVIDOS (DNA, sistema nervoso, árvore, folhas,
+            cards). Os modelos GLB entram aqui assim que registrados em GLB_MODELS. */}
         <Suspense fallback={null}>
-          <Panels shared={shared} />
+          <SceneModels />
         </Suspense>
         <EffectComposer multisampling={4}>
           <Bloom intensity={0.78} luminanceThreshold={0.22} luminanceSmoothing={0.55} mipmapBlur />
