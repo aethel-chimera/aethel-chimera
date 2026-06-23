@@ -51,7 +51,8 @@ export default function Services({ reducedMotion }) {
       cur.x += (pos.x - cur.x) * 0.1
       cur.y += (pos.y - cur.y) * 0.1
       if (previewRef.current) {
-        previewRef.current.style.transform = `translate(${cur.x + 24}px, ${cur.y - 120}px)`
+        // preview ao lado direito do cursor, centralizado na vertical (altura 160 -> -80)
+        previewRef.current.style.transform = `translate(${cur.x + 24}px, ${cur.y - 80}px)`
       }
       raf = requestAnimationFrame(tick)
     }
@@ -134,6 +135,10 @@ export default function Services({ reducedMotion }) {
       <div
         ref={previewRef}
         aria-hidden="true"
+        style={{
+          boxShadow:
+            '0 50px 100px -20px rgba(0, 0, 0, 0.95), 0 25px 55px -25px rgba(0, 0, 0, 0.9), 0 0 70px -5px rgba(0, 0, 0, 0.85)',
+        }}
         className={`fixed top-0 left-0 z-[80] w-64 h-40 rounded-lg overflow-hidden pointer-events-none transition-opacity duration-300 hidden md:block ${
           hoverImage ? 'opacity-100' : 'opacity-0'
         }`}
