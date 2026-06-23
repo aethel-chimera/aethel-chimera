@@ -32,7 +32,7 @@ const ACTS = {
   hero:       { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') },
   manifesto:  { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 5.3, color: new THREE.Color('#C9A66B') },
   servicos:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#5FA391') },
-  catalogo:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 7.6, color: new THREE.Color('#B9AED6') },
+  catalogo:   { glass: 0.0, fluid: 0.0, panels: 1.0, logo: 0, camZ: 7.6, color: new THREE.Color('#B9AED6') }, // panels = sinal "catálogo ativo" p/ a árvore GLB
   processo:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#9A85C4') },
   resultados: { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.4, color: new THREE.Color('#C77B4A') },
   planos:     { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#D9A38E') },
@@ -1320,6 +1320,21 @@ function SceneModels() {
   return GLB_MODELS.map((m) => <GLBModel key={m.key || m.url} {...m} />)
 }
 
+// ÁRVORE 3D (modelo GLB real) — substitui a árvore procedural. Visível só no
+// catálogo (gate por shared.panels), girando devagar.
+useGLTF.preload('/models/tree.glb')
+function CatalogTreeGLB({ shared }) {
+  const ref = useRef()
+  const { scene } = useGLTF('/models/tree.glb')
+  const obj = useMemo(() => scene.clone(true), [scene])
+  useFrame((_, dt) => {
+    if (!ref.current) return
+    ref.current.visible = shared.current.panels > 0.02
+    ref.current.rotation.y += dt * 0.12
+  })
+  return <primitive ref={ref} object={obj} position={[0, -1.2, 0]} scale={2.8} />
+}
+
 export default function ImmersiveWorld() {
   const shared = useRef({ glass: 1, fluid: 0, panels: 0, logo: 0, camZ: 6, mx: 0, my: 0, color: new THREE.Color('#E0A458') })
   const target = useRef({ ...ACTS.hero })
@@ -1371,6 +1386,7 @@ export default function ImmersiveWorld() {
             cards). Os modelos GLB entram aqui assim que registrados em GLB_MODELS. */}
         <Suspense fallback={null}>
           <SceneModels />
+          <CatalogTreeGLB shared={shared} />
         </Suspense>
         <EffectComposer multisampling={4}>
           <Bloom intensity={0.78} luminanceThreshold={0.22} luminanceSmoothing={0.55} mipmapBlur />
