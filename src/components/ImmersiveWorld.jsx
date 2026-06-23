@@ -524,13 +524,11 @@ function Panels({ shared }) {
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
     const t = state.clock.elapsedTime
-    const w = shared.current.panels
-    // SAÍDA do catálogo: cards dissolvem (smoothstep) e recuam junto com a árvore
+    // PRESENÇA (entra/sai com o catálogo, 0 fora) + recuo na saída
+    const show = bus.catalogShow || 0
     const exit = bus.catalogExit || 0
-    const eo = exit * exit * (3 - 2 * exit) // smoothstep
-    const vis = 1 - eo
-    op.current = THREE.MathUtils.damp(op.current, w, 4, d)
-    grp.current.visible = op.current > 0.01 && exit < 0.995
+    op.current = THREE.MathUtils.damp(op.current, show, 5, d)
+    grp.current.visible = op.current > 0.005
     grp.current.position.z = -exit * 5.0
     const activeF = bus.catalogP * (N - 1)
     // gira a órbita p/ trazer o projeto ativo à frente + leve reação ao cursor
@@ -557,15 +555,15 @@ function Panels({ shared }) {
       m.scale.y = THREE.MathUtils.damp(m.scale.y, 1.25 * sc, 6, d)
       // brilho/opacidade: frontal nítido; laterais esmaecidos (não somem)
       m.material.color.setScalar(0.55 + fr * 0.45)
-      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, op.current * vis * (0.18 + fr * 0.82), 6, d)
+      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, op.current * (0.18 + fr * 0.82), 6, d)
       const edge = m.children[0]
-      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, op.current * vis * (0.1 + fr * 0.7), 6, d)
+      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, op.current * (0.1 + fr * 0.7), 6, d)
       // projeta o centro do card na TELA (%) p/ o DOM posicionar a área clicável
       m.getWorldPosition(_v).project(camera)
       bus.cardHits[i] = {
         x: (_v.x * 0.5 + 0.5) * 100,
         y: (-_v.y * 0.5 + 0.5) * 100,
-        vis: op.current * vis > 0.02 ? fr * vis : 0, // só clicável com o catálogo visível (não na saída)
+        vis: op.current > 0.02 ? fr : 0, // só clicável com o catálogo presente (op.current = envelope)
         front: fr,
       }
     })
@@ -915,13 +913,11 @@ function Tree3D({ shared }) {
   useFrame((_, dt) => {
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
-    const w = shared.current.panels
-    // SAÍDA do catálogo: dissolve (smoothstep, decisiva) e recua p/ dentro do
-    // fog (escurece naturalmente) no fim do pin
+    // PRESENÇA (entra/sai com o scroll do catálogo, 0 fora dele) + recuo na saída
+    const show = bus.catalogShow || 0
     const exit = bus.catalogExit || 0
-    const eo = exit * exit * (3 - 2 * exit) // smoothstep
-    const vis = 1 - eo
-    grp.current.visible = w > 0.02 && exit < 0.995
+    const so = show * show * (3 - 2 * show) // smoothstep: entra/sai decisivo
+    grp.current.visible = show > 0.004
     grp.current.scale.setScalar(0.6 * (1 - 0.5 * exit))
     grp.current.position.y = -0.8 // centraliza: copa em cima E crown de raízes embaixo, ambos no quadro
     grp.current.position.z = -exit * 5.0 // recua p/ o fog da cena ao sair (escurece)
@@ -937,9 +933,9 @@ function Tree3D({ shared }) {
     const active = bus.catalogP * (CATALOG.length - 1)
     const frac = Math.abs(active - Math.round(active))
     const between = THREE.MathUtils.smoothstep(frac, 0.06, 0.4)
-    const target = w * (0.12 + between * 0.88) * vis // recua mais quando há card em leitura; some na saída
-    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, target, 5, d)
-    leafU.uOpacity.value = THREE.MathUtils.damp(leafU.uOpacity.value, target, 5, d)
+    const target = (0.12 + between * 0.88) * so // recua mais quando há card em leitura; some fora do catálogo
+    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, target, 6, d)
+    leafU.uOpacity.value = THREE.MathUtils.damp(leafU.uOpacity.value, target, 6, d)
   })
 
   return (
@@ -1046,7 +1042,7 @@ function FallingLeaves({ shared }) {
   useFrame((_, dt) => {
     if (!ref.current) return
     const d = Math.min(dt, 0.1)
-    const w = shared.current.panels * (1 - (bus.catalogExit || 0)) // some na saída
+    const w = bus.catalogShow || 0 // presença do catálogo (0 fora dele)
     ref.current.visible = w > 0.02
     uniforms.uTime.value += dt
     uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w, 4, d)
@@ -1362,10 +1358,15 @@ function CatalogTreeGLB({ shared }) {
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
     const t = state.clock.elapsedTime
-    const w = shared.current.panels
-    op.current = THREE.MathUtils.damp(op.current, w, 4, d) // fade suave (entra/sai)
-    grp.current.visible = op.current > 0.01
+    // PRESENÇA via envelope do scroll do catálogo (0 fora dele → nunca vaza p/
+    // Serviços nem p/ Processo) + recuo no fog ao sair (escurece naturalmente).
+    const w = bus.catalogShow || 0
+    const exit = bus.catalogExit || 0
+    op.current = THREE.MathUtils.damp(op.current, w, 5, d) // fade suave (entra/sai)
+    grp.current.visible = op.current > 0.005
     fadeObject(obj, op.current)
+    grp.current.scale.setScalar(1 - 0.4 * exit) // encolhe ao sair
+    grp.current.position.z = -exit * 5.0 // recua p/ o fog da cena ao sair (escurece)
     // movimento: VIRA na direção do cursor + deriva orgânica lenta (sem spin fixo)
     const ry = shared.current.mx * 0.7 + Math.sin(t * 0.13) * 0.35 + Math.sin(t * 0.37) * 0.12
     grp.current.rotation.y = THREE.MathUtils.damp(grp.current.rotation.y, ry, 2, d)
@@ -1477,7 +1478,7 @@ function GroundShadow({ shared }) {
   useFrame((_, dt) => {
     if (!ref.current) return
     const d = Math.min(dt, 0.1)
-    op.current = THREE.MathUtils.damp(op.current, shared.current.panels * (1 - (bus.catalogExit || 0)), 4, d)
+    op.current = THREE.MathUtils.damp(op.current, bus.catalogShow || 0, 4, d)
     ref.current.visible = op.current > 0.01
     ref.current.material.opacity = op.current
   })

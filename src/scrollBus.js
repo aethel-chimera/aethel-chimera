@@ -11,9 +11,14 @@
 // catalogExit: 0..1 no HOLD final do scroll pinado do catálogo. Dirige a SAÍDA
 //   dos elementos 3D (árvore, cards, sombra, pétalas): dissolvem e recuam ANTES
 //   do pin soltar, para não vazarem na seção Processo.
+// catalogShow: ENVELOPE de presença 0→1→0 dos elementos 3D do catálogo (árvore,
+//   cards, pétalas, sombra), dirigido pelo scroll do próprio catálogo e FORÇADO
+//   a 0 fora dele (callbacks do ScrollTrigger). Garante que nada vaze para as
+//   seções vizinhas — nem no início (vindo de Serviços) nem no fim (Processo).
 export const bus = {
   catalogP: 0,
   catalogExit: 0,
+  catalogShow: 0,
   tint: { r: 0.88, g: 0.64, b: 0.35 },
   cardHits: [],
   openProject: null,

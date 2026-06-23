@@ -645,17 +645,18 @@ main > section::after {
   position: absolute;
   left: 0;
   right: 0;
-  height: clamp(90px, 14vh, 200px);
+  height: clamp(160px, 26vh, 380px);
   pointer-events: none;
   z-index: -1;
 }
+/* gradiente multi-stop e mais alto: sem aresta dura no encontro das seções */
 main > section::before {
   top: 0;
-  background: linear-gradient(to bottom, rgba(7, 7, 11, 0.85), transparent);
+  background: linear-gradient(to bottom, rgba(7, 7, 11, 0.72), rgba(7, 7, 11, 0.34) 38%, rgba(7, 7, 11, 0.12) 68%, transparent);
 }
 main > section::after {
   bottom: 0;
-  background: linear-gradient(to top, rgba(7, 7, 11, 0.85), transparent);
+  background: linear-gradient(to top, rgba(7, 7, 11, 0.72), rgba(7, 7, 11, 0.34) 38%, rgba(7, 7, 11, 0.12) 68%, transparent);
 }
 
 /* reduced motion: corta tudo */

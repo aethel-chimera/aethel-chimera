@@ -137,6 +137,15 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
       // chegou ao centro) ANTES da seção soltar e descer. O ciclo dos cards
       // ocorre nos primeiros 85%; depois segura no último card centrado.
       const HOLD = 0.15
+      // Envelope de presença da cena 3D: entra (0→1) no começo do pin, sai (1→0)
+      // perto do fim. FORÇADO a 0 fora do pin (callbacks), p/ a árvore/cards nunca
+      // vazarem nas seções vizinhas — nem vindo de Serviços, nem indo p/ Processo.
+      const FADE_IN = 0.05 // fade-in nos primeiros 5% do pin
+      const EXIT_START = 0.85 // começa a sair aos 85%
+      const EXIT_END = 0.95 // some por completo aos 95% (resta 5% de respiro limpo)
+      const setShow = (v) => {
+        bus.catalogShow = Math.max(0, Math.min(1, v))
+      }
       const st = ScrollTrigger.create({
         trigger: sectionRef.current,
         pin: true,
@@ -145,17 +154,23 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
         scrub: true,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
-          const p = Math.min(1, self.progress / (1 - HOLD)) // chega a 1 aos 85% e segura
+          const pr = self.progress
+          const p = Math.min(1, pr / (1 - HOLD)) // chega a 1 aos 85% e segura
           bus.catalogP = p
-          // SAÍDA mais cedo e mais rápida: a cena 3D do catálogo dissolve/recua
-          // entre 85% e 95% do scroll pinado (não nos 15% inteiros), deixando os
-          // últimos ~5% como respiro LIMPO antes do pin soltar p/ o Processo.
-          const EXIT_START = 0.85
-          const EXIT_SPAN = 0.1
-          bus.catalogExit = Math.max(0, Math.min(1, (self.progress - EXIT_START) / EXIT_SPAN))
+          // SAÍDA: dissolve/recua entre EXIT_START e EXIT_END
+          bus.catalogExit = Math.max(0, Math.min(1, (pr - EXIT_START) / (EXIT_END - EXIT_START)))
+          // PRESENÇA: 0→1 (fade-in) · 1 (meio) · 1→0 (saída)
+          let show = 1
+          if (pr < FADE_IN) show = pr / FADE_IN
+          else if (pr >= EXIT_END) show = 0
+          else if (pr > EXIT_START) show = 1 - (pr - EXIT_START) / (EXIT_END - EXIT_START)
+          setShow(show)
           if (progressRef.current) progressRef.current.style.transform = `scaleX(${p})`
           setActive(Math.round(p * (N - 1)))
         },
+        // fora do pin a cena 3D do catálogo NÃO existe (sem vazamento):
+        onLeave: () => { setShow(0); bus.catalogExit = 1 }, // passou do fim → Processo
+        onLeaveBack: () => { setShow(0); bus.catalogExit = 0 }, // voltou p/ Serviços
       })
       stRef.current = st
       return () => st.kill()
