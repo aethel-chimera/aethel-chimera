@@ -630,32 +630,25 @@ button:focus-visible {
   transform-origin: bottom;
 }
 
-/* VÍDEO da quimera no fim (substitui a logo de partículas) ------------------ */
+/* VÍDEO da quimera no fim — cena COMPLETA (sem cortar) sobre um fundo que
+   acompanha a cor do vídeo (--mt). Sem mix-blend/hue p/ a cor exibida bater
+   com a amostrada. Feather leve só na borda, para fundir no fundo tingido. */
 .chimera-video-wrap {
   z-index: 0;
 }
 .chimera-video {
-  width: min(64rem, 94vw);
-  max-height: 92%;
-  object-fit: contain;
-  /* blend de luz: o preto do vídeo some e a quimera "acende" sobre a obsidiana */
-  mix-blend-mode: screen;
-  /* dissolve as bordas do retângulo do vídeo (sem moldura visível) */
-  -webkit-mask-image: radial-gradient(ellipse 62% 70% at 50% 52%, #000 52%, transparent 80%);
-  mask-image: radial-gradient(ellipse 62% 70% at 50% 52%, #000 52%, transparent 80%);
-  will-change: transform, filter;
-  /* motion (drift) + ciclo de cores (hue/saturação) — propriedades distintas,
-     compõem sem conflito */
-  animation: chimera-drift 20s ease-in-out infinite, chimera-hue 16s linear infinite;
+  width: min(72rem, 96vw);
+  max-height: 90%;
+  object-fit: contain; /* mostra a cena inteira, nunca corta */
+  /* feather discreto: dissolve só os últimos pixels da borda no fundo tingido */
+  -webkit-mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 84%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 84%, transparent 100%);
+  will-change: transform;
+  animation: chimera-drift 20s ease-in-out infinite;
 }
 @keyframes chimera-drift {
   0%, 100% { transform: scale(1) translateY(0); }
-  50% { transform: scale(1.045) translateY(-1.6%); }
-}
-@keyframes chimera-hue {
-  0% { filter: saturate(1.25) contrast(1.06) brightness(1) hue-rotate(0deg); }
-  50% { filter: saturate(1.6) contrast(1.12) brightness(1.08) hue-rotate(26deg); }
-  100% { filter: saturate(1.25) contrast(1.06) brightness(1) hue-rotate(0deg); }
+  50% { transform: scale(1.025) translateY(-1.2%); }
 }
 
 /* reduced motion: corta tudo */

@@ -3,11 +3,16 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { CONTACT } from '../data'
 import Magnetic from './Magnetic'
+import { useMotionTint } from '../useMotionTint'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function FinalCTA({ reducedMotion }) {
   const rootRef = useRef(null)
+  const videoRef = useRef(null)
+
+  // o fundo da seção acompanha a cor média do vídeo (cromo → ouro → violeta)
+  useMotionTint(videoRef, rootRef, { fallback: '200, 150, 92' })
 
   useEffect(() => {
     if (reducedMotion) return
@@ -34,10 +39,15 @@ export default function FinalCTA({ reducedMotion }) {
       ref={rootRef}
       className="relative z-[3] min-h-[92dvh] flex flex-col items-center justify-center text-center px-5 py-32 overflow-hidden"
     >
-      {/* VÍDEO da quimera (substitui a logo de partículas): blend de luz sobre a
-          obsidiana + motion (drift) e ciclo de cores (hue) — ver index.css */}
+      {/* fundo que ACOMPANHA a cor do vídeo: a cor média (--mt) preenche o
+          entorno e muda em tempo real; veil de obsidiana aterra o tom */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0" style={{ background: 'rgb(var(--mt))' }} />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-obsidian/70" />
+
+      {/* VÍDEO da quimera — cena COMPLETA (sem cortar), funde no fundo tingido */}
       <div aria-hidden="true" className="chimera-video-wrap pointer-events-none absolute inset-0 flex items-center justify-center">
         <video
+          ref={videoRef}
           className="chimera-video"
           src="/video/hero-loop.mp4"
           poster="/video/hero-poster.jpg"
