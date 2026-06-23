@@ -8,8 +8,12 @@
 //   atualizada a cada frame pelo mundo 3D para o DOM posicionar áreas clicáveis
 //   sobre TODOS os cards visíveis (não só o central).
 // openProject(i): handler do DOM (App/Catalog) para abrir o case do projeto i.
+// catalogExit: 0..1 no HOLD final do scroll pinado do catálogo. Dirige a SAÍDA
+//   dos elementos 3D (árvore, cards, sombra, pétalas): dissolvem e recuam ANTES
+//   do pin soltar, para não vazarem na seção Processo.
 export const bus = {
   catalogP: 0,
+  catalogExit: 0,
   tint: { r: 0.88, g: 0.64, b: 0.35 },
   cardHits: [],
   openProject: null,

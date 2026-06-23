@@ -147,6 +147,9 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
         onUpdate: (self) => {
           const p = Math.min(1, self.progress / (1 - HOLD)) // chega a 1 aos 85% e segura
           bus.catalogP = p
+          // SAÍDA: nos últimos HOLD%, a cena 3D do catálogo dissolve/recua, para
+          // o Processo entrar num fundo limpo (sem a árvore/cards vazando).
+          bus.catalogExit = Math.max(0, Math.min(1, (self.progress - (1 - HOLD)) / HOLD))
           if (progressRef.current) progressRef.current.style.transform = `scaleX(${p})`
           setActive(Math.round(p * (N - 1)))
         },

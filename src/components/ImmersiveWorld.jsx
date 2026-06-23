@@ -525,8 +525,12 @@ function Panels({ shared }) {
     const d = Math.min(dt, 0.1)
     const t = state.clock.elapsedTime
     const w = shared.current.panels
+    // SAÍDA do catálogo: cards dissolvem e recuam junto com a árvore
+    const exit = bus.catalogExit || 0
+    const vis = 1 - exit
     op.current = THREE.MathUtils.damp(op.current, w, 4, d)
-    grp.current.visible = op.current > 0.01
+    grp.current.visible = op.current > 0.01 && exit < 0.995
+    grp.current.position.z = -exit * 3.2
     const activeF = bus.catalogP * (N - 1)
     // gira a órbita p/ trazer o projeto ativo à frente + leve reação ao cursor
     grp.current.rotation.y = THREE.MathUtils.damp(
@@ -552,15 +556,15 @@ function Panels({ shared }) {
       m.scale.y = THREE.MathUtils.damp(m.scale.y, 1.25 * sc, 6, d)
       // brilho/opacidade: frontal nítido; laterais esmaecidos (não somem)
       m.material.color.setScalar(0.55 + fr * 0.45)
-      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, op.current * (0.18 + fr * 0.82), 6, d)
+      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, op.current * vis * (0.18 + fr * 0.82), 6, d)
       const edge = m.children[0]
-      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, op.current * (0.1 + fr * 0.7), 6, d)
+      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, op.current * vis * (0.1 + fr * 0.7), 6, d)
       // projeta o centro do card na TELA (%) p/ o DOM posicionar a área clicável
       m.getWorldPosition(_v).project(camera)
       bus.cardHits[i] = {
         x: (_v.x * 0.5 + 0.5) * 100,
         y: (-_v.y * 0.5 + 0.5) * 100,
-        vis: op.current > 0.02 ? fr : 0, // só clicável quando o catálogo está visível
+        vis: op.current * vis > 0.02 ? fr * vis : 0, // só clicável com o catálogo visível (não na saída)
         front: fr,
       }
     })
@@ -911,9 +915,13 @@ function Tree3D({ shared }) {
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
     const w = shared.current.panels
-    grp.current.visible = w > 0.02
-    grp.current.scale.setScalar(0.6)
+    // SAÍDA do catálogo: dissolve e recua (zoom-out) no HOLD final
+    const exit = bus.catalogExit || 0
+    const vis = 1 - exit
+    grp.current.visible = w > 0.02 && exit < 0.995
+    grp.current.scale.setScalar(0.6 * (1 - 0.3 * exit))
     grp.current.position.y = -0.8 // centraliza: copa em cima E crown de raízes embaixo, ambos no quadro
+    grp.current.position.z = -exit * 3.2 // afasta da câmera ao sair
     grp.current.rotation.y += dt * 0.1
     uniforms.uTime.value += dt
     leafU.uTime.value += dt
@@ -926,7 +934,7 @@ function Tree3D({ shared }) {
     const active = bus.catalogP * (CATALOG.length - 1)
     const frac = Math.abs(active - Math.round(active))
     const between = THREE.MathUtils.smoothstep(frac, 0.06, 0.4)
-    const target = w * (0.12 + between * 0.88) // recua mais quando há card em leitura
+    const target = w * (0.12 + between * 0.88) * vis // recua mais quando há card em leitura; some na saída
     uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, target, 5, d)
     leafU.uOpacity.value = THREE.MathUtils.damp(leafU.uOpacity.value, target, 5, d)
   })
@@ -1035,7 +1043,7 @@ function FallingLeaves({ shared }) {
   useFrame((_, dt) => {
     if (!ref.current) return
     const d = Math.min(dt, 0.1)
-    const w = shared.current.panels
+    const w = shared.current.panels * (1 - (bus.catalogExit || 0)) // some na saída
     ref.current.visible = w > 0.02
     uniforms.uTime.value += dt
     uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w, 4, d)
@@ -1466,7 +1474,7 @@ function GroundShadow({ shared }) {
   useFrame((_, dt) => {
     if (!ref.current) return
     const d = Math.min(dt, 0.1)
-    op.current = THREE.MathUtils.damp(op.current, shared.current.panels, 4, d)
+    op.current = THREE.MathUtils.damp(op.current, shared.current.panels * (1 - (bus.catalogExit || 0)), 4, d)
     ref.current.visible = op.current > 0.01
     ref.current.material.opacity = op.current
   })
