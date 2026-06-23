@@ -525,12 +525,13 @@ function Panels({ shared }) {
     const d = Math.min(dt, 0.1)
     const t = state.clock.elapsedTime
     const w = shared.current.panels
-    // SAÍDA do catálogo: cards dissolvem e recuam junto com a árvore
+    // SAÍDA do catálogo: cards dissolvem (smoothstep) e recuam junto com a árvore
     const exit = bus.catalogExit || 0
-    const vis = 1 - exit
+    const eo = exit * exit * (3 - 2 * exit) // smoothstep
+    const vis = 1 - eo
     op.current = THREE.MathUtils.damp(op.current, w, 4, d)
     grp.current.visible = op.current > 0.01 && exit < 0.995
-    grp.current.position.z = -exit * 3.2
+    grp.current.position.z = -exit * 5.0
     const activeF = bus.catalogP * (N - 1)
     // gira a órbita p/ trazer o projeto ativo à frente + leve reação ao cursor
     grp.current.rotation.y = THREE.MathUtils.damp(
@@ -915,13 +916,15 @@ function Tree3D({ shared }) {
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
     const w = shared.current.panels
-    // SAÍDA do catálogo: dissolve e recua (zoom-out) no HOLD final
+    // SAÍDA do catálogo: dissolve (smoothstep, decisiva) e recua p/ dentro do
+    // fog (escurece naturalmente) no fim do pin
     const exit = bus.catalogExit || 0
-    const vis = 1 - exit
+    const eo = exit * exit * (3 - 2 * exit) // smoothstep
+    const vis = 1 - eo
     grp.current.visible = w > 0.02 && exit < 0.995
-    grp.current.scale.setScalar(0.6 * (1 - 0.3 * exit))
+    grp.current.scale.setScalar(0.6 * (1 - 0.5 * exit))
     grp.current.position.y = -0.8 // centraliza: copa em cima E crown de raízes embaixo, ambos no quadro
-    grp.current.position.z = -exit * 3.2 // afasta da câmera ao sair
+    grp.current.position.z = -exit * 5.0 // recua p/ o fog da cena ao sair (escurece)
     grp.current.rotation.y += dt * 0.1
     uniforms.uTime.value += dt
     leafU.uTime.value += dt

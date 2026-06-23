@@ -147,9 +147,12 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
         onUpdate: (self) => {
           const p = Math.min(1, self.progress / (1 - HOLD)) // chega a 1 aos 85% e segura
           bus.catalogP = p
-          // SAÍDA: nos últimos HOLD%, a cena 3D do catálogo dissolve/recua, para
-          // o Processo entrar num fundo limpo (sem a árvore/cards vazando).
-          bus.catalogExit = Math.max(0, Math.min(1, (self.progress - (1 - HOLD)) / HOLD))
+          // SAÍDA mais cedo e mais rápida: a cena 3D do catálogo dissolve/recua
+          // entre 85% e 95% do scroll pinado (não nos 15% inteiros), deixando os
+          // últimos ~5% como respiro LIMPO antes do pin soltar p/ o Processo.
+          const EXIT_START = 0.85
+          const EXIT_SPAN = 0.1
+          bus.catalogExit = Math.max(0, Math.min(1, (self.progress - EXIT_START) / EXIT_SPAN))
           if (progressRef.current) progressRef.current.style.transform = `scaleX(${p})`
           setActive(Math.round(p * (N - 1)))
         },
