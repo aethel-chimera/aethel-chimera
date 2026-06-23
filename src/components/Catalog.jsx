@@ -84,17 +84,22 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
     if (reducedMotion) return
     const mm = gsap.matchMedia()
     mm.add('(min-width: 768px)', () => {
+      // HOLD no fim: o último ~15% do scroll mantém o card centralizado (já
+      // chegou ao centro) ANTES da seção soltar e descer. O ciclo dos cards
+      // ocorre nos primeiros 85%; depois segura no último card centrado.
+      const HOLD = 0.15
       const st = ScrollTrigger.create({
         trigger: sectionRef.current,
         pin: true,
         start: 'top top',
-        end: () => '+=' + Math.round((N - 0.35) * window.innerHeight),
+        end: () => '+=' + Math.round((N + 0.6) * window.innerHeight),
         scrub: true,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
-          bus.catalogP = self.progress
-          if (progressRef.current) progressRef.current.style.transform = `scaleX(${self.progress})`
-          setActive(Math.round(self.progress * (N - 1)))
+          const p = Math.min(1, self.progress / (1 - HOLD)) // chega a 1 aos 85% e segura
+          bus.catalogP = p
+          if (progressRef.current) progressRef.current.style.transform = `scaleX(${p})`
+          setActive(Math.round(p * (N - 1)))
         },
       })
       stRef.current = st

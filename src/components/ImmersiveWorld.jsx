@@ -537,8 +537,10 @@ function Panels({ shared }) {
       const wa = layout[i].ry + grp.current.rotation.y // ângulo no mundo
       const front = (Math.cos(wa) + 1) / 2 // 1 = de frente para a câmera
       const fr = Math.pow(front, 1.5)
-      // flutuação orgânica leve (altura) — órbita viva
-      m.position.y = THREE.MathUtils.damp(m.position.y, layout[i].y + Math.sin(t * 0.6 + i * 1.3) * 0.12, 3, d)
+      // o card FRONTAL (em leitura) sobe ao CENTRO (y→0); os laterais ficam
+      // nas alturas da hélice. flutuação orgânica leve por cima — órbita viva.
+      const baseY = layout[i].y * (1 - fr)
+      m.position.y = THREE.MathUtils.damp(m.position.y, baseY + Math.sin(t * 0.6 + i * 1.3) * 0.12, 3, d)
       // balanço suave (como pétala/folha boiando) — coeso com árvore+pétalas
       m.rotation.z = THREE.MathUtils.damp(m.rotation.z, Math.sin(t * 0.5 + i * 1.7) * 0.05, 2, d)
       m.rotation.x = THREE.MathUtils.damp(m.rotation.x, Math.sin(t * 0.4 + i * 0.9) * 0.04, 2, d)
