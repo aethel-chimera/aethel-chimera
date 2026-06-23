@@ -827,43 +827,55 @@ function Tree3D({ shared }) {
     const trunkTop = trunkPath[trunkPath.length - 1]
     const trunkBase = trunkPath[0]
 
-    // ---- COPA: do topo do tronco, 5 boughs densos para cima (a estrela da árvore)
+    // ---- COPA: galhos saem de DENTRO do tronco (ponto logo abaixo do topo) e
+    // GROSSOS, para fundir com o tronco sem deixar vão na junção. 1 central +
+    // laterais. (A copa é a estrela da árvore.)
+    const crotch = trunkPath[trunkPath.length - 2].clone() // logo abaixo do topo (junção sólida)
+    grow(crotch, new THREE.Vector3(0.05, 1, 0.03).normalize(), 1.6, 0.26, 1, 1, 5, true) // líder central fecha o centro
     for (let i = 0; i < 5; i++) {
-      const nd = new THREE.Vector3(0, 1, 0).applyAxisAngle(randAxis(), 0.45 + Math.random() * 0.6).normalize()
-      grow(trunkTop, nd, 1.7, 0.22, 1, 1, 5, true)
+      const nd = new THREE.Vector3(0, 1, 0).applyAxisAngle(randAxis(), 0.5 + Math.random() * 0.55).normalize()
+      grow(crotch, nd, 1.7, 0.24, 1, 1, 5, true)
     }
 
-    // ---- RAÍZES ENTRELAÇADAS (Árvore da Vida): cada raiz é um SCROLL que varre
-    // tangencialmente em sentido alternado, arca para fora e volta, cruzando as
-    // vizinhas por cima/baixo (weave). Ancoradas num anel de base ornamental.
-    const baseY = TRUNK_BASE_Y
-    const NROOTS = 8
-    for (let i = 0; i < NROOTS; i++) {
-      const t0 = (i / NROOTS) * Math.PI * 2
-      const swirl = i % 2 === 0 ? 1 : -1 // alterna o sentido → entrelaça
-      const layer = i % 2 === 0 ? 1 : -1 // alterna a profundidade → cruza por cima/baixo
-      const path = []
-      const SEG = 18
-      for (let s = 0; s <= SEG; s++) {
-        const t = s / SEG
-        const a = t0 + swirl * (t * t) * (Math.PI / NROOTS) * 3.2 // varredura em scroll
-        const arc = Math.sin(t * Math.PI) // 0→1→0: sai e volta (laço)
-        const r = 0.3 + arc * 1.2 // arco para fora e de volta
-        const y = baseY - 0.1 - t * 1.1 + arc * 0.22 // desce com leve dip (gnarl)
-        const px = Math.cos(a) * r
-        const pz = Math.sin(a) * r
-        // tecer: desloca perpendicular ao raio (tangente), alternando → over/under
-        const wx = -Math.sin(a) * layer * arc * 0.24
-        const wz = Math.cos(a) * layer * arc * 0.24
-        path.push(new THREE.Vector3(px + wx, y, pz + wz))
+    // ---- RAÍZES orgânicas IRREGULARES: poucas, assimétricas, cada uma com seus
+    // próprios nós/curvas, descendo e afinando até quase sumir. Sem simetria,
+    // sem anel, sem padrão — como raiz de verdade (cada uma é diferente).
+    const rootSpecs = [
+      { ang: 0.35, len: 1.55, rad: 0.3, steps: 8 },
+      { ang: 1.55, len: 1.05, rad: 0.21, steps: 6 },
+      { ang: 2.75, len: 1.75, rad: 0.34, steps: 9 },
+      { ang: 3.85, len: 1.15, rad: 0.22, steps: 6 },
+      { ang: 5.15, len: 1.4, rad: 0.27, steps: 7 },
+    ]
+    rootSpecs.forEach((rs) => {
+      const out = new THREE.Vector3(Math.cos(rs.ang), 0, Math.sin(rs.ang))
+      const start = trunkBase.clone().addScaledVector(out, 0.34).add(new THREE.Vector3(0, 0.2, 0))
+      const path = [start.clone()]
+      let p = start.clone()
+      const dir = out.clone().multiplyScalar(0.65).add(new THREE.Vector3(0, -0.6, 0)).normalize()
+      for (let s = 1; s <= rs.steps; s++) {
+        dir.y -= 0.08 + Math.random() * 0.08 // gravidade variável
+        dir.x += (Math.random() - 0.5) * 0.42 // nós/curvas fortes e ÚNICAS (gnarl)
+        dir.z += (Math.random() - 0.5) * 0.42
+        dir.normalize()
+        p = p.clone().addScaledVector(dir, rs.len / rs.steps)
+        path.push(p.clone())
+        // raiz secundária ocasional (preenche sem padrão)
+        if (s === Math.round(rs.steps * 0.55) && Math.random() < 0.7) {
+          const br = [p.clone()]
+          let bp = p.clone()
+          const bd = dir.clone().applyAxisAngle(randAxis(), 0.8).normalize()
+          for (let k = 1; k <= 3; k++) {
+            bd.y -= 0.12
+            bd.normalize()
+            bp = bp.clone().addScaledVector(bd, 0.32)
+            br.push(bp.clone())
+          }
+          branches.push(profiledTube(br, (t) => rs.rad * 0.5 * Math.pow(1 - t, 1.6) + 0.012, 7))
+        }
       }
-      branches.push(profiledTube(path, (t) => 0.22 * Math.pow(1 - t, 1.25) + 0.03, 9))
-    }
-    // anel de base ornamental (ancora/emoldura as raízes — "chão" da Árvore da Vida)
-    const ring = new THREE.TorusGeometry(1.18, 0.05, 8, 48)
-    ring.rotateX(Math.PI / 2)
-    ring.translate(0, baseY - 0.65, 0)
-    branches.push(ring)
+      branches.push(profiledTube(path, (t) => rs.rad * Math.pow(1 - t, 1.7) + 0.015, 8))
+    })
 
     // FOLHAS da copa: 2 por ponta de galho, ancoradas com leve dispersão
     const corner = []
