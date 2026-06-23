@@ -539,6 +539,9 @@ function Panels({ shared }) {
       const fr = Math.pow(front, 1.5)
       // flutuação orgânica leve (altura) — órbita viva
       m.position.y = THREE.MathUtils.damp(m.position.y, layout[i].y + Math.sin(t * 0.6 + i * 1.3) * 0.12, 3, d)
+      // balanço suave (como pétala/folha boiando) — coeso com árvore+pétalas
+      m.rotation.z = THREE.MathUtils.damp(m.rotation.z, Math.sin(t * 0.5 + i * 1.7) * 0.05, 2, d)
+      m.rotation.x = THREE.MathUtils.damp(m.rotation.x, Math.sin(t * 0.4 + i * 0.9) * 0.04, 2, d)
       // escala: frontal (leitura) menor, laterais ainda menores
       const sc = 0.5 + fr * 0.5
       m.scale.x = THREE.MathUtils.damp(m.scale.x, 2.0 * sc, 6, d)
@@ -945,14 +948,14 @@ void main(){
   float s = aSeed;
   float x = (fract(s * 7.13) - 0.5) * 9.5;
   float z = (fract(s * 3.71) - 0.5) * 5.0 - 0.5;
-  float fall = mod(uTime * 0.32 + s * 9.0, 1.0); // ciclo de queda
+  float fall = mod(uTime * 0.12 + s * 9.0, 1.0); // ciclo de queda LENTO (flutua)
   float y = 4.6 - fall * 9.2;
-  x += sin(uTime * 0.8 + s * 6.28) * 0.8; // vento (balanço)
-  z += cos(uTime * 0.6 + s * 6.28) * 0.4;
+  x += sin(uTime * 0.5 + s * 6.28) * 0.9; // vento (balanço suave)
+  z += cos(uTime * 0.4 + s * 6.28) * 0.45;
   vFade = sin(fall * 3.14159); // some no topo e no fim da queda
   vec4 mv = modelViewMatrix * vec4(x, y, z, 1.0);
-  // tombo da folha (rotação do quad no espaço da câmera)
-  float a = uTime * 1.5 + s * 20.0;
+  // tombo lento da pétala (rotação do quad no espaço da câmera)
+  float a = uTime * 0.7 + s * 20.0;
   vec2 c = aCorner * uScale * (0.7 + fract(s * 1.7) * 0.7);
   mv.xy += vec2(c.x * cos(a) - c.y * sin(a), c.x * sin(a) + c.y * cos(a));
   gl_Position = projectionMatrix * mv;
@@ -1316,7 +1319,21 @@ useGLTF.preload('/models/tree.glb')
 function CatalogTreeGLB({ shared }) {
   const grp = useRef()
   const { scene } = useGLTF('/models/tree.glb')
-  const obj = useMemo(() => scene.clone(true), [scene])
+  // realça BRILHO BRANCO nas folhas: mais reflexo (envMap) + menos rugosidade
+  // (especular) — efeito de qualidade nas folhas glossy do bonsai.
+  const obj = useMemo(() => {
+    const c = scene.clone(true)
+    c.traverse((n) => {
+      if (n.isMesh && n.material) {
+        const arr = Array.isArray(n.material) ? n.material : [n.material]
+        arr.forEach((m) => {
+          m.envMapIntensity = 2.8
+          if (m.roughness != null) m.roughness = Math.max(0.1, m.roughness * 0.55)
+        })
+      }
+    })
+    return c
+  }, [scene])
   const op = useRef(0)
   useFrame((state, dt) => {
     if (!grp.current) return
@@ -1335,8 +1352,9 @@ function CatalogTreeGLB({ shared }) {
   return (
     <group ref={grp} position={[1.4, 0, 0]}>
       <primitive object={obj} position={[0, -1.2, 0]} scale={2.8} />
-      {/* luzes limpas: key quente suave + preenchimento frio (realça o bonsai) */}
-      <pointLight position={[3.5, 2.5, 3.5]} intensity={7} distance={13} color="#F1E3BC" />
+      {/* luz BRANCA do alto = brilho/glint nas folhas + key quente + fill frio */}
+      <pointLight position={[1.5, 5.0, 3.5]} intensity={6} distance={16} color="#ffffff" />
+      <pointLight position={[3.5, 2.5, 3.5]} intensity={5.5} distance={13} color="#F1E3BC" />
       <pointLight position={[-3.5, 1.0, -2.0]} intensity={3} distance={13} color="#9FC2C9" />
     </group>
   )
