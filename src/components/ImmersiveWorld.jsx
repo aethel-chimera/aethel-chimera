@@ -521,7 +521,7 @@ function Panels({ shared }) {
   // posição de LEITURA do card (à direita; as infos do projeto ficam à esquerda em DOM)
   const RX = 1.55
   const RY = 0.0
-  const RZ = 2.8
+  const RZ = 3.0 // um pouco mais à frente da copa, p/ passar limpo
 
   useFrame((state, dt) => {
     const w = shared.current.panels
@@ -585,13 +585,14 @@ function Panels({ shared }) {
   return (
     <group ref={grp}>
       {CATALOG.map((p, i) => (
-        <mesh key={p.name} scale={[0.3, 0.3, 1]}>
+        // renderOrder alto: o card passa SEMPRE por cima da árvore (sem galho cruzando)
+        <mesh key={p.name} scale={[0.3, 0.3, 1]} renderOrder={4}>
           <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial map={textures[i]} color="#E0A458" transparent opacity={0} side={THREE.DoubleSide} toneMapped={false} />
-          {/* moldura âmbar do card */}
-          <lineSegments>
+          <meshBasicMaterial map={textures[i]} color="#E0A458" transparent opacity={0} depthTest={false} side={THREE.DoubleSide} toneMapped={false} />
+          {/* moldura âmbar do card (também por cima) */}
+          <lineSegments renderOrder={5}>
             <edgesGeometry args={[new THREE.PlaneGeometry(1.015, 1.03)]} />
-            <lineBasicMaterial color="#E0A458" transparent opacity={0} />
+            <lineBasicMaterial color="#E0A458" transparent opacity={0} depthTest={false} />
           </lineSegments>
         </mesh>
       ))}
@@ -936,7 +937,7 @@ function Tree3D({ shared }) {
     const active = bus.catalogP * (CATALOG.length - 1)
     const frac = Math.abs(active - Math.round(active))
     const between = THREE.MathUtils.smoothstep(frac, 0.06, 0.4)
-    const target = w * (0.18 + between * 0.82)
+    const target = w * (0.12 + between * 0.88) // recua mais quando há card em leitura
     uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, target, 5, d)
     leafU.uOpacity.value = THREE.MathUtils.damp(leafU.uOpacity.value, target, 5, d)
   })
