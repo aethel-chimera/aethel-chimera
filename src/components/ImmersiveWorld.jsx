@@ -1372,44 +1372,7 @@ function CatalogTreeGLB({ shared }) {
   )
 }
 
-// ===========================================================================
-// AMBIENTE IMERSIVO DO HERO — o animal místico (GLB) flutuando num espaço de
-// POEIRA atmosférica + LUZ dramática. Visível no topo (gate por glass), com
-// FADE suave e movimento ORGÂNICO reativo ao cursor (vira p/ o mouse, não spin).
-// ===========================================================================
-useGLTF.preload('/models/creature.glb')
-function HeroCreature({ shared }) {
-  const grp = useRef()
-  const { scene } = useGLTF('/models/creature.glb')
-  const obj = useMemo(() => scene.clone(true), [scene])
-  const op = useRef(0)
-  useFrame((state, dt) => {
-    if (!grp.current) return
-    const d = Math.min(dt, 0.1)
-    const t = state.clock.elapsedTime
-    const w = shared.current.glass
-    op.current = THREE.MathUtils.damp(op.current, w, 4, d) // fade (não some do nada)
-    grp.current.visible = op.current > 0.01
-    fadeObject(obj, op.current)
-    // vira na direção do cursor + deriva orgânica (sem giro constante)
-    const ry = -0.3 + shared.current.mx * 0.8 + Math.sin(t * 0.16) * 0.28 + Math.sin(t * 0.41) * 0.1
-    grp.current.rotation.y = THREE.MathUtils.damp(grp.current.rotation.y, ry, 2, d)
-    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.18 + Math.sin(t * 0.25) * 0.05, 2.5, d)
-    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, 1.5 + shared.current.mx * 0.3, 3, d)
-    grp.current.position.y = THREE.MathUtils.damp(grp.current.position.y, Math.sin(t * 0.5) * 0.16 - shared.current.my * 0.18, 3, d)
-    grp.current.scale.setScalar(2.3)
-  })
-  return (
-    <group ref={grp} position={[1.5, 0, 0]} scale={2.3}>
-      <primitive object={obj} />
-      {/* luz quente de borda + contraluz fria acompanhando a criatura (drama) */}
-      <pointLight position={[1.1, 0.7, 1.0]} intensity={5} distance={4} color="#E0A458" />
-      <pointLight position={[-1.0, -0.2, -0.6]} intensity={2.5} distance={4} color="#6a7bd6" />
-    </group>
-  )
-}
-
-// poeira atmosférica do ambiente (motes que flutuam ao redor da criatura)
+// poeira atmosférica do ambiente (motes que flutuam no espaço do hero)
 const ADUST_VERT = /* glsl */ `
 uniform float uTime; uniform float uSize;
 attribute float aRand;
@@ -1567,10 +1530,9 @@ export default function ImmersiveWorld() {
         <FallingLeaves shared={shared} />
         {/* sombra de contato que aterra a árvore na cena */}
         <GroundShadow shared={shared} />
-        {/* modelos 3D (GLB): criatura no hero + árvore no catálogo + cards orbitando */}
+        {/* modelos 3D (GLB): árvore no catálogo + cards orbitando */}
         <Suspense fallback={null}>
           <SceneModels />
-          <HeroCreature shared={shared} />
           <CatalogTreeGLB shared={shared} />
           <Panels shared={shared} />
         </Suspense>
