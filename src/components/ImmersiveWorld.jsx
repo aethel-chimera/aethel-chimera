@@ -494,6 +494,11 @@ function Fluid({ shared }) {
 // ---- Ato 3: cada projeto do catálogo é uma FOLHA que se desprende da COPA da
 // árvore, voa crescendo até virar o CARD de leitura, e depois CAI como folha. ----
 const WHITE = new THREE.Color('#ffffff')
+// CARDS do catálogo CIRCULANDO a árvore (órbita helicoidal). O scroll gira a
+// órbita trazendo cada projeto à frente; o card frontal fica grande/nítido e os
+// laterais menores/esmaecidos (nunca somem do nada). Leve flutuação + reação ao
+// hover. Profundidade real: os cards de trás passam ATRÁS da árvore.
+const CARD_FRAME = new THREE.Color('#E6D6AE') // moldura clean (creme dourado)
 function Panels({ shared }) {
   const grp = useRef()
   const textures = useTexture(CATALOG.map((p) => p.image))
@@ -505,96 +510,62 @@ function Panels({ shared }) {
   }, [textures])
 
   const N = CATALOG.length
-  const tmpC = useMemo(() => new THREE.Color(), [])
-  // âncora de cada folha na COPA (de onde ela se desprende) + cor da folha
-  const anchors = useMemo(
-    () =>
-      CATALOG.map((_, i) => {
-        const ang = i * 1.7 + 0.6
-        return {
-          cx: Math.cos(ang) * 1.7,
-          cz: Math.sin(ang) * 1.7 - 0.3,
-          cy: 2.2 + (i % 3) * 0.4,
-          leaf: CATALOG_COLORS[i % CATALOG_COLORS.length],
-        }
-      }),
-    [N]
+  const ANGLE = (Math.PI * 2) / N // distribui igualmente ao redor da árvore
+  const R = 3.5 // raio da órbita (fora da copa, sem ficar colado na câmera)
+  const layout = useMemo(
+    () => CATALOG.map((_, i) => ({ ry: i * ANGLE, y: Math.sin(i * 1.7) * 0.55 })),
+    [N, ANGLE]
   )
-  // posição de LEITURA do card (à direita; as infos do projeto ficam à esquerda em DOM)
-  const RX = 1.55
-  const RY = 0.0
-  const RZ = 3.0 // um pouco mais à frente da copa, p/ passar limpo
+  const op = useRef(0)
 
   useFrame((state, dt) => {
-    const w = shared.current.panels
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
     const t = state.clock.elapsedTime
-    grp.current.visible = w > 0.02
+    const w = shared.current.panels
+    op.current = THREE.MathUtils.damp(op.current, w, 4, d)
+    grp.current.visible = op.current > 0.01
     const activeF = bus.catalogP * (N - 1)
+    // gira a órbita p/ trazer o projeto ativo à frente + leve reação ao cursor
+    grp.current.rotation.y = THREE.MathUtils.damp(
+      grp.current.rotation.y,
+      -activeF * ANGLE + shared.current.mx * 0.22,
+      4,
+      d
+    )
     grp.current.children.forEach((m, i) => {
-      const a = anchors[i]
-      const prog = activeF - i // <0: ainda na copa (a chegar); 0: card; >0: já caiu
-      const cardness = Math.max(0, 1 - Math.abs(prog)) // 1 = card pleno de frente
-      const open = THREE.MathUtils.smoothstep(cardness, 0.12, 0.95)
-      const tumble = 1 - open
-
-      // FONTE da folha: na COPA (incoming, prog<=0) ou CAÍDA abaixo (outgoing, prog>0)
-      let sx, sy, sz
-      if (prog <= 0) {
-        const up = Math.max(0, -prog - 1) // folhas distantes ficam mais altas/escondidas
-        sx = a.cx + Math.sin(t * 0.8 + i) * 0.15
-        sy = a.cy + up * 1.6 + Math.sin(t * 0.9 + i * 2.0) * 0.12
-        sz = a.cz
-      } else {
-        sx = a.cx * 0.7 + Math.sin(t * 0.8 + i) * 0.2
-        sy = -2.6 - prog * 1.7 // cai cada vez mais fundo
-        sz = a.cz * 0.7
-      }
-      // posição = interpola da folha (copa/caída) até a leitura conforme abre
-      // (amortecimento mais suave = voo da folha mais visível)
-      m.position.x = THREE.MathUtils.damp(m.position.x, sx + (RX - sx) * open, 4.5, d)
-      m.position.y = THREE.MathUtils.damp(m.position.y, sy + (RY - sy) * open, 4.5, d)
-      m.position.z = THREE.MathUtils.damp(m.position.z, sz + (RZ - sz) * open, 4.5, d)
-
-      // rotação: folha tomba/gira no ar → card deita de FRENTE (plano) ao abrir
-      m.rotation.x = THREE.MathUtils.damp(m.rotation.x, tumble * (0.5 + Math.sin(t * 1.4 + i) * 0.7), 6, d)
-      m.rotation.y = THREE.MathUtils.damp(m.rotation.y, tumble * Math.sin(t * 1.0 + i * 2.0) * 0.9, 6, d)
-      m.rotation.z = THREE.MathUtils.damp(
-        m.rotation.z,
-        tumble * (Math.sin(t * 1.2 + i * 1.5) * 0.5 + (prog > 0 ? 0.4 : -0.2)),
-        6,
-        d
-      )
-
-      // escala: FOLHINHA (0.3) → tamanho de leitura
-      const sc = 0.3 + open * 0.7
-      m.scale.x = THREE.MathUtils.damp(m.scale.x, 3.5 * sc, 5, d)
-      m.scale.y = THREE.MathUtils.damp(m.scale.y, 2.2 * sc, 5, d)
-
-      // cor: FOLHA colorida (cor do projeto) → revela a IMAGEM (branco) ao virar card
-      tmpC.copy(a.leaf).lerp(WHITE, open)
-      m.material.color.lerp(tmpC, 1 - Math.exp(-8 * d))
-
-      // opacidade: surge ao se aproximar; some quando a folha está longe/funda
-      const vis = 1 - THREE.MathUtils.smoothstep(Math.abs(prog), 0.0, 1.7)
-      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, w * vis, 6, d)
+      const wa = layout[i].ry + grp.current.rotation.y // ângulo no mundo
+      const front = (Math.cos(wa) + 1) / 2 // 1 = de frente para a câmera
+      const fr = Math.pow(front, 1.5)
+      // flutuação orgânica leve (altura) — órbita viva
+      m.position.y = THREE.MathUtils.damp(m.position.y, layout[i].y + Math.sin(t * 0.6 + i * 1.3) * 0.12, 3, d)
+      // escala: frontal grande (leitura), laterais menores
+      const sc = 0.5 + fr * 0.5
+      m.scale.x = THREE.MathUtils.damp(m.scale.x, 2.4 * sc, 6, d)
+      m.scale.y = THREE.MathUtils.damp(m.scale.y, 1.5 * sc, 6, d)
+      // brilho/opacidade: frontal nítido; laterais esmaecidos (não somem)
+      m.material.color.setScalar(0.55 + fr * 0.45)
+      m.material.opacity = THREE.MathUtils.damp(m.material.opacity, op.current * (0.18 + fr * 0.82), 6, d)
       const edge = m.children[0]
-      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, w * vis * open * 0.9, 6, d)
+      if (edge) edge.material.opacity = THREE.MathUtils.damp(edge.material.opacity, op.current * (0.1 + fr * 0.7), 6, d)
     })
   })
 
   return (
-    <group ref={grp}>
+    <group ref={grp} position={[1.4, 0, 0]}>
       {CATALOG.map((p, i) => (
-        // renderOrder alto: o card passa SEMPRE por cima da árvore (sem galho cruzando)
-        <mesh key={p.name} scale={[0.3, 0.3, 1]} renderOrder={4}>
+        <mesh
+          key={p.name}
+          position={[Math.sin(layout[i].ry) * R, layout[i].y, Math.cos(layout[i].ry) * R]}
+          rotation={[0, layout[i].ry, 0]}
+          scale={[1.6, 1.0, 1]}
+        >
           <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial map={textures[i]} color="#E0A458" transparent opacity={0} depthTest={false} side={THREE.DoubleSide} toneMapped={false} />
-          {/* moldura âmbar do card (também por cima) */}
-          <lineSegments renderOrder={5}>
+          <meshBasicMaterial map={textures[i]} color="#ffffff" transparent opacity={0} side={THREE.DoubleSide} toneMapped={false} />
+          {/* moldura clean do card */}
+          <lineSegments>
             <edgesGeometry args={[new THREE.PlaneGeometry(1.015, 1.03)]} />
-            <lineBasicMaterial color="#E0A458" transparent opacity={0} depthTest={false} />
+            <lineBasicMaterial color={CARD_FRAME} transparent opacity={0} />
           </lineSegments>
         </mesh>
       ))}
@@ -604,7 +575,8 @@ function Panels({ shared }) {
 
 // cor premium distinta por projeto do catálogo; a árvore (e o fundo) assumem
 // a cor do projeto que está girando à frente, transicionando suavemente.
-const CATALOG_COLORS = ['#E0A458', '#5FA391', '#B9AED6', '#C77B4A', '#6FA8D9', '#D98EA8'].map(
+// paleta CLEAN/terrosa — combina com o bonsai verde e a criatura âmbar
+const CATALOG_COLORS = ['#A7C49C', '#E6D6B0', '#D8AE78', '#9FC2C2', '#CBA98E', '#E2CD93'].map(
   (c) => new THREE.Color(c)
 )
 function catalogTint(out, p) {
@@ -997,14 +969,16 @@ void main(){
   float leaf = 1.0 - smoothstep(0.32, 0.46, r);
   leaf *= smoothstep(0.5, 0.42, abs(p.y) + abs(p.x) * 0.6); // afina nas pontas
   if (leaf < 0.04) discard;
-  vec3 laranja = vec3(0.90, 0.46, 0.12);
-  vec3 tijolo  = vec3(0.68, 0.17, 0.07);
-  vec3 ouro    = vec3(0.92, 0.72, 0.26);
-  vec3 col = mix(tijolo, laranja, smoothstep(0.0, 0.5, vTone));
-  col = mix(col, ouro, smoothstep(0.5, 1.0, vTone));
+  // PÉTALAS clean (cerejeira): rosa suave → branco-creme → palha, combinando
+  // com o bonsai verde (sem o laranja saturado de outono).
+  vec3 rosa  = vec3(0.96, 0.80, 0.83);
+  vec3 creme = vec3(0.97, 0.93, 0.87);
+  vec3 palha = vec3(0.92, 0.85, 0.70);
+  vec3 col = mix(rosa, creme, smoothstep(0.0, 0.5, vTone));
+  col = mix(col, palha, smoothstep(0.5, 1.0, vTone));
   // nervura central sutil
-  col *= 1.0 - smoothstep(0.04, 0.0, abs(p.x)) * 0.35;
-  gl_FragColor = vec4(col, leaf * uOpacity * vFade * 0.95);
+  col *= 1.0 - smoothstep(0.04, 0.0, abs(p.x)) * 0.25;
+  gl_FragColor = vec4(col, leaf * uOpacity * vFade * 0.9);
 }
 `
 function FallingLeaves({ shared }) {
@@ -1320,43 +1294,80 @@ function SceneModels() {
   return GLB_MODELS.map((m) => <GLBModel key={m.key || m.url} {...m} />)
 }
 
-// ÁRVORE 3D (modelo GLB real) — substitui a árvore procedural. Visível só no
-// catálogo (gate por shared.panels), girando devagar.
+// fade suave de um modelo GLB (percorre os materiais) — para ele NÃO sumir do
+// nada: aparece/some por opacidade. depthWrite só quando opaco (evita artefato).
+function fadeObject(obj, o) {
+  obj.traverse((n) => {
+    const m = n.material
+    if (!m) return
+    const arr = Array.isArray(m) ? m : [m]
+    arr.forEach((mat) => {
+      mat.transparent = true
+      mat.opacity = o
+      mat.depthWrite = o > 0.9
+    })
+  })
+}
+
+// ÁRVORE 3D (modelo GLB real). Visível só no catálogo (gate por shared.panels),
+// com FADE suave, movimento ORGÂNICO + reativo ao cursor (não fica só girando)
+// e luzes próprias.
 useGLTF.preload('/models/tree.glb')
 function CatalogTreeGLB({ shared }) {
-  const ref = useRef()
+  const grp = useRef()
   const { scene } = useGLTF('/models/tree.glb')
   const obj = useMemo(() => scene.clone(true), [scene])
-  useFrame((_, dt) => {
-    if (!ref.current) return
-    ref.current.visible = shared.current.panels > 0.02
-    ref.current.rotation.y += dt * 0.12
+  const op = useRef(0)
+  useFrame((state, dt) => {
+    if (!grp.current) return
+    const d = Math.min(dt, 0.1)
+    const t = state.clock.elapsedTime
+    const w = shared.current.panels
+    op.current = THREE.MathUtils.damp(op.current, w, 4, d) // fade suave (entra/sai)
+    grp.current.visible = op.current > 0.01
+    fadeObject(obj, op.current)
+    // movimento: VIRA na direção do cursor + deriva orgânica lenta (sem spin fixo)
+    const ry = shared.current.mx * 0.7 + Math.sin(t * 0.13) * 0.35 + Math.sin(t * 0.37) * 0.12
+    grp.current.rotation.y = THREE.MathUtils.damp(grp.current.rotation.y, ry, 2, d)
+    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.1 + Math.sin(t * 0.21) * 0.04, 2, d)
+    grp.current.position.y = THREE.MathUtils.damp(grp.current.position.y, Math.sin(t * 0.4) * 0.12, 2, d) // respiração
   })
-  return <primitive ref={ref} object={obj} position={[0, -1.2, 0]} scale={2.8} />
+  return (
+    <group ref={grp} position={[1.4, 0, 0]}>
+      <primitive object={obj} position={[0, -1.2, 0]} scale={2.8} />
+      {/* luzes limpas: key quente suave + preenchimento frio (realça o bonsai) */}
+      <pointLight position={[3.5, 2.5, 3.5]} intensity={7} distance={13} color="#F1E3BC" />
+      <pointLight position={[-3.5, 1.0, -2.0]} intensity={3} distance={13} color="#9FC2C9" />
+    </group>
+  )
 }
 
 // ===========================================================================
 // AMBIENTE IMERSIVO DO HERO — o animal místico (GLB) flutuando num espaço de
-// POEIRA atmosférica + LUZ âmbar dramática. Visível no topo (gate por glass).
+// POEIRA atmosférica + LUZ dramática. Visível no topo (gate por glass), com
+// FADE suave e movimento ORGÂNICO reativo ao cursor (vira p/ o mouse, não spin).
 // ===========================================================================
 useGLTF.preload('/models/creature.glb')
 function HeroCreature({ shared }) {
   const grp = useRef()
   const { scene } = useGLTF('/models/creature.glb')
   const obj = useMemo(() => scene.clone(true), [scene])
+  const op = useRef(0)
   useFrame((state, dt) => {
     if (!grp.current) return
     const d = Math.min(dt, 0.1)
-    const w = shared.current.glass
-    grp.current.visible = w > 0.02
     const t = state.clock.elapsedTime
-    grp.current.rotation.y += dt * 0.18 // gira devagar
-    // flutua (respiração) + parallax ao cursor + encolhe ao sair (fade de escala)
-    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, 1.5 + shared.current.mx * 0.25, 3, d)
-    grp.current.position.y = THREE.MathUtils.damp(grp.current.position.y, Math.sin(t * 0.5) * 0.14 - shared.current.my * 0.15, 3, d)
-    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.16, 3, d)
-    const s = 2.3 * (0.7 + 0.3 * THREE.MathUtils.smoothstep(w, 0.0, 0.6))
-    grp.current.scale.setScalar(s)
+    const w = shared.current.glass
+    op.current = THREE.MathUtils.damp(op.current, w, 4, d) // fade (não some do nada)
+    grp.current.visible = op.current > 0.01
+    fadeObject(obj, op.current)
+    // vira na direção do cursor + deriva orgânica (sem giro constante)
+    const ry = -0.3 + shared.current.mx * 0.8 + Math.sin(t * 0.16) * 0.28 + Math.sin(t * 0.41) * 0.1
+    grp.current.rotation.y = THREE.MathUtils.damp(grp.current.rotation.y, ry, 2, d)
+    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.18 + Math.sin(t * 0.25) * 0.05, 2.5, d)
+    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, 1.5 + shared.current.mx * 0.3, 3, d)
+    grp.current.position.y = THREE.MathUtils.damp(grp.current.position.y, Math.sin(t * 0.5) * 0.16 - shared.current.my * 0.18, 3, d)
+    grp.current.scale.setScalar(2.3)
   })
   return (
     <group ref={grp} position={[1.5, 0, 0]} scale={2.3}>
@@ -1479,11 +1490,14 @@ export default function ImmersiveWorld() {
         <Fluid shared={shared} />
         {/* ambiente imersivo do hero: poeira atmosférica ao redor da criatura */}
         <AtmosphereDust shared={shared} />
-        {/* modelos 3D (GLB): criatura no hero + árvore no catálogo */}
+        {/* pétalas (cerejeira) caindo no catálogo, em volta da árvore */}
+        <FallingLeaves shared={shared} />
+        {/* modelos 3D (GLB): criatura no hero + árvore no catálogo + cards orbitando */}
         <Suspense fallback={null}>
           <SceneModels />
           <HeroCreature shared={shared} />
           <CatalogTreeGLB shared={shared} />
+          <Panels shared={shared} />
         </Suspense>
         <EffectComposer multisampling={4}>
           <Bloom intensity={0.78} luminanceThreshold={0.22} luminanceSmoothing={0.55} mipmapBlur />
