@@ -29,7 +29,7 @@ import * as THREE from 'three'
 // O ÚNICO efeito de partículas que permanece é o LOGO da quimera no fim
 // (contato/rodapé). Por isso `fluid` só é ligado nessas duas seções.
 const ACTS = {
-  hero:       { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') },
+  hero:       { glass: 1.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') }, // glass = sinal "hero ativo" p/ a criatura GLB + poeira
   manifesto:  { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 5.3, color: new THREE.Color('#C9A66B') },
   servicos:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#5FA391') },
   catalogo:   { glass: 0.0, fluid: 0.0, panels: 1.0, logo: 0, camZ: 7.6, color: new THREE.Color('#B9AED6') }, // panels = sinal "catálogo ativo" p/ a árvore GLB
@@ -1335,6 +1335,101 @@ function CatalogTreeGLB({ shared }) {
   return <primitive ref={ref} object={obj} position={[0, -1.2, 0]} scale={2.8} />
 }
 
+// ===========================================================================
+// AMBIENTE IMERSIVO DO HERO — o animal místico (GLB) flutuando num espaço de
+// POEIRA atmosférica + LUZ âmbar dramática. Visível no topo (gate por glass).
+// ===========================================================================
+useGLTF.preload('/models/creature.glb')
+function HeroCreature({ shared }) {
+  const grp = useRef()
+  const { scene } = useGLTF('/models/creature.glb')
+  const obj = useMemo(() => scene.clone(true), [scene])
+  useFrame((state, dt) => {
+    if (!grp.current) return
+    const d = Math.min(dt, 0.1)
+    const w = shared.current.glass
+    grp.current.visible = w > 0.02
+    const t = state.clock.elapsedTime
+    grp.current.rotation.y += dt * 0.18 // gira devagar
+    // flutua (respiração) + parallax ao cursor + encolhe ao sair (fade de escala)
+    grp.current.position.x = THREE.MathUtils.damp(grp.current.position.x, 1.5 + shared.current.mx * 0.25, 3, d)
+    grp.current.position.y = THREE.MathUtils.damp(grp.current.position.y, Math.sin(t * 0.5) * 0.14 - shared.current.my * 0.15, 3, d)
+    grp.current.rotation.x = THREE.MathUtils.damp(grp.current.rotation.x, -shared.current.my * 0.16, 3, d)
+    const s = 2.3 * (0.7 + 0.3 * THREE.MathUtils.smoothstep(w, 0.0, 0.6))
+    grp.current.scale.setScalar(s)
+  })
+  return (
+    <group ref={grp} position={[1.5, 0, 0]} scale={2.3}>
+      <primitive object={obj} />
+      {/* luz quente de borda + contraluz fria acompanhando a criatura (drama) */}
+      <pointLight position={[1.1, 0.7, 1.0]} intensity={5} distance={4} color="#E0A458" />
+      <pointLight position={[-1.0, -0.2, -0.6]} intensity={2.5} distance={4} color="#6a7bd6" />
+    </group>
+  )
+}
+
+// poeira atmosférica do ambiente (motes que flutuam ao redor da criatura)
+const ADUST_VERT = /* glsl */ `
+uniform float uTime; uniform float uSize;
+attribute float aRand;
+varying float vR;
+void main(){
+  vR = aRand;
+  vec3 p = position;
+  p.y += sin(uTime * 0.25 + aRand * 6.2831) * 0.35;
+  p.x += cos(uTime * 0.2 + aRand * 6.2831) * 0.25;
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  gl_PointSize = uSize * (300.0 / -mv.z) * (0.35 + aRand * 0.9);
+  gl_Position = projectionMatrix * mv;
+}
+`
+const ADUST_FRAG = /* glsl */ `
+precision highp float;
+uniform vec3 uColor; uniform float uOpacity;
+varying float vR;
+void main(){
+  vec2 uv = gl_PointCoord - 0.5; float d = length(uv);
+  if (d > 0.5) discard;
+  float a = pow(smoothstep(0.5, 0.0, d), 1.8);
+  gl_FragColor = vec4(uColor * (0.7 + vR * 0.5), a * uOpacity);
+}
+`
+function AtmosphereDust({ shared }) {
+  const ref = useRef()
+  const { geo, uniforms } = useMemo(() => {
+    const N = 520
+    const pos = new Float32Array(N * 3)
+    const rand = new Float32Array(N)
+    for (let i = 0; i < N; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 10
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 6.5
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 5 - 0.5
+      rand[i] = Math.random()
+    }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+    g.setAttribute('aRand', new THREE.BufferAttribute(rand, 1))
+    const u = { uTime: { value: 0 }, uSize: { value: 0.16 }, uOpacity: { value: 0 }, uColor: { value: new THREE.Color('#E0A458') } }
+    return { geo: g, uniforms: u }
+  }, [])
+  useFrame((_, dt) => {
+    if (!ref.current) return
+    const d = Math.min(dt, 0.1)
+    const w = shared.current.glass
+    ref.current.visible = w > 0.01
+    uniforms.uTime.value += dt
+    uniforms.uOpacity.value = THREE.MathUtils.damp(uniforms.uOpacity.value, w * 0.5, 3, d)
+    uniforms.uColor.value.lerp(shared.current.color, 1 - Math.exp(-2 * d))
+  })
+  return (
+    <points ref={ref} geometry={geo}>
+      <shaderMaterial
+        args={[{ vertexShader: ADUST_VERT, fragmentShader: ADUST_FRAG, uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
+      />
+    </points>
+  )
+}
+
 export default function ImmersiveWorld() {
   const shared = useRef({ glass: 1, fluid: 0, panels: 0, logo: 0, camZ: 6, mx: 0, my: 0, color: new THREE.Color('#E0A458') })
   const target = useRef({ ...ACTS.hero })
@@ -1380,12 +1475,14 @@ export default function ImmersiveWorld() {
         <Studio />
         <Director shared={shared} target={target} />
         <AuraSync />
-        {/* ÚNICO efeito de partículas mantido: o LOGO da quimera no fim (contato/rodapé) */}
+        {/* logo da quimera no fim (contato/rodapé) */}
         <Fluid shared={shared} />
-        {/* Efeitos 3D procedurais REMOVIDOS (DNA, sistema nervoso, árvore, folhas,
-            cards). Os modelos GLB entram aqui assim que registrados em GLB_MODELS. */}
+        {/* ambiente imersivo do hero: poeira atmosférica ao redor da criatura */}
+        <AtmosphereDust shared={shared} />
+        {/* modelos 3D (GLB): criatura no hero + árvore no catálogo */}
         <Suspense fallback={null}>
           <SceneModels />
+          <HeroCreature shared={shared} />
           <CatalogTreeGLB shared={shared} />
         </Suspense>
         <EffectComposer multisampling={4}>
