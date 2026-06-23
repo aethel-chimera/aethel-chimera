@@ -31,7 +31,7 @@ import * as THREE from 'three'
 const ACTS = {
   hero:       { glass: 1.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#E0A458') }, // glass = sinal "hero ativo" p/ a criatura GLB + poeira
   manifesto:  { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 5.3, color: new THREE.Color('#C9A66B') },
-  servicos:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#5FA391') },
+  servicos:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.2, color: new THREE.Color('#A98ED6') }, // violeta (alinha à paleta do vídeo)
   catalogo:   { glass: 0.0, fluid: 0.0, panels: 1.0, logo: 0, camZ: 7.6, color: new THREE.Color('#B9AED6') }, // panels = sinal "catálogo ativo" p/ a árvore GLB
   processo:   { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.0, color: new THREE.Color('#9A85C4') },
   resultados: { glass: 0.0, fluid: 0.0, panels: 0.0, logo: 0, camZ: 6.4, color: new THREE.Color('#C77B4A') },

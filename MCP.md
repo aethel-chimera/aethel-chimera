@@ -124,10 +124,11 @@ Objeto `bus` mutável (sem estado React, por performance — escrito por frame):
 Um único `<Canvas>` de fundo, coreografado por uma narrativa de **atos por
 seção** (`ACTS`), com pesos que ligam/desligam elementos conforme o scroll:
 
-- **Hero** — o fundo do hero agora é um **vídeo** da Quimera (`hero-loop.mp4`,
-  full-bleed + scrims), não mais o canvas. `glass:1` segue adensando a poeira do
-  canvas global atrás, mas o vídeo o cobre na primeira dobra. (A criatura GLB foi
-  **removida**.) Ver [Hero.jsx](src/components/Hero.jsx).
+- **Hero** — sem vídeo e sem a criatura GLB: respira só o mundo 3D/ambiente
+  (poeira/brasas, `glass:1`). O vídeo da Quimera (`hero-loop.mp4`) vive **apenas
+  no FinalCTA**, numa moldura integrada (texto acima, não sobreposto), com o
+  entorno seguindo a cor do vídeo via [useMotionTint.js](src/useMotionTint.js)
+  (amostra a cor saturada do frame → `--mt`). Ver [FinalCTA.jsx](src/components/FinalCTA.jsx).
 - **Catálogo** — `panels:1` sinaliza "catálogo ativo" → **árvore GLB**
   (`tree.glb`, `CatalogTreeGLB`) com os **cards orbitando** em hélice; o card
   frontal sobe ao centro (`y→0`) e a seção segura (HOLD ~15%) antes de soltar.

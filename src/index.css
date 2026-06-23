@@ -630,25 +630,32 @@ button:focus-visible {
   transform-origin: bottom;
 }
 
-/* VÍDEO da quimera no fim — cena COMPLETA (sem cortar) sobre um fundo que
-   acompanha a cor do vídeo (--mt). Sem mix-blend/hue p/ a cor exibida bater
-   com a amostrada. Feather leve só na borda, para fundir no fundo tingido. */
-.chimera-video-wrap {
-  z-index: 0;
+/* ===========================================================================
+   TRANSIÇÃO ENTRE SEÇÕES — cada seção emerge de e some na sombra, dando
+   profundidade e um corte suave entre fundos (sem editar cada componente).
+   Fades em obsidiana no topo e na base; ficam atrás do conteúdo da seção.
+   =========================================================================== */
+main > section {
+  position: relative;
+  isolation: isolate; /* o fade fica entre o fundo global e o conteúdo */
 }
-.chimera-video {
-  width: min(72rem, 96vw);
-  max-height: 90%;
-  object-fit: contain; /* mostra a cena inteira, nunca corta */
-  /* feather discreto: dissolve só os últimos pixels da borda no fundo tingido */
-  -webkit-mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 84%, transparent 100%);
-  mask-image: radial-gradient(ellipse 90% 94% at 50% 50%, #000 84%, transparent 100%);
-  will-change: transform;
-  animation: chimera-drift 20s ease-in-out infinite;
+main > section::before,
+main > section::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: clamp(90px, 14vh, 200px);
+  pointer-events: none;
+  z-index: -1;
 }
-@keyframes chimera-drift {
-  0%, 100% { transform: scale(1) translateY(0); }
-  50% { transform: scale(1.025) translateY(-1.2%); }
+main > section::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(7, 7, 11, 0.85), transparent);
+}
+main > section::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(7, 7, 11, 0.85), transparent);
 }
 
 /* reduced motion: corta tudo */

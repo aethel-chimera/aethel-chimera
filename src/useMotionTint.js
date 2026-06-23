@@ -7,7 +7,7 @@ import { useEffect } from 'react'
 // (cromo → ouro → violeta). Vídeo é same-origin (/video/...), então getImageData
 // não contamina o canvas. Em reduced-motion amostra só um frame (sem loop).
 // ---------------------------------------------------------------------------
-export function useMotionTint(videoRef, targetRef, { fps = 8, boost = 1.3, fallback = '224, 164, 88' } = {}) {
+export function useMotionTint(videoRef, targetRef, { fps = 8, sat = 2.1, lift = 1.15, fallback = '224, 164, 88' } = {}) {
   useEffect(() => {
     const target = targetRef.current
     if (!target) return
@@ -32,8 +32,13 @@ export function useMotionTint(videoRef, targetRef, { fps = 8, boost = 1.3, fallb
           r += data[i]; g += data[i + 1]; b += data[i + 2]
         }
         r /= n; g /= n; b /= n
-        // realça p/ tint perceptível sem estourar o branco
-        r = Math.min(255, r * boost); g = Math.min(255, g * boost); b = Math.min(255, b * boost)
+        // SATURA em torno da luma: a média crua é marrom-lamacenta; empurrar os
+        // canais p/ longe do cinza faz o tint ler como OURO ou VIOLETA de verdade,
+        // transicionando bonito com o vídeo. `lift` clareia p/ ser perceptível.
+        const luma = 0.299 * r + 0.587 * g + 0.114 * b
+        r = Math.min(255, Math.max(0, (luma + (r - luma) * sat) * lift))
+        g = Math.min(255, Math.max(0, (luma + (g - luma) * sat) * lift))
+        b = Math.min(255, Math.max(0, (luma + (b - luma) * sat) * lift))
         target.style.setProperty('--mt', `${r | 0}, ${g | 0}, ${b | 0}`)
         return true
       } catch {
@@ -57,5 +62,5 @@ export function useMotionTint(videoRef, targetRef, { fps = 8, boost = 1.3, fallb
     }
     raf = requestAnimationFrame(tick)
     return () => { stopped = true; cancelAnimationFrame(raf) }
-  }, [videoRef, targetRef, fps, boost, fallback])
+  }, [videoRef, targetRef, fps, sat, lift, fallback])
 }
