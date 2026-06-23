@@ -40,8 +40,35 @@ export default function Hero({ ready, reducedMotion }) {
   const tickerContent = [...TICKER_ITEMS, ...TICKER_ITEMS]
 
   return (
-    <section id="hero" ref={rootRef} className="relative min-h-[100dvh] flex flex-col z-[3]">
-      <div className="flex-1 flex items-end px-5 md:px-10 pb-28 pt-32">
+    <section id="hero" ref={rootRef} className="relative min-h-[100dvh] flex flex-col z-[3] overflow-hidden">
+      {/* fundo do hero: VÍDEO motion da Quimera Aethel em loop (boomerang, mudo).
+          O poster pinta de imediato (LCP) e é o fallback de reduced-motion (sem
+          autoplay). Scrims escurecem a base e a esquerda — onde fica o texto —
+          deixando a quimera brilhar ao centro/direita. */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+        {reducedMotion ? (
+          <img src="/video/hero-poster.jpg" alt="" className="h-full w-full object-cover" />
+        ) : (
+          <video
+            className="h-full w-full object-cover"
+            src="/video/hero-loop.mp4"
+            poster="/video/hero-poster.jpg"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+          />
+        )}
+        {/* base + topo: ancora o vídeo na obsidiana (sem borda dura de seção) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/35 to-obsidian/65" />
+        {/* esquerda: legibilidade do título e do ticker */}
+        <div className="absolute inset-0 bg-gradient-to-r from-obsidian/85 via-obsidian/25 to-transparent" />
+        {/* vinheta suave que funde o retângulo do vídeo na cena */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_115%_85%_at_68%_42%,transparent_34%,rgba(11,11,16,0.5)_100%)]" />
+      </div>
+
+      <div className="relative z-10 flex-1 flex items-end px-5 md:px-10 pb-28 pt-32">
         <div className="max-w-[44rem]">
           <div className="flex items-center gap-4 mb-6 hero-sub">
             <span className="mono-label text-amber whitespace-nowrap">[ SEC 01 ]</span>
@@ -81,7 +108,7 @@ export default function Hero({ ready, reducedMotion }) {
 
       {/* dica de interação: cue de scroll (intuitivo, some ao rolar) */}
       <div
-        className="hero-cta pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-24 flex flex-col items-center gap-3 transition-opacity duration-500"
+        className="hero-cta pointer-events-none absolute z-10 left-1/2 -translate-x-1/2 bottom-24 flex flex-col items-center gap-3 transition-opacity duration-500"
         style={{ opacity: hideHint ? 0 : 1 }}
         aria-hidden="true"
       >
@@ -90,7 +117,7 @@ export default function Hero({ ready, reducedMotion }) {
       </div>
 
       {/* ticker de serviços */}
-      <div className="hero-ticker border-t border-ivory/10 py-4 overflow-hidden" aria-hidden="true">
+      <div className="hero-ticker relative z-10 border-t border-ivory/10 py-4 overflow-hidden" aria-hidden="true">
         <div className="ticker-track flex w-max whitespace-nowrap">
           {tickerContent.map((item, i) => (
             <span key={i} className="mono-label text-titanium/70 flex items-center">

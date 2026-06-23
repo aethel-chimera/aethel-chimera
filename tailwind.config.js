@@ -9,6 +9,7 @@ export default {
         titanium: '#C8CAD0',
         ivory: '#F4F2EC',
         amber: '#E0A458',
+        violet: '#9A7BD8',
         signal: '#3DDC97',
       },
       fontFamily: {

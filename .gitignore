@@ -25,3 +25,6 @@ _refframes/
 
 # gravações do portfólio (binários grandes — adicionar no deploy)
 public/portfolio/*.mp4
+
+# master cru do video do hero (34MB) - so o hero-loop otimizado vai pro deploy
+public/video/video-motion-aethel-chimera.mp4

@@ -39,7 +39,8 @@ export default function FinalCTA({ reducedMotion }) {
       <div aria-hidden="true" className="chimera-video-wrap pointer-events-none absolute inset-0 flex items-center justify-center">
         <video
           className="chimera-video"
-          src="/video/chimera-logo-3d-video.mp4"
+          src="/video/hero-loop.mp4"
+          poster="/video/hero-poster.jpg"
           autoPlay
           muted
           loop
@@ -48,11 +49,11 @@ export default function FinalCTA({ reducedMotion }) {
         />
       </div>
 
-      {/* scrim radial: garante leitura do título sobre a logo */}
+      {/* scrim radial: garante leitura do título sobre a cena da quimera */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(40rem,90vw)] h-[28rem] rounded-full"
-        style={{ background: 'radial-gradient(ellipse at center, rgba(11,11,16,0.82) 0%, rgba(11,11,16,0.5) 45%, transparent 72%)' }}
+        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(50rem,94vw)] h-[33rem] rounded-full"
+        style={{ background: 'radial-gradient(ellipse at center, rgba(11,11,16,0.88) 0%, rgba(11,11,16,0.58) 46%, transparent 75%)' }}
       />
       <div className="cta-reveal relative flex items-center justify-center gap-4 mb-8">
         <span className="mono-label text-amber">[ SEC 08 ]</span>

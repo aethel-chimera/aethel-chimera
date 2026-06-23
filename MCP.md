@@ -66,10 +66,11 @@ aethel-chimera/
 │   ├── robots.txt
 │   ├── models/             # GLB do mundo 3D
 │   │   ├── tree.glb        # bonsai do catálogo (4,4 MB, otimizado)
-│   │   ├── creature.glb    # criatura do hero (2,8 MB) — NÃO usado (removido do hero); pode ser deletado
 │   │   └── README.md       # como incorporar/otimizar GLB
 │   ├── video/
-│   │   └── chimera-logo-3d-video.mp4   # logo animada do rodapé/CTA
+│   │   ├── hero-loop.mp4    # vídeo motion da Quimera, boomerang 16s mudo (4,4 MB) — fundo do Hero e do FinalCTA
+│   │   ├── hero-poster.jpg  # poster do vídeo (paint imediato + fallback reduced-motion)
+│   │   └── video-motion-aethel-chimera.mp4  # MASTER cru 3896×2128 34 MB — gitignored (não vai pro deploy; fonte p/ re-encode)
 │   └── portfolio/          # gravações .mp4 dos cases (nome = slug); ignoradas no git
 │       └── README.md
 │
@@ -123,8 +124,10 @@ Objeto `bus` mutável (sem estado React, por performance — escrito por frame):
 Um único `<Canvas>` de fundo, coreografado por uma narrativa de **atos por
 seção** (`ACTS`), com pesos que ligam/desligam elementos conforme o scroll:
 
-- **Hero** — `glass:1` sinaliza "hero ativo" → poeira/brasas atmosféricas
-  (a criatura GLB do hero foi **removida**; `glass` segue só adensando a poeira).
+- **Hero** — o fundo do hero agora é um **vídeo** da Quimera (`hero-loop.mp4`,
+  full-bleed + scrims), não mais o canvas. `glass:1` segue adensando a poeira do
+  canvas global atrás, mas o vídeo o cobre na primeira dobra. (A criatura GLB foi
+  **removida**.) Ver [Hero.jsx](src/components/Hero.jsx).
 - **Catálogo** — `panels:1` sinaliza "catálogo ativo" → **árvore GLB**
   (`tree.glb`, `CatalogTreeGLB`) com os **cards orbitando** em hélice; o card
   frontal sobe ao centro (`y→0`) e a seção segura (HOLD ~15%) antes de soltar.
@@ -212,7 +215,12 @@ Todo o conteúdo editável vive aqui; os componentes só consomem estes arrays.
 
 **Cores** ([tailwind.config.js](tailwind.config.js)):
 `obsidian #0B0B10` · `obsidian-deep #07070B` · `titanium #C8CAD0` ·
-`ivory #F4F2EC` · `amber #E0A458` · `signal #3DDC97`.
+`ivory #F4F2EC` · `amber #E0A458` · `violet #9A7BD8` · `signal #3DDC97`.
+
+> **Duotone âmbar + violeta:** alinhado ao vídeo do hero, o sistema de luz
+> **decorativo** (aurora `tech-grid`, `card-wave`, `flow-rule`) usa âmbar +
+> violeta. O verde `signal` ficou reservado ao que é **semântico** (uptime/live,
+> `signal-dot`, slider de ROI).
 
 **Fontes:** `display` = Space Grotesk · `serif` = Instrument Serif (destaque
 âmbar nos títulos) · `mono` = JetBrains Mono (rótulos técnicos).

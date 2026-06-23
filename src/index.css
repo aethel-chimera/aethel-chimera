@@ -7,6 +7,7 @@
   --titanium: #c8cad0;
   --ivory: #f4f2ec;
   --amber: #e0a458;
+  --violet: #9a7bd8;
   --signal: #3ddc97;
 }
 
@@ -449,7 +450,7 @@ button:focus-visible {
   pointer-events: none;
   background:
     radial-gradient(ellipse 55% 45% at 22% 28%, var(--aura-1, rgba(224, 164, 88, 0.1)), transparent 62%),
-    radial-gradient(ellipse 50% 55% at 82% 72%, var(--aura-2, rgba(61, 220, 151, 0.07)), transparent 62%),
+    radial-gradient(ellipse 50% 55% at 82% 72%, var(--aura-2, rgba(154, 123, 216, 0.09)), transparent 62%),
     radial-gradient(ellipse 70% 60% at 60% 110%, var(--aura-1, rgba(224, 164, 88, 0.06)), transparent 70%);
   filter: blur(8px);
   animation: aurora-drift 22s ease-in-out infinite alternate;
@@ -555,9 +556,9 @@ button:focus-visible {
     90deg,
     transparent 0%,
     rgba(224, 164, 88, 0) 8%,
-    #e0a458 32%,
-    #5ad1b0 50%,
-    #7aa2ff 68%,
+    #e0a458 30%,
+    #c79be6 50%,
+    #9a7bd8 70%,
     rgba(224, 164, 88, 0) 92%,
     transparent 100%
   );
@@ -582,7 +583,7 @@ button:focus-visible {
     90deg,
     rgba(244, 242, 236, 0.12),
     rgba(224, 164, 88, 0.9),
-    rgba(90, 209, 176, 0.6),
+    rgba(154, 123, 216, 0.7),
     rgba(244, 242, 236, 0.12)
   ) !important;
   background-size: 220% 100% !important;
