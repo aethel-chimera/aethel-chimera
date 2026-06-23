@@ -833,30 +833,37 @@ function Tree3D({ shared }) {
       grow(trunkTop, nd, 1.7, 0.22, 1, 1, 5, true)
     }
 
-    // ---- RAÍZES: saem de DENTRO da base alargada, arcando p/ baixo-fora e
-    // afinando — transição CONTÍNUA com o tronco (sem emenda seca)
-    const NROOTS = 7
+    // ---- RAÍZES ENTRELAÇADAS (Árvore da Vida): cada raiz é um SCROLL que varre
+    // tangencialmente em sentido alternado, arca para fora e volta, cruzando as
+    // vizinhas por cima/baixo (weave). Ancoradas num anel de base ornamental.
+    const baseY = TRUNK_BASE_Y
+    const NROOTS = 8
     for (let i = 0; i < NROOTS; i++) {
-      const ang = (i / NROOTS) * Math.PI * 2 + 0.25
-      const out = new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang))
-      // começa embutida na base (raio < flare) e levemente acima → funde no tronco
-      const start = trunkBase.clone().addScaledVector(out, 0.32).add(new THREE.Vector3(0, 0.16, 0))
-      const path = [start.clone()]
-      let p = start.clone()
-      const dir = out.clone().multiplyScalar(0.75).add(new THREE.Vector3(0, -0.5, 0)).normalize()
-      const STEPS = 6
-      const len = 1.2
-      for (let s = 1; s <= STEPS; s++) {
-        dir.y -= 0.14 // gravidade: arca para baixo ao se afastar
-        dir.x += (Math.random() - 0.5) * 0.05
-        dir.z += (Math.random() - 0.5) * 0.05
-        dir.normalize()
-        p = p.clone().addScaledVector(dir, len / STEPS)
-        path.push(p.clone())
+      const t0 = (i / NROOTS) * Math.PI * 2
+      const swirl = i % 2 === 0 ? 1 : -1 // alterna o sentido → entrelaça
+      const layer = i % 2 === 0 ? 1 : -1 // alterna a profundidade → cruza por cima/baixo
+      const path = []
+      const SEG = 18
+      for (let s = 0; s <= SEG; s++) {
+        const t = s / SEG
+        const a = t0 + swirl * (t * t) * (Math.PI / NROOTS) * 3.2 // varredura em scroll
+        const arc = Math.sin(t * Math.PI) // 0→1→0: sai e volta (laço)
+        const r = 0.3 + arc * 1.2 // arco para fora e de volta
+        const y = baseY - 0.1 - t * 1.1 + arc * 0.22 // desce com leve dip (gnarl)
+        const px = Math.cos(a) * r
+        const pz = Math.sin(a) * r
+        // tecer: desloca perpendicular ao raio (tangente), alternando → over/under
+        const wx = -Math.sin(a) * layer * arc * 0.24
+        const wz = Math.cos(a) * layer * arc * 0.24
+        path.push(new THREE.Vector3(px + wx, y, pz + wz))
       }
-      // grossa na base (casa com o flare) → ponta fina
-      branches.push(profiledTube(path, (t) => 0.3 * Math.pow(1 - t, 1.5) + 0.025, 9))
+      branches.push(profiledTube(path, (t) => 0.22 * Math.pow(1 - t, 1.25) + 0.03, 9))
     }
+    // anel de base ornamental (ancora/emoldura as raízes — "chão" da Árvore da Vida)
+    const ring = new THREE.TorusGeometry(1.18, 0.05, 8, 48)
+    ring.rotateX(Math.PI / 2)
+    ring.translate(0, baseY - 0.65, 0)
+    branches.push(ring)
 
     // FOLHAS da copa: 2 por ponta de galho, ancoradas com leve dispersão
     const corner = []
@@ -904,7 +911,7 @@ function Tree3D({ shared }) {
     const w = shared.current.panels
     grp.current.visible = w > 0.02
     grp.current.scale.setScalar(0.6)
-    grp.current.position.y = -1.5 // desce o conjunto: copa entra no centro, raízes recuam p/ baixo
+    grp.current.position.y = -0.8 // centraliza: copa em cima E crown de raízes embaixo, ambos no quadro
     grp.current.rotation.y += dt * 0.1
     uniforms.uTime.value += dt
     leafU.uTime.value += dt
