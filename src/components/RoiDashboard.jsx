@@ -58,7 +58,15 @@ export default function RoiDashboard({ invest, setInvest }) {
             preload="auto"
           />
         )}
-        <div className="absolute inset-0 bg-obsidian/82" />
+        {/* veil moderado (mais leve que antes — deixa a qualidade aparecer) */}
+        <div className="absolute inset-0 bg-obsidian/55" />
+        {/* VINHETA: as bordas dissolvem na obsidiana e o vídeo funde com o fundo
+            da página (sem retângulo) — integra com o resto da landing */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse 88% 78% at 50% 48%, transparent 26%, rgba(11,11,16,0.5) 64%, #0B0B10 100%)' }}
+        />
+        {/* topo e base fundem nas seções vizinhas */}
         <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-transparent to-obsidian" />
       </div>
 
