@@ -597,10 +597,11 @@ function Panels({ shared }) {
 const CATALOG_COLORS = ['#A7C49C', '#E6D6B0', '#D8AE78', '#9FC2C2', '#CBA98E', '#E2CD93'].map(
   (c) => new THREE.Color(c)
 )
-// paleta da ÁRVORE — âmbar ↔ violeta SATURADOS (ciclo contínuo p/ o offset de
-// 0.5 do tronco fechar sem salto). Folha e tronco amostram em pontos diferentes
-// dessa paleta → cores distintas, ambas percorrendo a marca com o scroll.
-const TREE_TINTS = ['#F2A93C', '#8A5CF0', '#F2A93C'].map((c) => new THREE.Color(c))
+// DUAS paletas SEMPRE distintas (sem cruzamento "lamacento"): a copa (topo) fica
+// no âmbar/ouro e a base no violeta — ambas variam com o scroll, mas nunca
+// colidem de hue. Saturadas, dentro do design system.
+const TOP_TINTS = ['#F2A93C', '#F0C75A', '#E08A2A'].map((c) => new THREE.Color(c)) // copa: âmbar/ouro
+const BOT_TINTS = ['#8A5CF0', '#A86BF0', '#6D40D6'].map((c) => new THREE.Color(c)) // base: violeta
 // interpola uma paleta por progresso p (0..1)
 function lerpPalette(out, cols, p) {
   const n = cols.length
@@ -1342,37 +1343,50 @@ function CatalogTreeGLB({ shared }) {
   const grp = useRef()
   const { scene } = useGLTF('/models/tree.glb')
   const mats = useRef([]) // materiais (clonados)
-  const leafCol = useRef(new THREE.Color('#F2A93C')) // cor das FOLHAS (damped)
-  const trunkCol = useRef(new THREE.Color('#8A5CF0')) // cor do TRONCO (damped)
-  const keyRef = useRef() // luz-chave que acompanha o tint das folhas
+  const topCol = useRef(new THREE.Color('#F2A93C')) // cor de CIMA (copa) — damped
+  const botCol = useRef(new THREE.Color('#8A5CF0')) // cor de BAIXO (tronco) — damped
+  const keyRef = useRef() // luz-chave que acompanha a cor de cima
   const _tt = useMemo(() => new THREE.Color(), [])
   const _t2 = useMemo(() => new THREE.Color(), [])
-  // CLONA materiais (não muta o cache do GLB). O bonsai é UM material só (folhas
-  // verdes + tronco marrom na MESMA textura), então um shader (onBeforeCompile)
-  // separa folha/tronco POR PIXEL (pelo verdor do texel) e aplica DUAS cores de
-  // marca distintas (uLeaf/uTrunk), preservando a luminância (forma/sombra).
+  // CLONA materiais (não muta o cache do GLB). Sem separar o objeto: um shader
+  // (onBeforeCompile) tinge por ALTURA (Y) — duas cores de marca, topo→base, com
+  // a transição na faixa da COPA. Preserva a luminância (forma/sombra). As duas
+  // cores percorrem a paleta com o scroll (uTop/uBot).
   const obj = useMemo(() => {
     const c = scene.clone(true)
     mats.current = []
     c.traverse((n) => {
       if (n.isMesh && n.material) {
+        // bbox LOCAL do mesh → normaliza a altura (auto-calibra, estável a
+        // rotação/respiração/escala). O split fica na metade superior (folhagem).
+        n.geometry.computeBoundingBox()
+        const bb = n.geometry.boundingBox
+        const yMin = bb.min.y
+        const yMax = bb.max.y
         const arr = (Array.isArray(n.material) ? n.material : [n.material]).map((m0) => {
           const m = m0.clone()
           m.envMapIntensity = 2.0
           if (m.roughness != null) m.roughness = Math.max(0.12, m.roughness * 0.6)
           if (m.emissive) m.emissiveIntensity = 1
           m.onBeforeCompile = (sh) => {
-            sh.uniforms.uLeaf = { value: leafCol.current }
-            sh.uniforms.uTrunk = { value: trunkCol.current }
+            sh.uniforms.uTop = { value: topCol.current }
+            sh.uniforms.uBot = { value: botCol.current }
+            sh.uniforms.uYMin = { value: yMin }
+            sh.uniforms.uYMax = { value: yMax }
             sh.uniforms.uTintAmt = { value: 0.92 }
+            sh.vertexShader = sh.vertexShader
+              .replace('#include <common>', '#include <common>\nvarying float vTreeY;')
+              .replace('#include <begin_vertex>', '#include <begin_vertex>\nvTreeY=position.y;')
             sh.fragmentShader = sh.fragmentShader
               .replace(
                 '#include <common>',
-                '#include <common>\nuniform vec3 uLeaf;uniform vec3 uTrunk;uniform float uTintAmt;'
+                '#include <common>\nuniform vec3 uTop;uniform vec3 uBot;uniform float uYMin;uniform float uYMax;uniform float uTintAmt;varying float vTreeY;'
               )
               .replace(
                 '#include <map_fragment>',
-                '#include <map_fragment>\n{float _l=dot(diffuseColor.rgb,vec3(0.299,0.587,0.114));float _g=clamp((diffuseColor.g-max(diffuseColor.r,diffuseColor.b))*4.5+0.12,0.0,1.0);vec3 _t=mix(uTrunk,uLeaf,_g);vec3 _b=_t*(0.42+_l*1.18);diffuseColor.rgb=mix(diffuseColor.rgb,_b,uTintAmt);}'
+                // n01 = altura normalizada 0..1; split na metade superior (copa):
+                // base/tronco (abaixo de 0.45) = uBot; copa (0.45→0.9) → uTop.
+                '#include <map_fragment>\n{float _l=dot(diffuseColor.rgb,vec3(0.299,0.587,0.114));float _n=clamp((vTreeY-uYMin)/max(0.001,uYMax-uYMin),0.0,1.0);float _ty=smoothstep(0.45,0.9,_n);vec3 _t=mix(uBot,uTop,_ty);vec3 _b=_t*(0.42+_l*1.18);diffuseColor.rgb=mix(diffuseColor.rgb,_b,uTintAmt);}'
               )
           }
           m.needsUpdate = true
@@ -1401,13 +1415,13 @@ function CatalogTreeGLB({ shared }) {
     // pixel). Damped p/ transição suave, como o ambiente das outras seções.
     const cp = bus.catalogP || 0
     const k = 1 - Math.exp(-3 * d)
-    leafCol.current.lerp(lerpPalette(_tt, TREE_TINTS, cp), k)
-    trunkCol.current.lerp(lerpPalette(_t2, TREE_TINTS, (cp + 0.5) % 1), k)
+    topCol.current.lerp(lerpPalette(_tt, TOP_TINTS, cp), k)
+    botCol.current.lerp(lerpPalette(_t2, BOT_TINTS, cp), k)
     for (let i = 0; i < mats.current.length; i++) {
       const m = mats.current[i]
-      if (m.emissive) m.emissive.copy(leafCol.current).multiplyScalar(0.16) // glow leve
+      if (m.emissive) m.emissive.copy(topCol.current).multiplyScalar(0.16) // glow leve
     }
-    if (keyRef.current) keyRef.current.color.copy(leafCol.current)
+    if (keyRef.current) keyRef.current.color.copy(topCol.current)
     grp.current.scale.setScalar(1 - 0.4 * exit) // encolhe ao sair
     grp.current.position.z = -exit * 5.0 // recua p/ o fog da cena ao sair (escurece)
     // movimento: VIRA na direção do cursor + deriva orgânica lenta (sem spin fixo)
