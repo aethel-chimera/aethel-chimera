@@ -22,6 +22,7 @@ const brl = (v) =>
 
 export default function RoiDashboard({ invest, setInvest }) {
   const [hover, setHover] = useState(null)
+  const reduced = useMemo(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])
 
   const data = useMemo(() => {
     const rows = CHANNELS.map((c) => {
@@ -39,8 +40,29 @@ export default function RoiDashboard({ invest, setInvest }) {
   const active = hover ? data.rows.find((r) => r.key === hover) : null
 
   return (
-    <section id="retorno" className="relative z-[3] px-5 md:px-10 py-32">
-      <div className="mb-14 max-w-2xl">
+    <section id="retorno" className="relative z-[3] px-5 md:px-10 py-32 overflow-hidden">
+      {/* fundo AMBIENTE: dashboard holográfico (vídeo) atrás dos números — bem
+          escurecido p/ não competir com a leitura. reduced-motion → poster. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        {reduced ? (
+          <img src="/video/roi-poster.jpg" alt="" className="h-full w-full object-cover" />
+        ) : (
+          <video
+            className="h-full w-full object-cover"
+            src="/video/roi-loop.mp4"
+            poster="/video/roi-poster.jpg"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+          />
+        )}
+        <div className="absolute inset-0 bg-obsidian/82" />
+        <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-transparent to-obsidian" />
+      </div>
+
+      <div className="relative z-10 mb-14 max-w-2xl">
         <SectionHead index="06" kicker="Investimento × retorno" title="Calculadora" accent="de retorno" className="mb-6" />
         <p className="text-titanium leading-relaxed">
           Ajuste o investimento mensal e veja o retorno projetado por canal. A métrica combina os
@@ -49,7 +71,7 @@ export default function RoiDashboard({ invest, setInvest }) {
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-[0.95fr_1.15fr] gap-6 lg:gap-10 items-start">
+      <div className="relative z-10 grid lg:grid-cols-[0.95fr_1.15fr] gap-6 lg:gap-10 items-start">
         {/* ---- Controle: investimento ---- */}
         <div className="rounded-2xl border border-ivory/12 bg-obsidian-deep/70 p-7 md:p-9">
           <label htmlFor="roi-invest" className="mono-label text-titanium/70 block mb-3">
