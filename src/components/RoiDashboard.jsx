@@ -15,6 +15,11 @@ const CHANNELS = [
   { key: 'auto', label: 'Automações & CRM', alloc: 0.15, mult: 6.0, color: '#E2A6C0', note: 'Retenção e LTV (fluxos de e-mail/CRM — o maior retorno por R$).' },
 ]
 
+// feather (alpha) das bordas do vídeo → dissolve na grade tingida em TODOS os
+// lados (inclusive as laterais); o eixo X mais fechado realça a transição lateral.
+const FADE = 'radial-gradient(ellipse 80% 96% at 50% 50%, #000 48%, transparent 98%)'
+const EDGE_FADE = { WebkitMaskImage: FADE, maskImage: FADE }
+
 const brl = (v) =>
   v >= 1000
     ? 'R$ ' + Math.round(v).toLocaleString('pt-BR')
@@ -44,11 +49,17 @@ export default function RoiDashboard({ invest, setInvest }) {
       {/* fundo AMBIENTE: dashboard holográfico (vídeo) atrás dos números — bem
           escurecido p/ não competir com a leitura. reduced-motion → poster. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        {/* grade tingida pela cor do vídeo (--mt): base p/ as bordas dissolverem */}
+        <div className="absolute inset-0" style={{ background: 'rgb(var(--mt))' }} />
+        <div className="absolute inset-0 bg-obsidian/[0.72]" />
+        {/* vídeo (4K): bordas FEATHER em todos os lados (inclusive laterais) →
+            dissolve na grade, sem retângulo. reduced-motion → poster. */}
         {reduced ? (
-          <img src="/video/roi-poster.jpg" alt="" className="h-full w-full object-cover" />
+          <img src="/video/roi-poster.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" style={EDGE_FADE} />
         ) : (
           <video
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
+            style={EDGE_FADE}
             src="/video/roi-loop.mp4"
             poster="/video/roi-poster.jpg"
             autoPlay
@@ -58,14 +69,8 @@ export default function RoiDashboard({ invest, setInvest }) {
             preload="auto"
           />
         )}
-        {/* veil moderado (mais leve que antes — deixa a qualidade aparecer) */}
-        <div className="absolute inset-0 bg-obsidian/55" />
-        {/* VINHETA: as bordas dissolvem na obsidiana e o vídeo funde com o fundo
-            da página (sem retângulo) — integra com o resto da landing */}
-        <div
-          className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse 88% 78% at 50% 48%, transparent 26%, rgba(11,11,16,0.5) 64%, #0B0B10 100%)' }}
-        />
+        {/* veil leve sobre o vídeo — mantém os números legíveis */}
+        <div className="absolute inset-0 bg-obsidian/40" />
         {/* topo e base fundem nas seções vizinhas */}
         <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-transparent to-obsidian" />
       </div>
