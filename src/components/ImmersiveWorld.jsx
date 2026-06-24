@@ -597,11 +597,10 @@ function Panels({ shared }) {
 const CATALOG_COLORS = ['#A7C49C', '#E6D6B0', '#D8AE78', '#9FC2C2', '#CBA98E', '#E2CD93'].map(
   (c) => new THREE.Color(c)
 )
-// paleta da ÁRVORE — dentro do design system (âmbar ↔ violeta, sem o verde cru):
-// percorre a marca conforme o scroll do catálogo, igual ao ambiente das seções.
-const TREE_TINTS = ['#E0A458', '#D9B36A', '#9A7BD8', '#B9AED6', '#C77B4A', '#E0A458'].map(
-  (c) => new THREE.Color(c)
-)
+// paleta da ÁRVORE — âmbar ↔ violeta SATURADOS (ciclo contínuo p/ o offset de
+// 0.5 do tronco fechar sem salto). Folha e tronco amostram em pontos diferentes
+// dessa paleta → cores distintas, ambas percorrendo a marca com o scroll.
+const TREE_TINTS = ['#F2A93C', '#8A5CF0', '#F2A93C'].map((c) => new THREE.Color(c))
 // interpola uma paleta por progresso p (0..1)
 function lerpPalette(out, cols, p) {
   const n = cols.length
@@ -1342,12 +1341,16 @@ useGLTF.preload('/models/tree.glb')
 function CatalogTreeGLB({ shared }) {
   const grp = useRef()
   const { scene } = useGLTF('/models/tree.glb')
-  const mats = useRef([]) // materiais (clonados) p/ tingir por frame
-  const tintRef = useRef(new THREE.Color('#E0A458')) // cor atual (damped) do scroll
-  const keyRef = useRef() // luz-chave que acompanha o tint
+  const mats = useRef([]) // materiais (clonados)
+  const leafCol = useRef(new THREE.Color('#F2A93C')) // cor das FOLHAS (damped)
+  const trunkCol = useRef(new THREE.Color('#8A5CF0')) // cor do TRONCO (damped)
+  const keyRef = useRef() // luz-chave que acompanha o tint das folhas
   const _tt = useMemo(() => new THREE.Color(), [])
-  // CLONA materiais (não muta o cache do GLB), dessatura a base crua (verde/marrom)
-  // e prepara emissivo — para tingir dentro do design system sem ficar lamacento.
+  const _t2 = useMemo(() => new THREE.Color(), [])
+  // CLONA materiais (não muta o cache do GLB). O bonsai é UM material só (folhas
+  // verdes + tronco marrom na MESMA textura), então um shader (onBeforeCompile)
+  // separa folha/tronco POR PIXEL (pelo verdor do texel) e aplica DUAS cores de
+  // marca distintas (uLeaf/uTrunk), preservando a luminância (forma/sombra).
   const obj = useMemo(() => {
     const c = scene.clone(true)
     mats.current = []
@@ -1355,12 +1358,24 @@ function CatalogTreeGLB({ shared }) {
       if (n.isMesh && n.material) {
         const arr = (Array.isArray(n.material) ? n.material : [n.material]).map((m0) => {
           const m = m0.clone()
-          m.envMapIntensity = 2.8
-          if (m.roughness != null) m.roughness = Math.max(0.1, m.roughness * 0.55)
-          // base dessaturada: tira o verde/marrom cru p/ o tint da marca dominar
-          const lum = m.color.r * 0.299 + m.color.g * 0.587 + m.color.b * 0.114
-          m.userData.tintBase = m.color.clone().lerp(new THREE.Color(lum, lum, lum), 0.55)
+          m.envMapIntensity = 2.0
+          if (m.roughness != null) m.roughness = Math.max(0.12, m.roughness * 0.6)
           if (m.emissive) m.emissiveIntensity = 1
+          m.onBeforeCompile = (sh) => {
+            sh.uniforms.uLeaf = { value: leafCol.current }
+            sh.uniforms.uTrunk = { value: trunkCol.current }
+            sh.uniforms.uTintAmt = { value: 0.92 }
+            sh.fragmentShader = sh.fragmentShader
+              .replace(
+                '#include <common>',
+                '#include <common>\nuniform vec3 uLeaf;uniform vec3 uTrunk;uniform float uTintAmt;'
+              )
+              .replace(
+                '#include <map_fragment>',
+                '#include <map_fragment>\n{float _l=dot(diffuseColor.rgb,vec3(0.299,0.587,0.114));float _g=clamp((diffuseColor.g-max(diffuseColor.r,diffuseColor.b))*4.5+0.12,0.0,1.0);vec3 _t=mix(uTrunk,uLeaf,_g);vec3 _b=_t*(0.42+_l*1.18);diffuseColor.rgb=mix(diffuseColor.rgb,_b,uTintAmt);}'
+              )
+          }
+          m.needsUpdate = true
           mats.current.push(m)
           return m
         })
@@ -1381,18 +1396,18 @@ function CatalogTreeGLB({ shared }) {
     op.current = THREE.MathUtils.damp(op.current, w, 5, d) // fade suave (entra/sai)
     grp.current.visible = op.current > 0.005
     fadeObject(obj, op.current)
-    // COR pelo SCROLL: percorre TREE_TINTS (âmbar↔violeta) conforme o projeto à
-    // frente, damped p/ transição suave — igual ao ambiente das outras seções.
-    tintRef.current.lerp(lerpPalette(_tt, TREE_TINTS, bus.catalogP), 1 - Math.exp(-3 * d))
-    for (let k = 0; k < mats.current.length; k++) {
-      const m = mats.current[k]
-      // cor: puxa forte p/ o tint (mas a textura ainda modula a forma)
-      if (m.userData.tintBase) m.color.copy(m.userData.tintBase).lerp(tintRef.current, 0.85)
-      // emissivo FORTE: o brilho da marca é somado por cima do map verde (vence
-      // o verde cru das folhas e faz a árvore "acender" na cor do scroll)
-      if (m.emissive) m.emissive.copy(tintRef.current).multiplyScalar(0.42)
+    // DUAS cores pelo SCROLL: folha em p, tronco no complemento (p+0.5) — hues
+    // sempre distintos, ambos percorrendo a paleta saturada (shader recolore por
+    // pixel). Damped p/ transição suave, como o ambiente das outras seções.
+    const cp = bus.catalogP || 0
+    const k = 1 - Math.exp(-3 * d)
+    leafCol.current.lerp(lerpPalette(_tt, TREE_TINTS, cp), k)
+    trunkCol.current.lerp(lerpPalette(_t2, TREE_TINTS, (cp + 0.5) % 1), k)
+    for (let i = 0; i < mats.current.length; i++) {
+      const m = mats.current[i]
+      if (m.emissive) m.emissive.copy(leafCol.current).multiplyScalar(0.16) // glow leve
     }
-    if (keyRef.current) keyRef.current.color.copy(tintRef.current)
+    if (keyRef.current) keyRef.current.color.copy(leafCol.current)
     grp.current.scale.setScalar(1 - 0.4 * exit) // encolhe ao sair
     grp.current.position.z = -exit * 5.0 // recua p/ o fog da cena ao sair (escurece)
     // movimento: VIRA na direção do cursor + deriva orgânica lenta (sem spin fixo)
