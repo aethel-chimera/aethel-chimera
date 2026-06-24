@@ -991,13 +991,10 @@ void main(){
   float leaf = 1.0 - smoothstep(0.32, 0.46, r);
   leaf *= smoothstep(0.5, 0.42, abs(p.y) + abs(p.x) * 0.6); // afina nas pontas
   if (leaf < 0.04) discard;
-  // PÉTALAS clean (cerejeira): rosa suave → branco-creme → palha, combinando
-  // com o bonsai verde (sem o laranja saturado de outono).
-  vec3 rosa  = vec3(0.96, 0.80, 0.83);
-  vec3 creme = vec3(0.97, 0.93, 0.87);
-  vec3 palha = vec3(0.92, 0.85, 0.70);
-  vec3 col = mix(rosa, creme, smoothstep(0.0, 0.5, vTone));
-  col = mix(col, palha, smoothstep(0.5, 1.0, vTone));
+  // PÉTALAS brancas → douradas (âmbar da marca), variando por pétala (vTone).
+  vec3 branco = vec3(1.0, 0.97, 0.90); // branco quente
+  vec3 ouro   = vec3(0.90, 0.68, 0.33); // dourado (âmbar)
+  vec3 col = mix(branco, ouro, smoothstep(0.0, 1.0, vTone));
   // nervura central sutil
   col *= 1.0 - smoothstep(0.04, 0.0, abs(p.x)) * 0.25;
   gl_FragColor = vec4(col, leaf * uOpacity * vFade * 0.9);
