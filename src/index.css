@@ -631,6 +631,48 @@ button:focus-visible {
 }
 
 /* ===========================================================================
+   GRÁFICOS VIVOS — motion holográfico inspirado no vídeo: um feixe de luz CORRE
+   dentro das barras de conquista (dados fluindo) e um valor SOBE pela curva de
+   crescimento. Discreto (lento, baixa opacidade, só nas barras-resultado) p/
+   dar vida sem poluir. reduced-motion zera tudo (regra global no fim).
+   =========================================================================== */
+@keyframes chart-stream {
+  0% { transform: translateX(-130%); opacity: 0; }
+  22% { opacity: 1; }
+  78% { opacity: 1; }
+  100% { transform: translateX(130%); opacity: 0; }
+}
+.chart-fill {
+  position: relative;
+  overflow: hidden;
+}
+.chart-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, rgba(244, 242, 236, 0.5), transparent);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: chart-stream 3.8s ease-in-out infinite;
+  animation-delay: var(--flow-delay, 0s); /* escalonado p/ não correr tudo junto */
+}
+
+/* ponto que sobe pela curva de crescimento + brilho pulsante */
+.grow-spark {
+  filter: drop-shadow(0 0 4px rgba(224, 164, 88, 0.9));
+}
+@keyframes grow-breathe {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+.grow-area {
+  animation: grow-breathe 4.5s ease-in-out infinite;
+}
+
+/* ===========================================================================
    TRANSIÇÃO ENTRE SEÇÕES — cada seção emerge de e some na sombra, dando
    profundidade e um corte suave entre fundos (sem editar cada componente).
    Fades em obsidiana no topo e na base; ficam atrás do conteúdo da seção.

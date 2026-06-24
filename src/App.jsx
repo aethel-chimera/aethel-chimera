@@ -42,6 +42,8 @@ export default function App() {
   const alreadyLoaded = useMemo(() => sessionStorage.getItem('aethel-preloaded') === '1', [])
   const [loaded, setLoaded] = useState(alreadyLoaded)
   const [detail, setDetail] = useState(null) // índice do projeto aberto (ou null)
+  // investimento mensal — estado compartilhado entre o diagnóstico (Process) e a calculadora de retorno (RoiDashboard)
+  const [invest, setInvest] = useState(8000)
 
   const handlePreloaderDone = useCallback(() => setLoaded(true), [])
 
@@ -108,8 +110,8 @@ export default function App() {
         <Manifesto reducedMotion={reducedMotion} />
         <Services reducedMotion={reducedMotion} />
         <Catalog reducedMotion={reducedMotion} onOpenProject={setDetail} />
-        <Process reducedMotion={reducedMotion} />
-        <RoiDashboard />
+        <Process reducedMotion={reducedMotion} invest={invest} setInvest={setInvest} />
+        <RoiDashboard invest={invest} setInvest={setInvest} />
         <Results reducedMotion={reducedMotion} />
         <Plans />
         <FinalCTA reducedMotion={reducedMotion} />

@@ -30,13 +30,19 @@ const fmt = (v, unit = '') =>
 // cor distinta por métrica (premium, alto contraste) — facilita ler cada barra
 const DIAG_COLORS = ['#3DDC97', '#7FB2E8', '#E2A6C0', '#E0A458', '#C58BD6']
 
-function Diagnostic({ chart, shown }) {
+// curva de transição usada nas barras (suave, mas responsiva ao slider)
+const EASE = 'cubic-bezier(0.22,1,0.36,1)'
+
+function Diagnostic({ chart, shown, factor }) {
   return (
     <div className="space-y-5">
       {chart.items.map((it, i) => {
         const max = it.scaleMax || 100
+        const ceil = it.scaleMax || 100
+        // projeção: quanto da meta a obra atinge com o investimento escolhido
+        const proj = Math.max(it.atual, Math.min(ceil, it.atual + (it.meta - it.atual) * factor))
         const atualW = Math.min(100, (it.atual / max) * 100)
-        const metaW = Math.min(100, (it.meta / max) * 100)
+        const metaW = Math.min(100, (proj / max) * 100)
         const c = DIAG_COLORS[i % DIAG_COLORS.length]
         return (
           <div key={it.label}>
@@ -48,23 +54,30 @@ function Diagnostic({ chart, shown }) {
               <span className="font-mono text-[0.64rem]">
                 <span style={{ color: c }}>{fmt(it.atual, it.unit)}</span>
                 <span className="text-titanium/45 mx-1.5">→</span>
-                <span className="text-amber">meta {fmt(it.meta, it.unit)}</span>
+                <span className="text-amber tabular-nums">meta {fmt(proj, it.unit)}</span>
               </span>
             </div>
             <div className="relative h-2.5 rounded-full bg-ivory/[0.08] overflow-hidden">
               <div
-                className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-[1100ms] ease-out"
+                className="chart-fill absolute inset-y-0 left-0 rounded-full"
                 style={{
                   width: shown ? `${atualW}%` : '0%',
-                  transitionDelay: `${i * 90}ms`,
+                  transition: `width 0.6s ${EASE}`,
+                  transitionDelay: `${i * 45}ms`,
                   background: `linear-gradient(90deg, ${c}55, ${c})`,
+                  '--flow-delay': `${i * 0.55}s`,
                 }}
               />
             </div>
             <div className="relative">
               <div
-                className="absolute -top-[13px] flex flex-col items-center transition-opacity duration-700"
-                style={{ left: `calc(${metaW}% - 1px)`, opacity: shown ? 1 : 0, transitionDelay: `${600 + i * 90}ms` }}
+                className="absolute -top-[13px] flex flex-col items-center"
+                style={{
+                  left: `calc(${metaW}% - 1px)`,
+                  opacity: shown ? 1 : 0,
+                  transition: `left 0.6s ${EASE}, opacity 0.5s ease`,
+                  transitionDelay: `${i * 45}ms`,
+                }}
               >
                 <span className="w-0.5 h-3.5 bg-amber" />
               </div>
@@ -76,20 +89,24 @@ function Diagnostic({ chart, shown }) {
   )
 }
 
-function BeforeAfter({ chart, shown }) {
+function BeforeAfter({ chart, shown, factor }) {
   return (
     <div className="space-y-5">
       {chart.items.map((it, i) => {
-        const max = Math.max(it.antes, it.depois) * 1.12
+        // projeção do "depois" conforme o investimento (o "antes" é fixo)
+        const proj = it.lowerBetter
+          ? Math.max(it.depois * 0.7, it.antes - (it.antes - it.depois) * factor)
+          : Math.min(100, it.antes + (it.depois - it.antes) * factor)
+        const max = Math.max(it.antes, it.depois, proj) * 1.12
         const aW = (it.antes / max) * 100
-        const dW = (it.depois / max) * 100
-        const improved = it.lowerBetter ? it.depois < it.antes : it.depois > it.antes
-        const pct = Math.round(((it.depois - it.antes) / it.antes) * 100)
+        const dW = (proj / max) * 100
+        const improved = it.lowerBetter ? proj < it.antes : proj > it.antes
+        const pct = Math.round(((proj - it.antes) / it.antes) * 100)
         return (
           <div key={it.label}>
             <div className="flex justify-between items-baseline mb-1.5">
               <span className="mono-label text-[0.6rem] text-titanium/80">{it.label}</span>
-              <span className={`font-mono text-[0.6rem] ${improved ? 'text-signal' : 'text-titanium/60'}`}>
+              <span className={`font-mono text-[0.6rem] tabular-nums ${improved ? 'text-signal' : 'text-titanium/60'}`}>
                 {pct > 0 ? '+' : ''}{pct}%
               </span>
             </div>
@@ -98,8 +115,8 @@ function BeforeAfter({ chart, shown }) {
                 <span className="mono-label text-[0.5rem] text-titanium/40 w-11 shrink-0">antes</span>
                 <div className="flex-1 h-2 rounded-full bg-ivory/[0.07] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-titanium/30 transition-[width] duration-[1100ms] ease-out"
-                    style={{ width: shown ? `${aW}%` : '0%', transitionDelay: `${i * 90}ms` }}
+                    className="h-full rounded-full bg-titanium/30"
+                    style={{ width: shown ? `${aW}%` : '0%', transition: `width 0.6s ${EASE}`, transitionDelay: `${i * 45}ms` }}
                   />
                 </div>
                 <span className="font-mono text-[0.6rem] text-titanium/50 w-12 text-right shrink-0">{fmt(it.antes, it.unit)}</span>
@@ -108,11 +125,11 @@ function BeforeAfter({ chart, shown }) {
                 <span className="mono-label text-[0.5rem] text-amber w-11 shrink-0">depois</span>
                 <div className="flex-1 h-2 rounded-full bg-ivory/[0.07] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-amber/80 to-amber transition-[width] duration-[1100ms] ease-out"
-                    style={{ width: shown ? `${dW}%` : '0%', transitionDelay: `${200 + i * 90}ms` }}
+                    className="chart-fill h-full rounded-full bg-gradient-to-r from-amber/80 to-amber"
+                    style={{ width: shown ? `${dW}%` : '0%', transition: `width 0.6s ${EASE}`, transitionDelay: `${i * 45}ms`, '--flow-delay': `${i * 0.55}s` }}
                   />
                 </div>
-                <span className="font-mono text-[0.6rem] text-amber w-12 text-right shrink-0">{fmt(it.depois, it.unit)}</span>
+                <span className="font-mono text-[0.6rem] text-amber w-12 text-right shrink-0 tabular-nums">{fmt(proj, it.unit)}</span>
               </div>
             </div>
           </div>
@@ -123,6 +140,7 @@ function BeforeAfter({ chart, shown }) {
 }
 
 function Growth({ chart, shown }) {
+  const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const w = 320
   const h = 140
   const pad = 26
@@ -151,7 +169,7 @@ function Growth({ chart, shown }) {
         {[0.5].map((g) => (
           <line key={g} x1={pad} x2={w - pad} y1={h - pad - g * (h - pad * 2)} y2={h - pad - g * (h - pad * 2)} stroke="#F4F2EC" strokeOpacity="0.06" />
         ))}
-        <path d={area} fill="url(#grow-grad)" style={{ opacity: shown ? 1 : 0, transition: 'opacity 1.2s ease 0.4s' }} />
+        <path d={area} fill="url(#grow-grad)" className={shown ? 'grow-area' : undefined} style={{ opacity: shown ? 1 : 0, transition: 'opacity 1.2s ease 0.4s' }} />
         <path
           d={line}
           fill="none"
@@ -161,6 +179,12 @@ function Growth({ chart, shown }) {
           strokeLinejoin="round"
           style={{ strokeDasharray: 700, strokeDashoffset: shown ? 0 : 700, transition: 'stroke-dashoffset 1.6s cubic-bezier(0.16,1,0.3,1)' }}
         />
+        {/* valor que SOBE pela curva em loop (igual ao gráfico do vídeo) */}
+        {shown && !reduced && (
+          <circle r="3.6" fill="#F4F2EC" className="grow-spark">
+            <animateMotion dur="3.4s" begin="1.2s" repeatCount="indefinite" path={line} />
+          </circle>
+        )}
         {pts.map((p, i) => (
           <circle
             key={i}
@@ -186,13 +210,13 @@ function Growth({ chart, shown }) {
   )
 }
 
-export default function ProcessChart({ chart }) {
+export default function ProcessChart({ chart, factor = 1 }) {
   const [ref, shown] = useShown()
   return (
     <div ref={ref}>
       <p className="mono-label text-[0.55rem] text-amber/80 mb-4">{chart.caption || 'Indicadores'}</p>
-      {chart.type === 'diagnostic' && <Diagnostic chart={chart} shown={shown} />}
-      {chart.type === 'beforeAfter' && <BeforeAfter chart={chart} shown={shown} />}
+      {chart.type === 'diagnostic' && <Diagnostic chart={chart} shown={shown} factor={factor} />}
+      {chart.type === 'beforeAfter' && <BeforeAfter chart={chart} shown={shown} factor={factor} />}
       {chart.type === 'growth' && <Growth chart={chart} shown={shown} />}
     </div>
   )

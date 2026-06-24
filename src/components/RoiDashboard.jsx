@@ -20,8 +20,7 @@ const brl = (v) =>
     ? 'R$ ' + Math.round(v).toLocaleString('pt-BR')
     : 'R$ ' + Math.round(v)
 
-export default function RoiDashboard() {
-  const [invest, setInvest] = useState(8000)
+export default function RoiDashboard({ invest, setInvest }) {
   const [hover, setHover] = useState(null)
 
   const data = useMemo(() => {
