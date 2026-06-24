@@ -48,7 +48,7 @@ export default function FinalCTA({ reducedMotion }) {
 
       <div className="relative z-10 w-full max-w-5xl flex flex-col items-center">
         <div className="cta-reveal flex items-center justify-center gap-4 mb-8">
-          <span className="mono-label text-amber">[ SEC 08 ]</span>
+          <span className="mono-label text-amber">[ SEC 09 ]</span>
           <span className="h-px w-12 bg-ivory/15" aria-hidden="true" />
           <span className="mono-label text-titanium/60">O próximo capítulo é o seu</span>
         </div>
@@ -58,30 +58,36 @@ export default function FinalCTA({ reducedMotion }) {
           <span className="font-serif italic normal-case text-amber tracking-normal">organismo?</span>
         </h2>
 
-        {/* VÍDEO da Quimera — faixa integrada (texto NÃO fica por cima). Razão
-            nativa do arquivo (sem cortar); cor do entorno (--mt) e vinheta
-            interna fundem a moldura no fundo da seção. */}
-        <figure className="cta-reveal relative mt-14 w-full">
-          <div className="relative mx-auto w-[min(58rem,100%)] aspect-[1600/874] rounded-[1.75rem] overflow-hidden ring-1 ring-ivory/10">
+        {/* VÍDEO da Quimera — FULL-BLEED (largura da viewport), QHD, SEM moldura:
+            a vinheta dissolve as bordas na obsidiana (sem retângulo genérico) e o
+            entorno acompanha a cor do vídeo (--mt). reduced-motion → poster. */}
+        <figure className="cta-reveal relative mt-10 md:mt-14 w-screen max-w-none">
+          <div className="relative w-full aspect-[1600/874] overflow-hidden">
             <div className="absolute inset-0" style={{ background: 'rgb(var(--mt))' }} aria-hidden="true" />
-            <div className="absolute inset-0 bg-obsidian/45" aria-hidden="true" />
-            <video
-              ref={videoRef}
-              className="absolute inset-0 h-full w-full object-cover"
-              src="/video/hero-loop.mp4"
-              poster="/video/hero-poster.jpg"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-            />
-            {/* vinheta interna: dissolve as bordas do quadro no fundo */}
+            <div className="absolute inset-0 bg-obsidian/38" aria-hidden="true" />
+            {reducedMotion ? (
+              <img src="/video/chimera-poster.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <video
+                ref={videoRef}
+                className="absolute inset-0 h-full w-full object-cover"
+                src="/video/chimera-loop.mp4"
+                poster="/video/chimera-poster.jpg"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+              />
+            )}
+            {/* VINHETA: bordas dissolvem na obsidiana (funde com a página, sem moldura) */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-[1.75rem]"
-              style={{ boxShadow: 'inset 0 0 90px 30px rgba(11,11,16,0.85)' }}
+              className="pointer-events-none absolute inset-0"
+              style={{ background: 'radial-gradient(ellipse 72% 76% at 50% 50%, transparent 40%, rgba(11,11,16,0.6) 72%, #0B0B10 100%)' }}
             />
+            {/* topo/base fundem na seção */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-obsidian/90 via-transparent to-obsidian/95" aria-hidden="true" />
           </div>
         </figure>
 

@@ -81,9 +81,9 @@ export default function Hero({ ready, reducedMotion }) {
         </div>
       </div>
 
-      {/* dica de interação: cue de scroll (intuitivo, some ao rolar) */}
+      {/* dica de interação: cue de scroll (só desktop — no mobile colide com os CTAs) */}
       <div
-        className="hero-cta pointer-events-none absolute z-10 left-1/2 -translate-x-1/2 bottom-24 flex flex-col items-center gap-3 transition-opacity duration-500"
+        className="hero-cta pointer-events-none absolute z-10 left-1/2 -translate-x-1/2 bottom-24 hidden md:flex flex-col items-center gap-3 transition-opacity duration-500"
         style={{ opacity: hideHint ? 0 : 1 }}
         aria-hidden="true"
       >

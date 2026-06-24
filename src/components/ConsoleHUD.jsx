@@ -11,6 +11,7 @@ const SECTION_NAMES = {
   servicos: 'SERVIÇOS',
   catalogo: 'CATÁLOGO',
   processo: 'PROTOCOLO',
+  retorno: 'RETORNO',
   resultados: 'RESULTADOS',
   planos: 'MANUTENÇÃO',
   contato: 'PORTAL',
@@ -103,7 +104,8 @@ export default function ConsoleHUD() {
         <span className="hud-corner bl" />
         <span className="hud-corner br" />
       </div>
-      <div className="hud-log" aria-hidden="true">
+      {/* log técnico só em telas médias+ (no mobile sobrepõe o conteúdo) */}
+      <div className="hud-log hidden md:block" aria-hidden="true">
         <span className="amber">SEC {idx}</span> // {SECTION_NAMES[active]} · POS <span className="amber">{coord}</span> · BRT {clock}
       </div>
       <div

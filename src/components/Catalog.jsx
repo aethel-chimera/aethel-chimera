@@ -221,13 +221,18 @@ export default function Catalog({ reducedMotion, onOpenProject }) {
         {/* info do slide ativo — sem bloco escuro; legibilidade por sombra */}
         <div className="catalog-info absolute left-10 bottom-16 z-[4] max-w-md">
           <div key={active} className="catalog-active">
-            <span className="font-display font-semibold text-[clamp(4rem,8vw,7rem)] text-ivory/10 leading-none block -mb-4 select-none" aria-hidden="true">
-              {String(active + 1).padStart(2, '0')}
-            </span>
-            <p className="mono-label text-amber mb-2">
-              {p.segment} · {p.year}
-            </p>
-            <h3 className="font-display font-semibold text-4xl text-ivory mb-4">{p.name}</h3>
+            {/* índice + segmento na MESMA linha (base alinhada) — sem o número
+                gigante grudando no texto; mais visível (âmbar) e organizado */}
+            <div className="flex items-baseline gap-3 mb-3">
+              <span className="font-display font-semibold text-[clamp(2.2rem,3vw,3rem)] text-amber leading-none tabular-nums select-none">
+                {String(active + 1).padStart(2, '0')}
+              </span>
+              <span className="h-px w-7 bg-amber/40 mb-2" aria-hidden="true" />
+              <p className="mono-label text-amber/90">
+                {p.segment} · {p.year}
+              </p>
+            </div>
+            <h3 className="font-display font-semibold text-4xl text-ivory mb-4 leading-[1.05]">{p.name}</h3>
             <ul className="space-y-1 mb-5">
               {p.metrics.map((m) => (
                 <li key={m} className="font-mono text-xs text-amber flex items-center gap-2">
