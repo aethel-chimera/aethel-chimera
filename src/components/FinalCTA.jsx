@@ -7,6 +7,11 @@ import { useMotionTint } from '../useMotionTint'
 
 gsap.registerPlugin(ScrollTrigger)
 
+// feather (alpha) das bordas do vídeo → dissolve na grade de fundo tingida (--mt),
+// sem aresta dura; ênfase no topo/base (eixo vertical mais aberto).
+const FADE = 'radial-gradient(ellipse 84% 94% at 50% 50%, #000 46%, transparent 96%)'
+const EDGE_FADE = { WebkitMaskImage: FADE, maskImage: FADE }
+
 export default function FinalCTA({ reducedMotion }) {
   const rootRef = useRef(null)
   const videoRef = useRef(null)
@@ -39,12 +44,18 @@ export default function FinalCTA({ reducedMotion }) {
       ref={rootRef}
       className="relative z-[3] flex flex-col items-center text-center px-5 py-32 overflow-hidden"
     >
-      {/* glow ambiente que ACOMPANHA a cor do vídeo (--mt), atrás de tudo */}
+      {/* GRADE DE FUNDO que ACOMPANHA a cor do vídeo (--mt): o vídeo dissolve
+          (máscara) nesta grade tingida, então fundo e vídeo mudam de cor juntos.
+          Base = obsidiana (identidade) + tinta do vídeo; topo/base fundem nas
+          seções vizinhas com sombreamento. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0" style={{ background: 'rgb(var(--mt))' }} />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-obsidian/[0.84]" />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0"
-        style={{ background: 'radial-gradient(ellipse 65% 55% at 50% 60%, rgba(var(--mt), 0.20), transparent 72%)' }}
+        style={{ background: 'radial-gradient(ellipse 72% 62% at 50% 46%, rgba(var(--mt),0.26), transparent 70%)' }}
       />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-obsidian via-transparent to-obsidian" />
 
       <div className="relative z-10 w-full max-w-5xl flex flex-col items-center">
         <div className="cta-reveal flex items-center justify-center gap-4 mb-8">
@@ -62,15 +73,14 @@ export default function FinalCTA({ reducedMotion }) {
             a vinheta dissolve as bordas na obsidiana (sem retângulo genérico) e o
             entorno acompanha a cor do vídeo (--mt). reduced-motion → poster. */}
         <figure className="cta-reveal relative mt-10 md:mt-14 w-screen max-w-none">
-          <div className="relative w-full aspect-[1600/874] overflow-hidden">
-            <div className="absolute inset-0" style={{ background: 'rgb(var(--mt))' }} aria-hidden="true" />
-            <div className="absolute inset-0 bg-obsidian/38" aria-hidden="true" />
+          <div className="relative w-full aspect-[1600/874]">
             {reducedMotion ? (
-              <img src="/video/chimera-poster.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <img src="/video/chimera-poster.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" style={EDGE_FADE} />
             ) : (
               <video
                 ref={videoRef}
                 className="absolute inset-0 h-full w-full object-cover"
+                style={EDGE_FADE}
                 src="/video/chimera-loop.mp4"
                 poster="/video/chimera-poster.jpg"
                 autoPlay
@@ -80,14 +90,6 @@ export default function FinalCTA({ reducedMotion }) {
                 preload="auto"
               />
             )}
-            {/* VINHETA: bordas dissolvem na obsidiana (funde com a página, sem moldura) */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
-              style={{ background: 'radial-gradient(ellipse 72% 76% at 50% 50%, transparent 40%, rgba(11,11,16,0.6) 72%, #0B0B10 100%)' }}
-            />
-            {/* topo/base fundem na seção */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-obsidian/90 via-transparent to-obsidian/95" aria-hidden="true" />
           </div>
         </figure>
 
