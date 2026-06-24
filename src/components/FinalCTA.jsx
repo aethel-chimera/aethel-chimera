@@ -49,11 +49,11 @@ export default function FinalCTA({ reducedMotion }) {
           Base = obsidiana (identidade) + tinta do vídeo; topo/base fundem nas
           seções vizinhas com sombreamento. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0" style={{ background: 'rgb(var(--mt))' }} />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-obsidian/[0.84]" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-obsidian/[0.68]" />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0"
-        style={{ background: 'radial-gradient(ellipse 72% 62% at 50% 46%, rgba(var(--mt),0.26), transparent 70%)' }}
+        style={{ background: 'radial-gradient(ellipse 76% 66% at 50% 46%, rgba(var(--mt),0.42), transparent 72%)' }}
       />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-obsidian via-transparent to-obsidian" />
 
