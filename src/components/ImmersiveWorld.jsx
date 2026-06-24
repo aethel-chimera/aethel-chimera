@@ -597,13 +597,20 @@ function Panels({ shared }) {
 const CATALOG_COLORS = ['#A7C49C', '#E6D6B0', '#D8AE78', '#9FC2C2', '#CBA98E', '#E2CD93'].map(
   (c) => new THREE.Color(c)
 )
-function catalogTint(out, p) {
-  const n = CATALOG_COLORS.length
+// paleta da ÁRVORE — dentro do design system (âmbar ↔ violeta, sem o verde cru):
+// percorre a marca conforme o scroll do catálogo, igual ao ambiente das seções.
+const TREE_TINTS = ['#E0A458', '#D9B36A', '#9A7BD8', '#B9AED6', '#C77B4A', '#E0A458'].map(
+  (c) => new THREE.Color(c)
+)
+// interpola uma paleta por progresso p (0..1)
+function lerpPalette(out, cols, p) {
+  const n = cols.length
   const f = Math.max(0, Math.min(1, p)) * (n - 1)
   const i = Math.floor(f)
-  const a = CATALOG_COLORS[Math.min(i, n - 1)]
-  const b = CATALOG_COLORS[Math.min(i + 1, n - 1)]
-  return out.copy(a).lerp(b, f - i)
+  return out.copy(cols[Math.min(i, n - 1)]).lerp(cols[Math.min(i + 1, n - 1)], f - i)
+}
+function catalogTint(out, p) {
+  return lerpPalette(out, CATALOG_COLORS, p)
 }
 
 // ---- coluna vertebral: ÁRVORE 3D (galhos com seiva luminosa subindo).
@@ -1335,17 +1342,29 @@ useGLTF.preload('/models/tree.glb')
 function CatalogTreeGLB({ shared }) {
   const grp = useRef()
   const { scene } = useGLTF('/models/tree.glb')
-  // realça BRILHO BRANCO nas folhas: mais reflexo (envMap) + menos rugosidade
-  // (especular) — efeito de qualidade nas folhas glossy do bonsai.
+  const mats = useRef([]) // materiais (clonados) p/ tingir por frame
+  const tintRef = useRef(new THREE.Color('#E0A458')) // cor atual (damped) do scroll
+  const keyRef = useRef() // luz-chave que acompanha o tint
+  const _tt = useMemo(() => new THREE.Color(), [])
+  // CLONA materiais (não muta o cache do GLB), dessatura a base crua (verde/marrom)
+  // e prepara emissivo — para tingir dentro do design system sem ficar lamacento.
   const obj = useMemo(() => {
     const c = scene.clone(true)
+    mats.current = []
     c.traverse((n) => {
       if (n.isMesh && n.material) {
-        const arr = Array.isArray(n.material) ? n.material : [n.material]
-        arr.forEach((m) => {
+        const arr = (Array.isArray(n.material) ? n.material : [n.material]).map((m0) => {
+          const m = m0.clone()
           m.envMapIntensity = 2.8
           if (m.roughness != null) m.roughness = Math.max(0.1, m.roughness * 0.55)
+          // base dessaturada: tira o verde/marrom cru p/ o tint da marca dominar
+          const lum = m.color.r * 0.299 + m.color.g * 0.587 + m.color.b * 0.114
+          m.userData.tintBase = m.color.clone().lerp(new THREE.Color(lum, lum, lum), 0.55)
+          if (m.emissive) m.emissiveIntensity = 1
+          mats.current.push(m)
+          return m
         })
+        n.material = Array.isArray(n.material) ? arr : arr[0]
       }
     })
     return c
@@ -1362,6 +1381,18 @@ function CatalogTreeGLB({ shared }) {
     op.current = THREE.MathUtils.damp(op.current, w, 5, d) // fade suave (entra/sai)
     grp.current.visible = op.current > 0.005
     fadeObject(obj, op.current)
+    // COR pelo SCROLL: percorre TREE_TINTS (âmbar↔violeta) conforme o projeto à
+    // frente, damped p/ transição suave — igual ao ambiente das outras seções.
+    tintRef.current.lerp(lerpPalette(_tt, TREE_TINTS, bus.catalogP), 1 - Math.exp(-3 * d))
+    for (let k = 0; k < mats.current.length; k++) {
+      const m = mats.current[k]
+      // cor: puxa forte p/ o tint (mas a textura ainda modula a forma)
+      if (m.userData.tintBase) m.color.copy(m.userData.tintBase).lerp(tintRef.current, 0.85)
+      // emissivo FORTE: o brilho da marca é somado por cima do map verde (vence
+      // o verde cru das folhas e faz a árvore "acender" na cor do scroll)
+      if (m.emissive) m.emissive.copy(tintRef.current).multiplyScalar(0.42)
+    }
+    if (keyRef.current) keyRef.current.color.copy(tintRef.current)
     grp.current.scale.setScalar(1 - 0.4 * exit) // encolhe ao sair
     grp.current.position.z = -exit * 5.0 // recua p/ o fog da cena ao sair (escurece)
     // movimento: VIRA na direção do cursor + deriva orgânica lenta (sem spin fixo)
@@ -1373,10 +1404,11 @@ function CatalogTreeGLB({ shared }) {
   return (
     <group ref={grp} position={[1.4, 0, 0]}>
       <primitive object={obj} position={[0, -1.2, 0]} scale={2.8} />
-      {/* luz BRANCA do alto = brilho/glint nas folhas + key quente + fill frio */}
-      <pointLight position={[1.5, 5.0, 3.5]} intensity={6} distance={16} color="#ffffff" />
-      <pointLight position={[3.5, 2.5, 3.5]} intensity={5.5} distance={13} color="#F1E3BC" />
-      <pointLight position={[-3.5, 1.0, -2.0]} intensity={3} distance={13} color="#9FC2C9" />
+      {/* luz BRANCA do alto = glint nas folhas; KEY acompanha o tint do scroll;
+          fill violeta suave (dentro da paleta) */}
+      <pointLight position={[1.5, 5.0, 3.5]} intensity={5} distance={16} color="#ffffff" />
+      <pointLight ref={keyRef} position={[3.5, 2.5, 3.5]} intensity={6} distance={13} color="#E0A458" />
+      <pointLight position={[-3.5, 1.0, -2.0]} intensity={2.6} distance={13} color="#9A85C4" />
     </group>
   )
 }
