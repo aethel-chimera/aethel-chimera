@@ -1519,40 +1519,6 @@ function AtmosphereDust({ shared }) {
   )
 }
 
-// SOMBRA DE CONTATO suave sob a árvore — aterra o modelo (sensação de que ele
-// pertence à cena, não está "colado") sem atrapalhar a visualização. Plano
-// horizontal com gradiente radial escuro, gate por panels (só no catálogo).
-function GroundShadow({ shared }) {
-  const ref = useRef()
-  const tex = useMemo(() => {
-    const c = document.createElement('canvas')
-    c.width = c.height = 256
-    const g = c.getContext('2d')
-    const grd = g.createRadialGradient(128, 128, 0, 128, 128, 128)
-    grd.addColorStop(0, 'rgba(0,0,0,0.6)')
-    grd.addColorStop(0.45, 'rgba(0,0,0,0.32)')
-    grd.addColorStop(1, 'rgba(0,0,0,0)')
-    g.fillStyle = grd
-    g.fillRect(0, 0, 256, 256)
-    const t = new THREE.CanvasTexture(c)
-    t.colorSpace = THREE.SRGBColorSpace
-    return t
-  }, [])
-  const op = useRef(0)
-  useFrame((_, dt) => {
-    if (!ref.current) return
-    const d = Math.min(dt, 0.1)
-    op.current = THREE.MathUtils.damp(op.current, bus.catalogShow || 0, 4, d)
-    ref.current.visible = op.current > 0.01
-    ref.current.material.opacity = op.current
-  })
-  return (
-    <mesh ref={ref} position={[1.4, -2.15, 0.4]} rotation={[-Math.PI / 2.1, 0, 0]}>
-      <planeGeometry args={[7, 5]} />
-      <meshBasicMaterial map={tex} transparent depthWrite={false} opacity={0} />
-    </mesh>
-  )
-}
 
 export default function ImmersiveWorld() {
   const shared = useRef({ glass: 1, fluid: 0, panels: 0, logo: 0, camZ: 6, mx: 0, my: 0, color: new THREE.Color('#E0A458') })
@@ -1604,8 +1570,6 @@ export default function ImmersiveWorld() {
         <AtmosphereDust shared={shared} />
         {/* pétalas (cerejeira) caindo no catálogo, em volta da árvore */}
         <FallingLeaves shared={shared} />
-        {/* sombra de contato que aterra a árvore na cena */}
-        <GroundShadow shared={shared} />
         {/* modelos 3D (GLB): árvore no catálogo + cards orbitando */}
         <Suspense fallback={null}>
           <SceneModels />
