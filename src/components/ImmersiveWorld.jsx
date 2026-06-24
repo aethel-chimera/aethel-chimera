@@ -597,11 +597,12 @@ function Panels({ shared }) {
 const CATALOG_COLORS = ['#A7C49C', '#E6D6B0', '#D8AE78', '#9FC2C2', '#CBA98E', '#E2CD93'].map(
   (c) => new THREE.Color(c)
 )
-// DUAS paletas SEMPRE distintas (sem cruzamento "lamacento"): a copa (topo) fica
-// no âmbar/ouro e a base no violeta — ambas variam com o scroll, mas nunca
-// colidem de hue. Saturadas, dentro do design system.
-const TOP_TINTS = ['#F2A93C', '#F0C75A', '#E08A2A'].map((c) => new THREE.Color(c)) // copa: âmbar/ouro
-const BOT_TINTS = ['#8A5CF0', '#A86BF0', '#6D40D6'].map((c) => new THREE.Color(c)) // base: violeta
+// ciclo de marca âmbar→violeta→âmbar: a árvore INTEIRA percorre isso com o scroll
+// (mudança BEM visível). Copa e base derivam dessa cor-base puxando, por um delta
+// fixo, p/ quente (copa) e frio (base) → sempre distintas, sem colidir de hue.
+const BRAND_CYCLE = ['#F2A93C', '#8A5CF0', '#F2A93C'].map((c) => new THREE.Color(c))
+const TINT_WARM = new THREE.Color('#F2A93C') // âmbar
+const TINT_COOL = new THREE.Color('#8A5CF0') // violeta
 // interpola uma paleta por progresso p (0..1)
 function lerpPalette(out, cols, p) {
   const n = cols.length
@@ -1415,8 +1416,13 @@ function CatalogTreeGLB({ shared }) {
     // pixel). Damped p/ transição suave, como o ambiente das outras seções.
     const cp = bus.catalogP || 0
     const k = 1 - Math.exp(-3 * d)
-    topCol.current.lerp(lerpPalette(_tt, TOP_TINTS, cp), k)
-    botCol.current.lerp(lerpPalette(_t2, BOT_TINTS, cp), k)
+    // cor-base do scroll (a árvore toda percorre âmbar↔violeta), e copa/base
+    // puxam p/ quente/frio (delta fixo) → sempre distintas, mudança bem visível
+    lerpPalette(_tt, BRAND_CYCLE, cp)
+    _t2.copy(_tt).lerp(TINT_WARM, 0.45)
+    topCol.current.lerp(_t2, k)
+    _t2.copy(_tt).lerp(TINT_COOL, 0.45)
+    botCol.current.lerp(_t2, k)
     for (let i = 0; i < mats.current.length; i++) {
       const m = mats.current[i]
       if (m.emissive) m.emissive.copy(topCol.current).multiplyScalar(0.16) // glow leve
