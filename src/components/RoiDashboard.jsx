@@ -8,17 +8,12 @@ import SectionHead from './SectionHead'
 //   SEO ~7,5x · mídia paga ~2–4x (ROAS) · conteúdo/social ~3x · automação/e-mail
 //   até ~40x · benchmark "bom" do setor = 5x. (Valores conservadores e mesclados.)
 const CHANNELS = [
-  { key: 'trafego', label: 'Gestão de Tráfego', alloc: 0.3, mult: 3.2, color: '#E0A458', note: 'ROAS de mídia paga otimizada (Meta / Google).' },
-  { key: 'sites', label: 'Sites & SEO', alloc: 0.25, mult: 5.0, color: '#3DDC97', note: 'Tráfego orgânico que compõe mês a mês (ativo de longo prazo).' },
-  { key: 'lp', label: 'Landing Pages · CRO', alloc: 0.15, mult: 4.0, color: '#7FB2E8', note: 'Otimização de conversão: mais venda com o mesmo tráfego.' },
-  { key: 'social', label: 'Social & Conteúdo', alloc: 0.15, mult: 3.0, color: '#C58BD6', note: 'Alcance, autoridade e demanda de marca.' },
-  { key: 'auto', label: 'Automações & CRM', alloc: 0.15, mult: 6.0, color: '#E2A6C0', note: 'Retenção e LTV (fluxos de e-mail/CRM — o maior retorno por R$).' },
+  { key: 'trafego', label: 'Gestão de Tráfego', alloc: 0.3, mult: 3.2, color: '#D6D6DA', note: 'ROAS de mídia paga otimizada (Meta / Google).' },
+  { key: 'sites', label: 'Sites & SEO', alloc: 0.25, mult: 5.0, color: '#AEB2B8', note: 'Tráfego orgânico que compõe mês a mês (ativo de longo prazo).' },
+  { key: 'lp', label: 'Landing Pages · CRO', alloc: 0.15, mult: 4.0, color: '#9AA0A8', note: 'Otimização de conversão: mais venda com o mesmo tráfego.' },
+  { key: 'social', label: 'Social & Conteúdo', alloc: 0.15, mult: 3.0, color: '#B6B2BE', note: 'Alcance, autoridade e demanda de marca.' },
+  { key: 'auto', label: 'Automações & CRM', alloc: 0.15, mult: 6.0, color: '#C8C2C6', note: 'Retenção e LTV (fluxos de e-mail/CRM — o maior retorno por R$).' },
 ]
-
-// feather (alpha) das bordas do vídeo → dissolve na grade tingida em TODOS os
-// lados (inclusive as laterais); o eixo X mais fechado realça a transição lateral.
-const FADE = 'radial-gradient(ellipse 80% 96% at 50% 50%, #000 48%, transparent 98%)'
-const EDGE_FADE = { WebkitMaskImage: FADE, maskImage: FADE }
 
 const brl = (v) =>
   v >= 1000
@@ -27,7 +22,6 @@ const brl = (v) =>
 
 export default function RoiDashboard({ invest, setInvest }) {
   const [hover, setHover] = useState(null)
-  const reduced = useMemo(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])
 
   const data = useMemo(() => {
     const rows = CHANNELS.map((c) => {
@@ -45,36 +39,7 @@ export default function RoiDashboard({ invest, setInvest }) {
   const active = hover ? data.rows.find((r) => r.key === hover) : null
 
   return (
-    <section id="retorno" className="relative z-[3] px-5 md:px-10 py-32 overflow-hidden">
-      {/* fundo AMBIENTE: dashboard holográfico (vídeo) atrás dos números — bem
-          escurecido p/ não competir com a leitura. reduced-motion → poster. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        {/* grade tingida pela cor do vídeo (--mt): base p/ as bordas dissolverem */}
-        <div className="absolute inset-0" style={{ background: 'rgb(var(--mt))' }} />
-        <div className="absolute inset-0 bg-obsidian/[0.72]" />
-        {/* vídeo (4K): bordas FEATHER em todos os lados (inclusive laterais) →
-            dissolve na grade, sem retângulo. reduced-motion → poster. */}
-        {reduced ? (
-          <img src="/video/roi-poster.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" style={EDGE_FADE} />
-        ) : (
-          <video
-            className="absolute inset-0 h-full w-full object-cover"
-            style={EDGE_FADE}
-            src="/video/roi-loop.mp4"
-            poster="/video/roi-poster.jpg"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-          />
-        )}
-        {/* veil leve sobre o vídeo — mantém os números legíveis */}
-        <div className="absolute inset-0 bg-obsidian/40" />
-        {/* topo e base fundem nas seções vizinhas */}
-        <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-transparent to-obsidian" />
-      </div>
-
+    <section id="retorno" className="relative z-[3] px-5 md:px-10 py-32">
       <div className="relative z-10 mb-14 max-w-2xl">
         <SectionHead index="06" kicker="Investimento × retorno" title="Calculadora" accent="de retorno" className="mb-6" />
         <p className="text-titanium leading-relaxed">

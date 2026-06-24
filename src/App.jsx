@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
@@ -6,10 +6,6 @@ import Lenis from 'lenis'
 import Preloader from './components/Preloader'
 import Cursor from './components/Cursor'
 import ConsoleHUD from './components/ConsoleHUD'
-
-// O mundo WebGL imersivo (R3F + materiais ricos + pós-processamento) é carregado
-// de forma assíncrona para não bloquear o paint inicial — crítico para o LCP.
-const ImmersiveWorld = lazy(() => import('./components/ImmersiveWorld'))
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Manifesto from './components/Manifesto'
@@ -28,15 +24,6 @@ gsap.registerPlugin(ScrollTrigger)
 export default function App() {
   const reducedMotion = useMemo(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    []
-  )
-  // Degradação de mobile (regra do gate de performance): no mobile e em
-  // reduced-motion o mundo WebGL pesado NÃO é carregado — entra um fallback
-  // estático. Isso mantém o Three.js fora do caminho e o Lighthouse mobile alto.
-  const enable3D = useMemo(
-    () =>
-      !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-      !window.matchMedia('(max-width: 767px), (pointer: coarse)').matches,
     []
   )
   const alreadyLoaded = useMemo(() => sessionStorage.getItem('aethel-preloaded') === '1', [])
@@ -92,16 +79,6 @@ export default function App() {
       <div className="vignette" aria-hidden="true" />
 
       <Cursor />
-      {enable3D ? (
-        <Suspense fallback={null}>
-          <ImmersiveWorld />
-        </Suspense>
-      ) : (
-        <div
-          aria-hidden="true"
-          className="fixed inset-0 z-[0] bg-[radial-gradient(circle_at_70%_42%,rgba(224,164,88,0.13),transparent_55%)]"
-        />
-      )}
       {loaded && <ConsoleHUD />}
       <Navbar />
 

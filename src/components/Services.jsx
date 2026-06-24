@@ -8,7 +8,7 @@ import SectionHead from './SectionHead'
 gsap.registerPlugin(ScrollTrigger)
 
 // cor premium distinta por serviço (tons joia/metálico, coesos com a marca)
-const SERVICE_ACCENTS = ['#E0A458', '#C9A66B', '#5FA391', '#9A85C4', '#C77B4A', '#D9A38E']
+const SERVICE_ACCENTS = ['#D6D6DA', '#C2C2C6', '#A6AAAE', '#A2A2AA', '#B2AEAC', '#C6C2C0']
 
 export default function Services({ reducedMotion }) {
   const rootRef = useRef(null)

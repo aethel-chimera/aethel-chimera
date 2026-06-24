@@ -4,11 +4,11 @@
 
 :root {
   --obsidian: #0b0b10;
-  --titanium: #c8cad0;
-  --ivory: #f4f2ec;
-  --amber: #e0a458;
-  --violet: #9a7bd8;
-  --signal: #3ddc97;
+  --titanium: #bfc1c6;
+  --ivory: #f4f4f5;
+  --amber: #d8d8da;
+  --violet: #9ca0a6;
+  --signal: #c4c6ca;
 }
 
 html {
@@ -99,7 +99,7 @@ body {
   width: 84px;
   height: 84px;
   margin: -42px 0 0 -42px;
-  background: rgba(224, 164, 88, 0.92);
+  background: rgba(216, 216, 218, 0.92);
   border-color: transparent;
 }
 .cursor-ring .cursor-label {
@@ -168,8 +168,8 @@ button:focus-visible {
 
 /* ponto de status pulsante */
 @keyframes pulse-signal {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(61, 220, 151, 0.5); }
-  50% { box-shadow: 0 0 0 6px rgba(61, 220, 151, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(196, 198, 202, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(196, 198, 202, 0); }
 }
 .signal-dot {
   width: 8px;
@@ -223,7 +223,7 @@ button:focus-visible {
     115deg,
     transparent 30%,
     rgba(244, 242, 236, 0.14) 45%,
-    rgba(224, 164, 88, 0.1) 50%,
+    rgba(216, 216, 218, 0.1) 50%,
     transparent 65%
   );
   background-size: 250% 250%;
@@ -257,7 +257,7 @@ button:focus-visible {
   position: absolute;
   width: 22px;
   height: 22px;
-  border-color: rgba(224, 164, 88, 0.5);
+  border-color: rgba(216, 216, 218, 0.5);
   border-style: solid;
   border-width: 0;
 }
@@ -347,8 +347,8 @@ button:focus-visible {
   opacity: 0;
   transition: opacity 0.4s;
 }
-.chroma::before { color: #ff4d4d; }
-.chroma::after { color: #3ddcdc; }
+.chroma::before { color: #bdbdbd; }
+.chroma::after { color: #9a9a9a; }
 .chroma:hover::before { opacity: 0.55; transform: translate(-2px, 1px); }
 .chroma:hover::after { opacity: 0.55; transform: translate(2px, -1px); }
 
@@ -361,8 +361,8 @@ button:focus-visible {
   transition: border-color 0.4s, box-shadow 0.4s;
 }
 .at-panel:hover {
-  border-color: rgba(224, 164, 88, 0.5);
-  box-shadow: 0 0 0 1px rgba(224, 164, 88, 0.25), 0 30px 80px -30px rgba(224, 164, 88, 0.3);
+  border-color: rgba(216, 216, 218, 0.5);
+  box-shadow: 0 0 0 1px rgba(216, 216, 218, 0.25), 0 30px 80px -30px rgba(216, 216, 218, 0.3);
 }
 .at-panel .panel-scanlines {
   position: absolute;
@@ -380,7 +380,7 @@ button:focus-visible {
   position: absolute;
   width: 10px;
   height: 10px;
-  border-color: rgba(224, 164, 88, 0.7);
+  border-color: rgba(216, 216, 218, 0.7);
   border-style: solid;
   border-width: 0;
 }
@@ -401,8 +401,8 @@ button:focus-visible {
   pointer-events: none;
   opacity: 0;
   background:
-    linear-gradient(90deg, rgba(255, 40, 80, 0.35), transparent 10%),
-    linear-gradient(-90deg, rgba(60, 220, 220, 0.35), transparent 10%);
+    linear-gradient(90deg, rgba(200, 200, 200, 0.35), transparent 10%),
+    linear-gradient(-90deg, rgba(160, 160, 160, 0.35), transparent 10%);
   transition: opacity 0.4s;
 }
 .at-panel:hover .panel-media::after { opacity: 1; }
@@ -413,7 +413,7 @@ button:focus-visible {
   appearance: none;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(224, 164, 88, 0.55), rgba(61, 220, 151, 0.55));
+  background: linear-gradient(90deg, rgba(216, 216, 218, 0.55), rgba(196, 198, 202, 0.55));
   outline: none;
   cursor: pointer;
 }
@@ -424,8 +424,8 @@ button:focus-visible {
   height: 22px;
   border-radius: 50%;
   background: var(--ivory, #f4f2ec);
-  border: 3px solid var(--amber, #e0a458);
-  box-shadow: 0 0 0 4px rgba(224, 164, 88, 0.18), 0 2px 10px rgba(0, 0, 0, 0.5);
+  border: 3px solid var(--amber, #d8d8da);
+  box-shadow: 0 0 0 4px rgba(216, 216, 218, 0.18), 0 2px 10px rgba(0, 0, 0, 0.5);
   transition: transform 0.15s ease;
 }
 .roi-range::-webkit-slider-thumb:hover { transform: scale(1.12); }
@@ -434,11 +434,11 @@ button:focus-visible {
   height: 22px;
   border-radius: 50%;
   background: var(--ivory, #f4f2ec);
-  border: 3px solid var(--amber, #e0a458);
-  box-shadow: 0 0 0 4px rgba(224, 164, 88, 0.18);
+  border: 3px solid var(--amber, #d8d8da);
+  box-shadow: 0 0 0 4px rgba(216, 216, 218, 0.18);
   cursor: pointer;
 }
-.roi-range:focus-visible { box-shadow: 0 0 0 3px rgba(61, 220, 151, 0.4); }
+.roi-range:focus-visible { box-shadow: 0 0 0 3px rgba(196, 198, 202, 0.4); }
 
 /* grade técnica de fundo (sutil, reativa ao tema) */
 /* fundo imersivo: aurora suave que respira nas cores da marca (âmbar +
@@ -449,9 +449,9 @@ button:focus-visible {
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 55% 45% at 22% 28%, var(--aura-1, rgba(224, 164, 88, 0.1)), transparent 62%),
-    radial-gradient(ellipse 50% 55% at 82% 72%, var(--aura-2, rgba(154, 123, 216, 0.09)), transparent 62%),
-    radial-gradient(ellipse 70% 60% at 60% 110%, var(--aura-1, rgba(224, 164, 88, 0.06)), transparent 70%);
+    radial-gradient(ellipse 55% 45% at 22% 28%, var(--aura-1, rgba(216, 216, 218, 0.1)), transparent 62%),
+    radial-gradient(ellipse 50% 55% at 82% 72%, var(--aura-2, rgba(156, 160, 166, 0.09)), transparent 62%),
+    radial-gradient(ellipse 70% 60% at 60% 110%, var(--aura-1, rgba(216, 216, 218, 0.06)), transparent 70%);
   filter: blur(8px);
   animation: aurora-drift 22s ease-in-out infinite alternate;
 }
@@ -524,7 +524,7 @@ button:focus-visible {
 
 /* cor premium por item de Serviços + franja RGB no hover (como o resto do site) */
 .service-num {
-  color: var(--accent, #e0a458);
+  color: var(--accent, #d8d8da);
 }
 .service-title {
   transition: color 0.3s ease, text-shadow 0.3s ease;
@@ -534,12 +534,12 @@ button:focus-visible {
 }
 .service-row:hover .service-title,
 .service-row:focus-within .service-title {
-  color: var(--accent, #e0a458);
+  color: var(--accent, #d8d8da);
   text-shadow: -1.5px 0 rgba(255, 70, 90, 0.45), 1.5px 0 rgba(70, 220, 220, 0.45);
 }
 .service-row:hover .service-cat,
 .service-row:focus-within .service-cat {
-  color: var(--accent, #e0a458);
+  color: var(--accent, #d8d8da);
 }
 
 /* ===== FLUXO DE ONDAS — luz que corre nas interações (inspirado no vídeo) ===== */
@@ -555,11 +555,11 @@ button:focus-visible {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(224, 164, 88, 0) 8%,
-    #e0a458 30%,
-    #c79be6 50%,
-    #9a7bd8 70%,
-    rgba(224, 164, 88, 0) 92%,
+    rgba(216, 216, 218, 0) 8%,
+    #d8d8da 30%,
+    #bfbfc2 50%,
+    #9ca0a6 70%,
+    rgba(216, 216, 218, 0) 92%,
     transparent 100%
   );
   background-size: 220% 100%;
@@ -582,8 +582,8 @@ button:focus-visible {
   background: linear-gradient(
     90deg,
     rgba(244, 242, 236, 0.12),
-    rgba(224, 164, 88, 0.9),
-    rgba(154, 123, 216, 0.7),
+    rgba(216, 216, 218, 0.9),
+    rgba(156, 160, 166, 0.7),
     rgba(244, 242, 236, 0.12)
   ) !important;
   background-size: 220% 100% !important;
@@ -662,7 +662,7 @@ button:focus-visible {
 
 /* ponto que sobe pela curva de crescimento + brilho pulsante */
 .grow-spark {
-  filter: drop-shadow(0 0 4px rgba(224, 164, 88, 0.9));
+  filter: drop-shadow(0 0 4px rgba(216, 216, 218, 0.9));
 }
 @keyframes grow-breathe {
   0%, 100% { opacity: 0.85; }

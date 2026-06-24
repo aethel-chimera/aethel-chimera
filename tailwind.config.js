@@ -3,14 +3,17 @@ export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
+      // PALETA NEUTRA (reset): monocromático cru, pronto p/ um novo design.
+      // Os mesmos tokens da marca (amber/violet/signal) agora apontam p/ cinzas,
+      // então as classes existentes continuam válidas, sem cor.
       colors: {
         obsidian: '#0B0B10',
         'obsidian-deep': '#07070B',
-        titanium: '#C8CAD0',
-        ivory: '#F4F2EC',
-        amber: '#E0A458',
-        violet: '#9A7BD8',
-        signal: '#3DDC97',
+        titanium: '#BFC1C6',
+        ivory: '#F4F4F5',
+        amber: '#D8D8DA',
+        violet: '#9CA0A6',
+        signal: '#C4C6CA',
       },
       fontFamily: {
         display: ['"Space Grotesk"', 'sans-serif'],
