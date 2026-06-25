@@ -1,18 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { X, ArrowRight, ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { CATALOG } from '../data'
 
-// Seção interna do projeto (estilo "case" imersivo): a gravação do site toca
-// em tela cheia, com a info ao lado. Sem o vídeo, mostra a imagem (poster).
+// Seção interna do projeto (case): imagem + info ao lado. Sem vídeo.
 export default function ProjectDetail({ index, onClose, onNav }) {
   const project = CATALOG[index]
   const rootRef = useRef(null)
-  const [videoFailed, setVideoFailed] = useState(false)
 
   // entrada animada + trava de scroll (Lenis) enquanto aberto
   useEffect(() => {
-    setVideoFailed(false)
     const lenis = window.__lenis
     lenis?.stop()
     document.body.style.overflow = 'hidden'
@@ -37,8 +34,6 @@ export default function ProjectDetail({ index, onClose, onNav }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [index, onClose, onNav])
-
-  const hasVideo = project.video && !videoFailed
 
   return (
     <div
@@ -65,29 +60,9 @@ export default function ProjectDetail({ index, onClose, onNav }) {
       </div>
 
       <div className="px-5 md:px-10 pb-24 pt-4 max-w-7xl mx-auto">
-        {/* player / poster */}
+        {/* imagem do projeto */}
         <div className="detail-reveal relative rounded-xl overflow-hidden border border-ivory/12 bg-obsidian aspect-video">
-          {hasVideo ? (
-            <video
-              key={project.slug}
-              className="w-full h-full object-cover"
-              src={project.video}
-              poster={project.image}
-              autoPlay
-              muted
-              loop
-              playsInline
-              controls
-              onError={() => setVideoFailed(true)}
-            />
-          ) : (
-            <>
-              <img src={project.image} alt={`Site da ${project.name}`} className="w-full h-full object-cover" />
-              <span className="absolute bottom-4 left-4 mono-label text-[0.6rem] text-titanium/70 bg-obsidian/70 rounded-full px-3 py-1.5">
-                gravação em breve
-              </span>
-            </>
-          )}
+          <img src={project.image} alt={`Site da ${project.name}`} className="w-full h-full object-cover" />
         </div>
 
         {/* info */}

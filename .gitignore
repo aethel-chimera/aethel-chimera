@@ -24,10 +24,5 @@ Thumbs.db
 _refframes/
 
 # gravações do portfólio (binários grandes — adicionar no deploy)
-public/portfolio/*.mp4
 
-# master cru do video do hero (34MB) - so o hero-loop otimizado vai pro deploy
-public/video/video-motion-aethel-chimera.mp4
 
-# master cru do video de graficos (40MB) - integrar versao otimizada quando definir o local
-public/video/video-graficos-motion.mp4

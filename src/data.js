@@ -66,10 +66,7 @@ export const SERVICES = [
   },
 ]
 
-// CATÁLOGO: cada projeto tem uma `image` (poster/fallback) e um `video`
-// (gravação do site, opcional). Coloque os .mp4 em /public/portfolio/ com o
-// nome do `slug` — ex.: public/portfolio/vetra.mp4 — e a seção interna toca
-// automaticamente; sem o arquivo, ela mostra a imagem.
+// CATÁLOGO: cada projeto tem uma `image` (mostrada no card e no case).
 export const CATALOG = [
   {
     name: 'Vetra Engenharia',
@@ -81,7 +78,6 @@ export const CATALOG = [
     tags: ['WhatsApp', 'CRM', 'Formulário inteligente'],
     url: '#',
     image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1600&auto=format&fit=crop',
-    video: '/portfolio/vetra.mp4',
   },
   {
     name: 'Clínica Aurum',
@@ -93,7 +89,6 @@ export const CATALOG = [
     tags: ['Agendamento', 'Pix', 'WhatsApp'],
     url: '#',
     image: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=1600&auto=format&fit=crop',
-    video: '/portfolio/aurum.mp4',
   },
   {
     name: 'Mosaico Arquitetura',
@@ -105,7 +100,6 @@ export const CATALOG = [
     tags: ['Portfólio dinâmico', 'CRM', 'Newsletter'],
     url: '#',
     image: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=1600&auto=format&fit=crop',
-    video: '/portfolio/mosaico.mp4',
   },
   {
     name: 'Forja Performance',
@@ -117,7 +111,6 @@ export const CATALOG = [
     tags: ['Pagamento recorrente', 'Pix', 'Agendamento'],
     url: '#',
     image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1600&auto=format&fit=crop',
-    video: '/portfolio/forja.mp4',
   },
   {
     name: 'Lume Odontologia',
@@ -129,7 +122,6 @@ export const CATALOG = [
     tags: ['WhatsApp', 'Agendamento', 'Google Ads'],
     url: '#',
     image: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?q=80&w=1600&auto=format&fit=crop',
-    video: '/portfolio/lume.mp4',
   },
   {
     name: 'Atlas Logística',
@@ -141,7 +133,6 @@ export const CATALOG = [
     tags: ['CRM', 'Cotação online', 'Automações'],
     url: '#',
     image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=1600&auto=format&fit=crop',
-    video: '/portfolio/atlas.mp4',
   },
 ]
 
