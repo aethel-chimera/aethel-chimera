@@ -9,7 +9,7 @@ import Scramble from './Scramble'
 const HERO_VIDEOS = [
   { src: '/video/leao-cyber.mp4', poster: '/video/leao-cyber-poster.jpg', alt: 'Leão cibernético' },
   { src: '/video/mid-hero.mp4', poster: '/video/mid-hero-poster.jpg', alt: 'Quimera central' },
-  { src: '/video/mulher-cyber.mp4', poster: '/video/mulher-cyber-poster.jpg', alt: 'Mulher cibernética' },
+  { src: '/video/mulher-cyber.mp4', poster: '/video/mulher-cyber-poster.jpg', alt: 'Mulher cibernética', flip: true },
 ]
 
 export default function Hero({ ready, reducedMotion }) {
@@ -53,12 +53,14 @@ export default function Hero({ ready, reducedMotion }) {
           leitura do texto sobre os vídeos. */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 flex">
-          {HERO_VIDEOS.map((v) =>
-            reducedMotion ? (
-              <img key={v.src} src={v.poster} alt="" className="flex-1 h-full w-0 object-cover" />
+          {HERO_VIDEOS.map((v) => {
+            const flip = v.flip ? { transform: 'scaleX(-1)' } : undefined
+            return reducedMotion ? (
+              <img key={v.src} src={v.poster} alt="" style={flip} className="flex-1 h-full w-0 object-cover" />
             ) : (
               <video
                 key={v.src}
+                style={flip}
                 className="flex-1 h-full w-0 object-cover"
                 src={v.src}
                 poster={v.poster}
@@ -69,7 +71,7 @@ export default function Hero({ ready, reducedMotion }) {
                 preload="auto"
               />
             )
-          )}
+          })}
         </div>
         {/* base escurece (texto/CTA/ticker) e topo livre (rostos visíveis) */}
         <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/55 to-obsidian/15" />
