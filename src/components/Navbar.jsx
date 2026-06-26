@@ -64,7 +64,7 @@ export default function Navbar() {
           {/* pílula de marca + status no estilo AT */}
           <div className="at-pill">
             <a href="#hero" className="flex items-center gap-2.5 leading-none" aria-label="Aethel Chimera — início">
-              <img src="/logo-white.png" alt="Aethel Chimera" className="h-7 w-auto" />
+              <img src="/image/logo-white.png" alt="Aethel Chimera" className="h-7 w-auto" />
               <span className="font-display font-semibold text-xl text-ivory">Æ</span>
             </a>
             <span className="connector" aria-hidden="true" />

@@ -5,6 +5,13 @@ import { TICKER_ITEMS } from '../data'
 import Magnetic from './Magnetic'
 import Scramble from './Scramble'
 
+// tríptico do hero: 3 vídeos retrato lado a lado, como uma tela única.
+const HERO_VIDEOS = [
+  { src: '/video/leao-cyber.mp4', poster: '/video/leao-cyber-poster.jpg', alt: 'Leão cibernético' },
+  { src: '/video/mid-hero.mp4', poster: '/video/mid-hero-poster.jpg', alt: 'Quimera central' },
+  { src: '/video/mulher-cyber.mp4', poster: '/video/mulher-cyber-poster.jpg', alt: 'Mulher cibernética' },
+]
+
 export default function Hero({ ready, reducedMotion }) {
   const rootRef = useRef(null)
   const [hideHint, setHideHint] = useState(false)
@@ -41,8 +48,35 @@ export default function Hero({ ready, reducedMotion }) {
 
   return (
     <section id="hero" ref={rootRef} className="relative min-h-[100dvh] flex flex-col z-[3] overflow-hidden">
-      {/* sem vídeo aqui: o Hero respira só o mundo 3D/ambiente atrás (o vídeo da
-          Quimera vive apenas no fim da página, no FinalCTA). */}
+      {/* TRÍPTICO: 3 vídeos retrato lado a lado (leão · meio · mulher) compondo
+          uma tela única, em loop. reduced-motion → posters. Scrims garantem a
+          leitura do texto sobre os vídeos. */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute inset-0 flex">
+          {HERO_VIDEOS.map((v) =>
+            reducedMotion ? (
+              <img key={v.src} src={v.poster} alt="" className="flex-1 h-full w-0 object-cover" />
+            ) : (
+              <video
+                key={v.src}
+                className="flex-1 h-full w-0 object-cover"
+                src={v.src}
+                poster={v.poster}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+              />
+            )
+          )}
+        </div>
+        {/* base escurece (texto/CTA/ticker) e topo livre (rostos visíveis) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/55 to-obsidian/15" />
+        {/* leve reforço à esquerda p/ o título */}
+        <div className="absolute inset-0 bg-gradient-to-r from-obsidian/70 via-transparent to-transparent" />
+      </div>
+
       <div className="relative z-10 flex-1 flex items-end px-5 md:px-10 pb-28 pt-32">
         <div className="max-w-[44rem]">
           <div className="flex items-center gap-4 mb-6 hero-sub">

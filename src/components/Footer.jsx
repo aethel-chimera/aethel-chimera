@@ -25,7 +25,7 @@ export default function Footer() {
     <footer id="rodape" className="relative z-[3] bg-gradient-to-b from-obsidian-deep/40 to-obsidian-deep/70 rounded-t-[3rem] mt-12 px-5 md:px-10 pt-20 pb-10">
       <div className="grid md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-12 mb-20">
         <div>
-          <img src="/logo-white.png" alt="Aethel Chimera" className="h-28 w-auto mb-6" loading="lazy" />
+          <img src="/image/logo-white.png" alt="Aethel Chimera" className="h-28 w-auto mb-6" loading="lazy" />
           <p className="text-titanium text-sm leading-relaxed max-w-xs">
             Engenharia de presença digital. Site, tráfego, conteúdo e evolução contínua em um único
             organismo.

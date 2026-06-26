@@ -26,3 +26,6 @@ _refframes/
 # gravações do portfólio (binários grandes — adicionar no deploy)
 
 
+
+# masters dos videos do hero (originais 4K verticais) - so as versoes web vao pro deploy
+public/video/*-master.mp4
