@@ -294,13 +294,13 @@ button:focus-visible {
   transition: color 0.3s;
 }
 .arrow-link::before {
-  content: '->';
+  content: '↓';
   color: var(--amber);
-  transform: translateX(0);
+  transform: translateY(0);
   transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
 }
 .arrow-link:hover { color: var(--ivory); }
-.arrow-link:hover::before { transform: translateX(4px); }
+.arrow-link:hover::before { transform: translateY(3px); }
 
 /* pílula AT com conector brilhante animado */
 .at-pill {
