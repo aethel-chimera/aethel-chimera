@@ -10,6 +10,9 @@ gsap.registerPlugin(ScrollTrigger)
 // cor premium distinta por serviço (tons joia/metálico, coesos com a marca)
 const SERVICE_ACCENTS = ['#D6D6DA', '#C2C2C6', '#A6AAAE', '#A2A2AA', '#B2AEAC', '#C6C2C0']
 
+// suavização do preview seguindo o cursor: menor = mais delay/lag (segue mais atrasado)
+const PREVIEW_FOLLOW = 0.045
+
 export default function Services({ reducedMotion }) {
   const rootRef = useRef(null)
   const previewRef = useRef(null)
@@ -48,8 +51,8 @@ export default function Services({ reducedMotion }) {
       pos.y = e.clientY
     }
     const tick = () => {
-      cur.x += (pos.x - cur.x) * 0.1
-      cur.y += (pos.y - cur.y) * 0.1
+      cur.x += (pos.x - cur.x) * PREVIEW_FOLLOW
+      cur.y += (pos.y - cur.y) * PREVIEW_FOLLOW
       if (previewRef.current) {
         // preview ao lado direito do cursor, centralizado na vertical (altura 160 -> -80)
         previewRef.current.style.transform = `translate(${cur.x + 24}px, ${cur.y - 80}px)`
