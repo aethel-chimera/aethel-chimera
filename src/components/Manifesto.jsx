@@ -48,7 +48,7 @@ export default function Manifesto({ reducedMotion }) {
               className={`manifesto-word inline-block mr-[0.32em] ${
                 KEYWORDS.has(word) ? 'text-amber font-serif italic' : ''
               }`}
-              style={{ opacity: reducedMotion ? 1 : 0.6 }}
+              style={{ opacity: reducedMotion ? 1 : 0.28 }}
             >
               {word}
             </span>
