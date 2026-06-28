@@ -18,7 +18,7 @@ export default function Cursor() {
     const onMove = (e) => {
       pos.x = e.clientX
       pos.y = e.clientY
-      const target = e.target.closest('[data-cursor]')
+      const target = e.target?.closest?.('[data-cursor]')
       setLabel(target ? target.dataset.cursor : '')
     }
 

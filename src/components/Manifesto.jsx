@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import DotField from './DotField'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -114,9 +115,17 @@ export default function Manifesto({ reducedMotion }) {
     <section
       id="manifesto"
       ref={rootRef}
-      className="relative z-[3] min-h-[100dvh] flex items-center px-5 md:px-10 py-24 xl:py-0"
+      className="relative z-[3] min-h-[100dvh] flex items-center px-5 md:px-10 py-24 xl:py-0 overflow-hidden"
     >
-      <div className="w-full grid xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-12 xl:gap-16 items-center">
+      {/* FUNDO: campo de pontos 3D (dot field) com hover que muda as cores —
+          nas áreas sem texto. Atrás do conteúdo; não bloqueia cliques/seleção. */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <DotField />
+        {/* scrim radial p/ o conteúdo respirar sobre os pontos */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(11,11,16,0.5),transparent_80%)]" />
+      </div>
+
+      <div className="relative z-10 w-full grid xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-12 xl:gap-16 items-center">
         {/* coluna do texto */}
         <div>
           <div className="flex items-center gap-4 mb-10">

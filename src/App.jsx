@@ -46,7 +46,7 @@ export default function App() {
 
     // âncoras internas passam pelo Lenis para não brigar com o smooth scroll
     const onAnchorClick = (e) => {
-      const a = e.target.closest('a[href^="#"]')
+      const a = e.target?.closest?.('a[href^="#"]')
       if (!a) return
       const target = document.querySelector(a.getAttribute('href'))
       if (!target) return
