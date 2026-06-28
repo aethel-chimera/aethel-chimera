@@ -1,7 +1,15 @@
 import { Check } from 'lucide-react'
 import { PLANS } from '../data'
-import Magnetic from './Magnetic'
+import LiquidButton from './LiquidButton'
 import SectionHead from './SectionHead'
+
+// rola até o contato respeitando o smooth scroll (Lenis), com fallback nativo
+function scrollToContact() {
+  const el = document.querySelector('#contato')
+  if (!el) return
+  if (window.__lenis) window.__lenis.scrollTo(el, { offset: -64 })
+  else el.scrollIntoView({ behavior: 'smooth' })
+}
 
 export default function Plans() {
   return (
@@ -23,8 +31,10 @@ export default function Plans() {
                 {plan.badge}
               </span>
             )}
+            {/* card COM overflow-hidden (a linha de luz do topo acompanha os
+                cantos arredondados). O pb-28 reserva o espaço onde o botão fica. */}
             <div
-              className={`card-wave overflow-hidden relative rounded-2xl p-8 md:p-10 h-full flex flex-col ${
+              className={`card-wave overflow-hidden relative rounded-2xl px-8 md:px-10 pt-8 md:pt-10 pb-36 h-full flex flex-col ${
                 plan.featured
                   ? 'bg-ivory text-obsidian'
                   : 'bg-obsidian-deep border border-ivory/10 text-ivory'
@@ -37,7 +47,7 @@ export default function Plans() {
                   {plan.period}
                 </span>
               </p>
-              <ul className="mt-8 mb-10 space-y-3 flex-1">
+              <ul className="mt-8 space-y-3 flex-1">
                 {plan.items.map((item) => (
                   <li key={item} className={`flex gap-3 text-sm leading-relaxed ${plan.featured ? 'text-obsidian/80' : 'text-titanium'}`}>
                     <Check size={16} className={`shrink-0 mt-0.5 ${plan.featured ? 'text-obsidian' : 'text-amber'}`} aria-hidden="true" />
@@ -45,18 +55,34 @@ export default function Plans() {
                   </li>
                 ))}
               </ul>
-              <Magnetic className="w-full">
-                <a
-                  href="#contato"
-                  className={`mono-label block text-center rounded-full px-6 py-4 transition-colors duration-300 ${
-                    plan.featured
-                      ? 'bg-obsidian text-ivory hover:bg-amber hover:text-obsidian'
-                      : 'border border-ivory/25 text-ivory hover:bg-ivory hover:text-obsidian'
-                  }`}
-                >
-                  {plan.cta}
-                </a>
-              </Magnetic>
+            </div>
+
+            {/* botão FORA do card (o wrapper externo não tem overflow), sobreposto
+                na base. Assim o canvas do efeito transborda sem ser recortado.
+                Card claro (featured): efeito ESCURO + texto que inverte (mix-blend). */}
+            <div className="absolute inset-x-0 bottom-9 md:bottom-10 flex justify-center">
+              <LiquidButton
+                width={268}
+                height={48}
+                pad={30}
+                fontSize={12}
+                viscosity={4}
+                approach={80}
+                deform={3}
+                bounce={2}
+                organic={10}
+                fillTime={3250}
+                minSpeed={400}
+                snapSpeed={1900}
+                sigma={50}
+                shape="pill"
+                color={plan.featured ? '#0B0B10' : '#F4F4F5'}
+                textColor={plan.featured ? '#F4F4F5' : undefined}
+                aria-label={plan.cta}
+                onClick={scrollToContact}
+              >
+                {plan.cta}
+              </LiquidButton>
             </div>
           </div>
         ))}

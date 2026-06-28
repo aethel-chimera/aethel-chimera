@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { CONTACT } from '../data'
-import Magnetic from './Magnetic'
+import LiquidButton from './LiquidButton'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -46,8 +46,11 @@ export default function FinalCTA({ reducedMotion }) {
           <span className="font-serif italic normal-case text-amber tracking-normal">organismo?</span>
         </h2>
 
-        <div className="cta-reveal mt-14">
-          <Magnetic strength={16}>
+        {/* O LiquidButton usa mix-blend-mode no texto, que quebra sob um
+            ancestral com transform/opacity — por isso fica fora do Magnetic e
+            da animação .cta-reveal. reduced-motion cai no link simples. */}
+        <div className="mt-14">
+          {reducedMotion ? (
             <a
               href={CONTACT.whatsappUrl}
               target="_blank"
@@ -56,7 +59,24 @@ export default function FinalCTA({ reducedMotion }) {
             >
               Iniciar projeto
             </a>
-          </Magnetic>
+          ) : (
+            <LiquidButton
+              viscosity={10}
+              approach={160}
+              deform={10}
+              bounce={7}
+              organic={10}
+              fillTime={3250}
+              minSpeed={400}
+              snapSpeed={1900}
+              shape="pill"
+              color="#F4F4F5"
+              aria-label="Iniciar projeto pelo WhatsApp"
+              onClick={() => window.open(CONTACT.whatsappUrl, '_blank', 'noopener,noreferrer')}
+            >
+              Iniciar projeto
+            </LiquidButton>
+          )}
         </div>
 
         <div className="cta-reveal mt-12 flex flex-col sm:flex-row gap-4 sm:gap-10">

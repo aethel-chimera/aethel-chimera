@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { NAV_LINKS } from '../data'
-import Magnetic from './Magnetic'
+import LiquidButton from './LiquidButton'
 import AudioToggle from './AudioToggle'
 
 export default function Navbar() {
@@ -81,16 +81,31 @@ export default function Navbar() {
             ))}
           </ul>
 
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-2">
             <AudioToggle />
-            <Magnetic>
-              <a
-                href="#contato"
-                className="mono-label inline-block rounded-full border border-amber/60 text-amber px-6 py-2.5 hover:bg-amber hover:text-obsidian transition-colors duration-300"
-              >
-                Iniciar projeto
-              </a>
-            </Magnetic>
+            {/* botão líquido compacto. O header não tem overflow-hidden, então
+                o canvas do efeito pode transbordar sem ser cortado. */}
+            <LiquidButton
+              width={156}
+              height={40}
+              pad={22}
+              fontSize={11}
+              viscosity={8}
+              approach={40}
+              deform={1}
+              bounce={1}
+              organic={10}
+              fillTime={3250}
+              minSpeed={400}
+              snapSpeed={1900}
+              sigma={10}
+              shape="pill"
+              color="#D8D8DA"
+              aria-label="Iniciar projeto"
+              onClick={() => closeAnd('#contato')}
+            >
+              Iniciar projeto
+            </LiquidButton>
           </div>
 
           <button

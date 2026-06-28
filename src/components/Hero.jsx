@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
-import { ArrowRight, ArrowDown } from 'lucide-react'
+import { ArrowDown } from 'lucide-react'
 import { TICKER_ITEMS } from '../data'
-import Magnetic from './Magnetic'
+import LiquidButton from './LiquidButton'
 import Scramble from './Scramble'
 
 // tríptico do hero: 3 vídeos retrato lado a lado, como uma tela única.
@@ -32,6 +32,14 @@ function heroPanelLayout(i, count) {
     fade: (HERO_BLEND / width) * 100, // largura do fade em % do próprio painel
     hasFade: i > 0, // o primeiro fica totalmente opaco; os demais entram por cima
   }
+}
+
+// rola até o contato respeitando o smooth scroll (Lenis), com fallback nativo
+function scrollToContact() {
+  const el = document.querySelector('#contato')
+  if (!el) return
+  if (window.__lenis) window.__lenis.scrollTo(el, { offset: -64 })
+  else el.scrollIntoView({ behavior: 'smooth' })
 }
 
 export default function Hero({ ready, reducedMotion }) {
@@ -133,20 +141,38 @@ export default function Hero({ ready, reducedMotion }) {
             empresa: site, tráfego, conteúdo e evolução contínua.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-5">
-            <Magnetic className="hero-cta">
-              <a
-                href="#contato"
-                className="mono-label inline-flex items-center gap-3 rounded-full bg-ivory text-obsidian px-8 py-4 hover:bg-amber transition-colors duration-300"
-              >
-                Iniciar projeto <ArrowRight size={14} aria-hidden="true" />
-              </a>
-            </Magnetic>
+            {/* CTA líquido. Fora do Magnetic e sem a classe hero-cta porque
+                ambos aplicam transform, que quebra o mix-blend do texto. A
+                margem esquerda negativa compensa a folga do canvas, alinhando
+                o pill com o título à esquerda. */}
+            <LiquidButton
+              width={200}
+              height={52}
+              pad={40}
+              fontSize={13}
+              viscosity={4}
+              approach={80}
+              deform={2}
+              bounce={4}
+              organic={10}
+              fillTime={3250}
+              minSpeed={400}
+              snapSpeed={1900}
+              sigma={50}
+              shape="pill"
+              color="#F4F4F5"
+              aria-label="Iniciar projeto"
+              onClick={scrollToContact}
+              style={{ marginLeft: -40 }}
+            >
+              Iniciar projeto
+            </LiquidButton>
             <a
               href="#catalogo"
-              className="hero-cta mono-label group inline-flex items-center gap-3 text-titanium hover:text-ivory transition-colors link-underline"
+              className="hero-cta mono-label group inline-flex items-center gap-3 pb-1 text-titanium hover:text-ivory transition-colors link-underline"
             >
               Ver catálogo
-              <ArrowDown size={14} className="transition-transform duration-300 group-hover:translate-y-1" aria-hidden="true" />
+              <ArrowDown size={14} className="transition-transform duration-300 group-hover:translate-y-0.5" aria-hidden="true" />
             </a>
           </div>
         </div>
