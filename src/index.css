@@ -82,18 +82,21 @@ body {
 .cursor-dot {
   width: 8px;
   height: 8px;
-  background: var(--ivory);
+  background: #fff;
   margin: -4px 0 0 -4px;
+  /* inverte o que estiver embaixo: branco no escuro, preto no claro */
+  mix-blend-mode: difference;
 }
 .cursor-ring {
-  width: 40px;
-  height: 40px;
-  margin: -20px 0 0 -20px;
-  border: 1px solid rgba(244, 242, 236, 0.4);
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border: 1.5px solid #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: width 0.3s, height 0.3s, margin 0.3s, background-color 0.3s;
+  mix-blend-mode: difference;
 }
 .cursor-ring.is-label {
   width: 84px;
@@ -101,6 +104,8 @@ body {
   margin: -42px 0 0 -42px;
   background: rgba(216, 216, 218, 0.92);
   border-color: transparent;
+  /* rótulo precisa ser legível, então sem inversão */
+  mix-blend-mode: normal;
 }
 .cursor-ring .cursor-label {
   font-family: 'JetBrains Mono', monospace;
