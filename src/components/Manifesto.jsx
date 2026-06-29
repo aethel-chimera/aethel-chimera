@@ -120,12 +120,20 @@ export default function Manifesto({ reducedMotion }) {
       ref={rootRef}
       className="relative z-[3] min-h-[100dvh] flex items-center px-5 md:px-10 py-24 xl:py-0 overflow-hidden"
     >
-      {/* FUNDO: campo de pontos 3D (dot field) com hover que muda as cores —
-          nas áreas sem texto. Atrás do conteúdo; não bloqueia cliques/seleção. */}
-      <div className="pointer-events-none absolute inset-0 z-0">
+      {/* FUNDO: campo de pontos em ondas (dot field), pequeno, no canto
+          inferior-esquerdo — abaixo do texto, em área sem conteúdo. Hover muda
+          as cores. Máscara dissolve as bordas perto do texto/cards. Atrás de
+          tudo; não bloqueia cliques/seleção. */}
+      <div
+        className="pointer-events-none absolute left-0 bottom-0 z-0 w-[46%] h-[48%] xl:h-[46%]"
+        style={{
+          WebkitMaskImage:
+            'linear-gradient(to top right, #000 22%, rgba(0,0,0,0.65) 55%, transparent 88%)',
+          maskImage:
+            'linear-gradient(to top right, #000 22%, rgba(0,0,0,0.65) 55%, transparent 88%)',
+        }}
+      >
         <DotField />
-        {/* scrim radial p/ o conteúdo respirar sobre os pontos */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_62%_at_50%_50%,rgba(11,11,16,0.5),transparent_80%)]" />
       </div>
 
       <div className="relative z-10 w-full grid xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-12 xl:gap-16 items-center">

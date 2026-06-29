@@ -7,12 +7,12 @@ import { useEffect, useRef } from 'react'
 // Decorativo → aria-hidden; respeita prefers-reduced-motion (quadro estático).
 //
 // Parâmetros fáceis de ajustar depois:
-const COLS = 64 // densidade horizontal
-const ROWS = 40 // densidade em profundidade
-const PITCH = 1.05 // inclinação do plano (rad) — quanto "deita" o chão de pontos
+const COLS = 56 // densidade horizontal
+const ROWS = 34 // densidade em profundidade
+const PITCH = 0.82 // inclinação do plano (rad) — menor = lençol de ondas mais achatado
 const CAM_Z = 2.6 // distância da câmera (perspectiva)
 const FOCAL = 1.5 // distância focal
-const WAVE_AMP = 0.16 // altura da onda base
+const WAVE_AMP = 0.22 // altura da onda
 const BASE = [150, 152, 158] // cor neutra (sem hover) — combina com o baseline cru
 const ACCENT_SPEED = 0.4 // velocidade do ciclo de cor no hover
 
@@ -71,8 +71,9 @@ export default function DotField({ className = '' }) {
         const gz = j / (ROWS - 1) // 0 perto, 1 longe
         for (let i = 0; i < COLS; i++) {
           const gx = (i / (COLS - 1)) * 2 - 1 // -1..1
-          // onda base + ondulação radial sob o cursor (no hover)
-          let y = sin(gx * 3.0 + t) * cos(gz * 4.0 - t * 0.8) * WAVE_AMP
+          // ondas rolando (duas senoides diagonais que viajam no tempo) +
+          // ondulação radial sob o cursor (no hover)
+          let y = (sin(gx * 3.2 + gz * 1.6 + t * 1.1) + sin(gz * 3.4 - t) * 0.45) * WAVE_AMP
           if (hov > 0.001) {
             const dx = gx - (mouse.x * 2 - 1)
             const dz = gz - (1 - mouse.y)
