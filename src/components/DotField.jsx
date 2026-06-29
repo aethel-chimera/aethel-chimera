@@ -7,12 +7,12 @@ import { useEffect, useRef } from 'react'
 // Decorativo → aria-hidden; respeita prefers-reduced-motion (quadro estático).
 //
 // Parâmetros fáceis de ajustar depois:
-const COLS = 56 // densidade horizontal
-const ROWS = 34 // densidade em profundidade
-const PITCH = 0.82 // inclinação do plano (rad) — menor = lençol de ondas mais achatado
+const COLS = 64 // densidade ao longo da onda (largura)
+const ROWS = 18 // profundidade — poucas filas: faixa/crista de UMA onda, não um campo
+const PITCH = 0.5 // inclinação do plano (rad) — baixo = vista mais de lado p/ ver a crista
 const CAM_Z = 2.6 // distância da câmera (perspectiva)
 const FOCAL = 1.5 // distância focal
-const WAVE_AMP = 0.22 // altura da onda
+const WAVE_AMP = 0.46 // altura da onda — alta p/ formar um vinco nítido
 const BASE = [150, 152, 158] // cor neutra (sem hover) — combina com o baseline cru
 const ACCENT_SPEED = 0.4 // velocidade do ciclo de cor no hover
 
@@ -71,9 +71,10 @@ export default function DotField({ className = '' }) {
         const gz = j / (ROWS - 1) // 0 perto, 1 longe
         for (let i = 0; i < COLS; i++) {
           const gx = (i / (COLS - 1)) * 2 - 1 // -1..1
-          // ondas rolando (duas senoides diagonais que viajam no tempo) +
-          // ondulação radial sob o cursor (no hover)
-          let y = (sin(gx * 3.2 + gz * 1.6 + t * 1.1) + sin(gz * 3.4 - t) * 0.45) * WAVE_AMP
+          // UMA onda dominante: uma senoide que viaja ao longo da largura (gx),
+          // com leve deslocamento por profundidade p/ a crista não ficar chapada.
+          // + ondulação radial sob o cursor (no hover)
+          let y = sin(gx * 2.4 + gz * 0.5 + t * 1.2) * WAVE_AMP
           if (hov > 0.001) {
             const dx = gx - (mouse.x * 2 - 1)
             const dz = gz - (1 - mouse.y)
