@@ -1,9 +1,131 @@
-import { useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { CATALOG } from '../data'
 import { blip } from '../audio'
 import SectionHead from './SectionHead'
 
 const FILTERS = ['Todos', 'WhatsApp', 'Pix', 'Agendamento', 'CRM']
+
+// CTA do case com efeito "TV estragada": no hover, ruído de TV + fantasma RGB +
+// scanlines piscam em espasmos aleatórios e independentes (dois temporizadores).
+// Keyframes em index.css. Fundo escuro no hover para o mix-blend-screen render.
+function GlitchCaseButton({ onClick, children }) {
+  const [hovered, setHovered] = useState(false)
+  const [sNoise, setSNoise] = useState(0) // trilha do ruído de TV
+  const [sGhost, setSGhost] = useState(0) // trilha do fantasma RGB + scanlines
+  const alive = useRef(false)
+  const timers = useRef([])
+  const filterId = `glitch-snow-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
+  const I = 0.55 // intensidade dos espasmos
+
+  useEffect(() => {
+    if (!hovered) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    alive.current = true
+    timers.current = []
+
+    const tick = (setter) => {
+      if (!alive.current) return
+      const gap = 280 + Math.random() * (1200 - 600 * I) // pausa aleatória
+      const t1 = setTimeout(() => {
+        if (!alive.current) return
+        setter(0.55 + Math.random() * 0.45) // força aleatória da rajada
+        const t2 = setTimeout(() => {
+          if (!alive.current) return
+          setter(0)
+          tick(setter)
+        }, 45 + Math.random() * 110) // duração aleatória da rajada
+        timers.current.push(t2)
+      }, gap)
+      timers.current.push(t1)
+    }
+
+    tick(setSNoise)
+    tick(setSGhost)
+
+    return () => {
+      alive.current = false
+      timers.current.forEach(clearTimeout)
+      setSNoise(0)
+      setSGhost(0)
+    }
+  }, [hovered])
+
+  const ghostOp = sGhost > 0 ? (0.5 + 0.4 * I) * sGhost : 0
+  const noiseOp = sNoise > 0 ? (0.3 + 0.5 * I) * sNoise : 0
+  const scanOp = sGhost > 0 ? 0.55 * sGhost : 0
+  const snap = { transition: 'opacity 30ms linear' }
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
+      className="mono-label relative isolate inline-flex items-center gap-3 overflow-hidden rounded-full border border-amber/60 px-6 py-3 text-amber transition-[border-color,box-shadow] duration-150 hover:border-amber hover:shadow-[0_0_0_1px_rgba(216,216,218,.22),0_8px_28px_rgba(0,0,0,.6)]"
+    >
+      <span className="relative z-[2]">{children}</span>
+
+      {hovered && (
+        <>
+          {/* fantasmas RGB (trilha 'ghost') */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-[4] grid place-items-center text-[#ff0033] mix-blend-screen"
+            style={{ ...snap, opacity: ghostOp, animation: 'glitch-rgbA .2s steps(3,end) infinite' }}
+          >
+            {children}
+          </span>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-[4] grid place-items-center text-[#00ffe6] mix-blend-screen"
+            style={{ ...snap, opacity: ghostOp, animation: 'glitch-rgbB .2s steps(3,end) infinite' }}
+          >
+            {children}
+          </span>
+
+          {/* ruído de TV (trilha 'noise') */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-[3] mix-blend-screen"
+            style={{ ...snap, opacity: noiseOp }}
+          >
+            <svg className="block h-full w-full" preserveAspectRatio="none">
+              <filter id={filterId}>
+                <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch">
+                  <animate
+                    attributeName="seed"
+                    values="1;5;9;3;12;7;15;2"
+                    dur="0.5s"
+                    repeatCount="indefinite"
+                    calcMode="discrete"
+                  />
+                </feTurbulence>
+                <feColorMatrix type="saturate" values="0" />
+                <feComponentTransfer>
+                  <feFuncA type="linear" slope="0.7" />
+                </feComponentTransfer>
+              </filter>
+              <rect width="100%" height="100%" filter={`url(#${filterId})`} />
+            </svg>
+          </div>
+
+          {/* scanlines (acompanham a trilha 'ghost') */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-[5] mix-blend-overlay"
+            style={{
+              ...snap,
+              opacity: scanOp,
+              backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 1px, rgba(0,0,0,.5) 1px 3px)',
+              animation: 'glitch-scan .3s linear infinite',
+            }}
+          />
+        </>
+      )}
+    </button>
+  )
+}
 
 // Card de projeto (imagem + dados). Grade responsiva — sem 3D.
 function ProjectCard({ project, index, dimmed, onOpen }) {
@@ -50,12 +172,7 @@ function ProjectCard({ project, index, dimmed, onOpen }) {
               </span>
             ))}
           </div>
-          <button
-            onClick={() => onOpen?.(index)}
-            className="mono-label inline-flex items-center gap-3 rounded-full border border-amber/60 text-amber px-6 py-3 hover:bg-amber hover:text-obsidian transition-colors duration-300"
-          >
-            Ver case do projeto →
-          </button>
+          <GlitchCaseButton onClick={() => onOpen?.(index)}>Ver case do projeto →</GlitchCaseButton>
         </div>
       </div>
     </article>
