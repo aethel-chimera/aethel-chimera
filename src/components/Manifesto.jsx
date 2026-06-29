@@ -7,53 +7,165 @@ gsap.registerPlugin(ScrollTrigger)
 const TEXT =
   'A maioria das empresas trata o site como despesa estática. Nós tratamos como ativo vivo: medido, mantido e evoluído todos os meses. Da primeira visita ao tráfego que converte, da arquitetura à manutenção, um único organismo.'
 
-// palavras que acendem em âmbar
+// palavras que acendem em destaque (serif)
 const KEYWORDS = new Set(['ativo', 'vivo:', 'organismo.'])
+
+// as três naturezas da Quimera — leão (face), bode (motor), serpente (cauda).
+// o emblema 4:5 é o slot onde entram os renders de cada natureza.
+const NATURES = [
+  {
+    ghost: 'leão',
+    kicker: 'a face · identidade',
+    title: 'Identidade visual',
+    desc: 'A cara que o mercado reconhece. Marca e sistema visual que fazem a empresa ser lembrada antes de ser comparada.',
+    accent: '#D8D8DA',
+  },
+  {
+    ghost: 'bode',
+    kicker: 'o motor · tráfego',
+    title: 'Tráfego e performance',
+    desc: 'O motor que impulsiona. Mídia paga e otimização que sobem terreno onde os outros param.',
+    accent: '#BFC1C6',
+  },
+  {
+    ghost: 'serpente',
+    kicker: 'a cauda · estratégia',
+    title: 'Estratégia e marketing',
+    desc: 'O jogo longo. Posicionamento e a leitura precisa do momento de dar o bote, sem pressa e sem ruído.',
+    accent: '#9CA0A6',
+  },
+]
 
 export default function Manifesto({ reducedMotion }) {
   const rootRef = useRef(null)
 
+  // acende o texto palavra a palavra. no desktop com pin; em telas menores
+  // (onde os cards empilham) o pin sairia da tela, então acende no scroll normal.
   useEffect(() => {
     if (reducedMotion) return
     const ctx = gsap.context(() => {
       const words = rootRef.current.querySelectorAll('.manifesto-word')
-      gsap.to(words, {
-        opacity: 1,
-        ease: 'none',
-        stagger: 0.06,
-        scrollTrigger: {
-          trigger: rootRef.current,
-          start: 'top top',
-          end: '+=140%',
-          pin: true,
-          scrub: 0.6,
-        },
+      const mm = gsap.matchMedia()
+
+      mm.add('(min-width: 1280px)', () => {
+        gsap.to(words, {
+          opacity: 1,
+          ease: 'none',
+          stagger: 0.06,
+          scrollTrigger: {
+            trigger: rootRef.current,
+            start: 'top top',
+            end: '+=140%',
+            pin: true,
+            scrub: 0.6,
+          },
+        })
+      })
+
+      mm.add('(max-width: 1279px)', () => {
+        gsap.to(words, {
+          opacity: 1,
+          ease: 'none',
+          stagger: 0.04,
+          scrollTrigger: {
+            trigger: rootRef.current,
+            start: 'top 80%',
+            end: 'bottom 65%',
+            scrub: 0.6,
+          },
+        })
       })
     }, rootRef)
     return () => ctx.revert()
   }, [reducedMotion])
 
+  // tilt 3D sutil + brilho que segue o cursor em cada card (apenas mouse fino)
+  useEffect(() => {
+    if (reducedMotion || !window.matchMedia('(pointer: fine)').matches) return
+    const cards = rootRef.current.querySelectorAll('.nature-card')
+    const cleanups = []
+    cards.forEach((card) => {
+      const onMove = (e) => {
+        const r = card.getBoundingClientRect()
+        const px = (e.clientX - r.left) / r.width - 0.5
+        const py = (e.clientY - r.top) / r.height - 0.5
+        card.style.setProperty('--ry', (px * 6).toFixed(2) + 'deg')
+        card.style.setProperty('--rx', (-py * 6).toFixed(2) + 'deg')
+        card.style.setProperty('--mx', (px * 14).toFixed(1) + 'px')
+        card.style.setProperty('--my', (py * 14).toFixed(1) + 'px')
+      }
+      const onLeave = () => {
+        card.style.setProperty('--ry', '0deg')
+        card.style.setProperty('--rx', '0deg')
+        card.style.setProperty('--mx', '0px')
+        card.style.setProperty('--my', '0px')
+      }
+      card.addEventListener('pointermove', onMove)
+      card.addEventListener('pointerleave', onLeave)
+      cleanups.push(() => {
+        card.removeEventListener('pointermove', onMove)
+        card.removeEventListener('pointerleave', onLeave)
+      })
+    })
+    return () => cleanups.forEach((fn) => fn())
+  }, [reducedMotion])
+
   return (
-    <section id="manifesto" ref={rootRef} className="relative z-[3] min-h-[100dvh] flex items-center px-5 md:px-10">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center gap-4 mb-10">
-          <span className="mono-label text-amber">[ SEC 02 ]</span>
-          <span className="h-px w-12 md:w-24 bg-ivory/15" aria-hidden="true" />
-          <span className="mono-label text-titanium/60">Manifesto</span>
+    <section
+      id="manifesto"
+      ref={rootRef}
+      className="relative z-[3] min-h-[100dvh] flex items-center px-5 md:px-10 py-24 xl:py-0"
+    >
+      <div className="w-full grid xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-12 xl:gap-16 items-center">
+        {/* coluna do texto */}
+        <div>
+          <div className="flex items-center gap-4 mb-10">
+            <span className="mono-label text-amber">[ SEC 02 ]</span>
+            <span className="h-px w-12 md:w-24 bg-ivory/15" aria-hidden="true" />
+            <span className="mono-label text-titanium/60">Manifesto</span>
+          </div>
+          <p className="font-display font-medium text-[clamp(1.5rem,3.4vw,3rem)] leading-snug text-ivory">
+            {TEXT.split(' ').map((word, i) => (
+              <span
+                key={i}
+                className={`manifesto-word inline-block mr-[0.32em] ${
+                  KEYWORDS.has(word) ? 'text-amber font-serif italic' : ''
+                }`}
+                style={{ opacity: reducedMotion ? 1 : 0.28 }}
+              >
+                {word}
+              </span>
+            ))}
+          </p>
         </div>
-        <p className="font-display font-medium text-[clamp(1.6rem,4vw,3.2rem)] leading-snug text-ivory">
-          {TEXT.split(' ').map((word, i) => (
-            <span
-              key={i}
-              className={`manifesto-word inline-block mr-[0.32em] ${
-                KEYWORDS.has(word) ? 'text-amber font-serif italic' : ''
-              }`}
-              style={{ opacity: reducedMotion ? 1 : 0.28 }}
-            >
-              {word}
-            </span>
-          ))}
-        </p>
+
+        {/* coluna das três naturezas */}
+        <div>
+          <div className="flex items-center gap-3 mb-6">
+            <span className="mono-label text-titanium/60">A Quimera · três naturezas</span>
+            <span className="flow-rule h-px flex-1 bg-ivory/10" aria-hidden="true" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+            {NATURES.map((n) => (
+              <article key={n.ghost} className="nature-card" style={{ '--acc': n.accent }}>
+                <div className="nature-emblem">
+                  <div className="glow" aria-hidden="true" />
+                  <div className="rim" aria-hidden="true" />
+                  <span className="ghost">{n.ghost}</span>
+                  <span className="nature-slottag">4:5 · render</span>
+                </div>
+                <div className="nature-body">
+                  <p className="nature-kicker">{n.kicker}</p>
+                  <h3 className="font-serif italic text-ivory text-[clamp(1.05rem,1.5vw,1.35rem)] leading-tight mb-1">
+                    {n.title}
+                  </h3>
+                  <div className="nature-line" aria-hidden="true" />
+                  <p className="text-titanium text-[0.82rem] leading-relaxed">{n.desc}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   )

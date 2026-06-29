@@ -706,6 +706,123 @@ main > section::after {
   background: linear-gradient(to top, rgba(7, 7, 11, 0.72), rgba(7, 7, 11, 0.34) 38%, rgba(7, 7, 11, 0.12) 68%, transparent);
 }
 
+/* ===========================================================================
+   HOVER "TV ESTRAGADA" — CTA do catálogo (componente GlitchCaseButton em
+   Catalog.jsx): ruído de TV (SVG), fantasma RGB e scanlines piscam em espasmos
+   aleatórios e independentes; o botão treme de leve. Keyframes referenciados
+   via style inline no componente.
+   =========================================================================== */
+@keyframes glitch-rgbA { 0% { transform: translate(-2px, 0); } 25% { transform: translate(-5px, 1px); } 50% { transform: translate(-1px, -1px); } 75% { transform: translate(-6px, 0); } 100% { transform: translate(-3px, 1px); } }
+@keyframes glitch-rgbB { 0% { transform: translate(2px, 0); } 25% { transform: translate(5px, -1px); } 50% { transform: translate(1px, 1px); } 75% { transform: translate(6px, 0); } 100% { transform: translate(3px, -1px); } }
+@keyframes glitch-scan { from { background-position: 0 0; } to { background-position: 0 3px; } }
+
+/* ===========================================================================
+   TRÊS NATUREZAS — cards da Quimera ao lado do Manifesto. Emblema 4:5 (slot
+   para os renders), tilt 3D sutil no mouse e brilho neutro que segue o cursor.
+   Monocromático, na gramática de console do site. O tilt zera em reduced-motion
+   (as variáveis --rx/--ry/--mx/--my ficam em 0 sem o JS).
+   =========================================================================== */
+.nature-card {
+  --acc: var(--amber);
+  position: relative;
+  border: 1px solid rgba(244, 242, 236, 0.1);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(244, 242, 236, 0.025), rgba(244, 242, 236, 0));
+  padding: 0.8rem 0.8rem 1.4rem;
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s, background 0.4s;
+  will-change: transform;
+}
+.nature-card:hover {
+  border-color: rgba(244, 242, 236, 0.2);
+  background: linear-gradient(180deg, rgba(244, 242, 236, 0.045), rgba(244, 242, 236, 0));
+}
+
+.nature-emblem {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 18%, rgba(244, 242, 236, 0.05), #07070b 62%);
+  border: 1px solid rgba(244, 242, 236, 0.1);
+  display: grid;
+  place-items: center;
+  transform: translateZ(40px);
+}
+.nature-emblem .glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 45% at 50% 38%, var(--acc), transparent 70%);
+  opacity: 0.14;
+  filter: blur(8px);
+  transition: opacity 0.5s, transform 0.6s;
+  transform: translate(var(--mx, 0), var(--my, 0));
+}
+.nature-card:hover .nature-emblem .glow {
+  opacity: 0.3;
+}
+.nature-emblem .rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgba(244, 242, 236, 0.05), inset 0 -60px 80px -40px var(--acc);
+  opacity: 0.45;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+.nature-card:hover .nature-emblem .rim {
+  opacity: 0.85;
+}
+.nature-emblem .ghost {
+  position: relative;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: clamp(1.4rem, 2.4vw, 2.1rem);
+  color: rgba(244, 242, 236, 0.16);
+  letter-spacing: 0.01em;
+  transition: color 0.5s;
+}
+.nature-card:hover .nature-emblem .ghost {
+  color: rgba(244, 242, 236, 0.28);
+}
+.nature-slottag {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(244, 242, 236, 0.34);
+}
+
+.nature-body {
+  padding: 1.1rem 0.3rem 0;
+  transform: translateZ(24px);
+}
+.nature-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--acc);
+  opacity: 0.9;
+  margin-bottom: 0.7rem;
+}
+.nature-line {
+  height: 1px;
+  width: 28px;
+  background: var(--acc);
+  opacity: 0.55;
+  margin-bottom: 0.85rem;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s;
+}
+.nature-card:hover .nature-line {
+  width: 60px;
+  opacity: 0.95;
+}
+
 /* reduced motion: corta tudo */
 @media (prefers-reduced-motion: reduce) {
   *,
