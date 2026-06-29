@@ -16,6 +16,7 @@ const KEYWORDS = new Set(['ativo', 'vivo:', 'organismo.'])
 const NATURES = [
   {
     ghost: 'leão',
+    img: '/image/lion-cards.webp',
     kicker: 'a face · identidade',
     title: 'Identidade visual',
     desc: 'A cara que o mercado reconhece. Marca e sistema visual que fazem a empresa ser lembrada antes de ser comparada.',
@@ -23,6 +24,7 @@ const NATURES = [
   },
   {
     ghost: 'bode',
+    img: '/image/goat-cards.webp',
     kicker: 'o motor · tráfego',
     title: 'Tráfego e performance',
     desc: 'O motor que impulsiona. Mídia paga e otimização que sobem terreno onde os outros param.',
@@ -30,6 +32,7 @@ const NATURES = [
   },
   {
     ghost: 'serpente',
+    img: '/image/snake-cards.webp',
     kicker: 'a cauda · estratégia',
     title: 'Estratégia e marketing',
     desc: 'O jogo longo. Posicionamento e a leitura precisa do momento de dar o bote, sem pressa e sem ruído.',
@@ -158,10 +161,14 @@ export default function Manifesto({ reducedMotion }) {
             {NATURES.map((n) => (
               <article key={n.ghost} className="nature-card" style={{ '--acc': n.accent }}>
                 <div className="nature-emblem">
-                  <div className="glow" aria-hidden="true" />
+                  <img
+                    src={n.img}
+                    alt={`Quimera · ${n.ghost} — ${n.title}`}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  {/* moldura de acento que intensifica no hover */}
                   <div className="rim" aria-hidden="true" />
-                  <span className="ghost">{n.ghost}</span>
-                  <span className="nature-slottag">4:5 · render</span>
                 </div>
                 <div className="nature-body">
                   <p className="nature-kicker">{n.kicker}</p>
