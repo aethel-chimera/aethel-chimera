@@ -59,8 +59,11 @@ export default function DotField({ className = '' }) {
 
     const draw = () => {
       const cx = W / 2
-      const cy = H * 0.46
-      const scaleScreen = Math.min(W, H) * 0.62
+      const cy = H * 0.52
+      // escalas desacopladas: X preenche a LARGURA (faixa larga), Y usa a
+      // ALTURA da faixa (amplitude da onda visível mesmo numa faixa baixa).
+      const scaleX = W * 0.82
+      const scaleY = H * 1.25
       hov += ((mouse.inside ? 1 : 0) - hov) * 0.05
 
       ctx.clearRect(0, 0, W, H)
@@ -74,7 +77,7 @@ export default function DotField({ className = '' }) {
           // UMA onda dominante: uma senoide que viaja ao longo da largura (gx),
           // com leve deslocamento por profundidade p/ a crista não ficar chapada.
           // + ondulação radial sob o cursor (no hover)
-          let y = sin(gx * 2.4 + gz * 0.5 + t * 1.2) * WAVE_AMP
+          let y = sin(gx * 3.0 + gz * 0.5 + t * 1.2) * WAVE_AMP
           if (hov > 0.001) {
             const dx = gx - (mouse.x * 2 - 1)
             const dz = gz - (1 - mouse.y)
@@ -87,11 +90,11 @@ export default function DotField({ className = '' }) {
           const Yr = y * cos(PITCH) - Z * sin(PITCH)
           const Zr = y * sin(PITCH) + Z * cos(PITCH)
           const persp = FOCAL / (Zr + CAM_Z)
-          const sx = cx + X * persp * scaleScreen
-          const sy = cy - Yr * persp * scaleScreen
+          const sx = cx + X * persp * scaleX
+          const sy = cy - Yr * persp * scaleY
           if (sx < -20 || sx > W + 20 || sy < -20 || sy > H + 20) continue
           const depth = 1 - gz // 1 perto, 0 longe
-          const r = Math.max(0.4, persp * scaleScreen * 0.018 * (0.5 + depth))
+          const r = Math.max(0.4, persp * scaleY * 0.02 * (0.5 + depth))
           let alpha = 0.12 + depth * 0.5
           // cor do ponto
           let cr, cg, cb

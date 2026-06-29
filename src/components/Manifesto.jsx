@@ -118,24 +118,10 @@ export default function Manifesto({ reducedMotion }) {
     <section
       id="manifesto"
       ref={rootRef}
-      className="relative z-[3] min-h-[100dvh] flex items-center px-5 md:px-10 py-24 xl:py-0 overflow-hidden"
+      className="relative z-[3] min-h-[100dvh] flex flex-col px-5 md:px-10 py-24 xl:py-0 overflow-hidden"
     >
-      {/* FUNDO: campo de pontos em ondas (dot field), pequeno, no canto
-          inferior-esquerdo — abaixo do texto, em área sem conteúdo. Hover muda
-          as cores. Máscara dissolve as bordas perto do texto/cards. Atrás de
-          tudo; não bloqueia cliques/seleção. */}
-      <div
-        className="pointer-events-none absolute left-0 bottom-0 z-0 w-[46%] h-[48%] xl:h-[46%]"
-        style={{
-          WebkitMaskImage:
-            'linear-gradient(to top right, #000 22%, rgba(0,0,0,0.65) 55%, transparent 88%)',
-          maskImage:
-            'linear-gradient(to top right, #000 22%, rgba(0,0,0,0.65) 55%, transparent 88%)',
-        }}
-      >
-        <DotField />
-      </div>
-
+      {/* CONTEÚDO centralizado no espaço acima da faixa de onda */}
+      <div className="flex-1 flex items-center w-full">
       <div className="relative z-10 w-full grid xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-12 xl:gap-16 items-center">
         {/* coluna do texto */}
         <div>
@@ -190,6 +176,23 @@ export default function Manifesto({ reducedMotion }) {
             ))}
           </div>
         </div>
+      </div>
+      </div>
+
+      {/* FAIXA DE ONDA no rodapé da seção — largura total (do início do texto ao
+          fim dos cards), abaixo do conteúdo, como uma margem. Não sobrepõe nada
+          (reservada via flex-col). Hover muda as cores; máscara dissolve o topo
+          para fundir com a seção. Não bloqueia cliques/seleção. */}
+      <div
+        className="pointer-events-none relative z-0 w-full h-[clamp(110px,20vh,240px)] mt-4 xl:mt-2"
+        style={{
+          WebkitMaskImage:
+            'linear-gradient(to top, #000 55%, rgba(0,0,0,0.5) 80%, transparent 100%)',
+          maskImage:
+            'linear-gradient(to top, #000 55%, rgba(0,0,0,0.5) 80%, transparent 100%)',
+        }}
+      >
+        <DotField />
       </div>
     </section>
   )
