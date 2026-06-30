@@ -181,17 +181,9 @@ export default function Manifesto({ reducedMotion }) {
 
       {/* FAIXA DE ONDA no rodapé da seção — largura total (do início do texto ao
           fim dos cards), abaixo do conteúdo, como uma margem. Não sobrepõe nada
-          (reservada via flex-col). Hover muda as cores; máscara dissolve o topo
-          para fundir com a seção. Não bloqueia cliques/seleção. */}
-      <div
-        className="pointer-events-none relative z-0 w-full h-[clamp(110px,20vh,240px)] mt-4 xl:mt-2"
-        style={{
-          WebkitMaskImage:
-            'linear-gradient(to top, #000 55%, rgba(0,0,0,0.5) 80%, transparent 100%)',
-          maskImage:
-            'linear-gradient(to top, #000 55%, rgba(0,0,0,0.5) 80%, transparent 100%)',
-        }}
-      >
+          (reservada via flex-col). Hover muda as cores. O fade das bordas é feito
+          dentro do próprio canvas (laterais e base). Não bloqueia cliques/seleção. */}
+      <div className="pointer-events-none relative z-0 w-full h-[clamp(110px,20vh,240px)] mt-4 xl:mt-2">
         <DotField />
       </div>
     </section>
