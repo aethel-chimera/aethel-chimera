@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { CATALOG } from '../data'
 import { blip } from '../audio'
 import SectionHead from './SectionHead'
+import CatalogCardOverlay from './CatalogCardOverlay'
 
 const FILTERS = ['Todos', 'WhatsApp', 'Pix', 'Agendamento', 'CRM']
 
@@ -179,7 +180,7 @@ function ProjectCard({ project, index, dimmed, onOpen }) {
   )
 }
 
-export default function Catalog({ onOpenProject }) {
+export default function Catalog({ onOpenProject, reducedMotion }) {
   const [filter, setFilter] = useState('Todos')
   const matches = (p) => filter === 'Todos' || p.tags.includes(filter)
 
@@ -188,8 +189,36 @@ export default function Catalog({ onOpenProject }) {
     blip(330, 0.04, 'sine')
   }
 
+  // Cinemático "catálogo vivo": a cena 3D (espadachim com a Lune Améthyste) toca
+  // em LOOP — o personagem gira a espada e dispara o pulso de energia ametista (o
+  // "lançamento"). SEM cards no vídeo: os cards são adicionados aqui como DOM
+  // (data-driven via CATALOG), sobre o lado direito do vídeo, sincronizados ao
+  // tempo do `videoRef` se desejar. Reprodução sequencial = suave (sem scrubbing).
+  const videoRef = useRef(null)
+
   return (
     <section id="catalogo" className="relative z-[3] px-5 md:px-10 py-32">
+      {/* ---- Cinemático FULL-SCREEN: a Lune Améthyste girando + pulso de energia (loop) ----
+           h-screen + object-cover -> preenche a viewport inteira (vídeo widescreen 2.75:1).
+           -mt-32 cancela o padding-top da seção pra a cena começar no topo. */}
+      <div className="relative -mx-5 md:-mx-10 -mt-32 mb-24 h-screen overflow-hidden bg-obsidian">
+        <video
+          ref={videoRef}
+          src="/catalogo-vivo.mp4"
+          poster="/catalogo-vivo-poster.jpg"
+          muted
+          playsInline
+          preload="auto"
+          autoPlay={!reducedMotion || undefined}
+          loop={!reducedMotion || undefined}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+
+        {/* CARD OVERLAY (esqueleto editável) — card sobre o vídeo, data-driven via CATALOG.
+            Ajuste tempos/posição dentro de CatalogCardOverlay.jsx (LAUNCH_T / EXIT_T / right-[5%]). */}
+        <CatalogCardOverlay videoRef={videoRef} onOpenProject={onOpenProject} />
+      </div>
+
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
         <SectionHead index="04" title="Catálogo" accent="vivo" />
         <div className="flex flex-col gap-2">
