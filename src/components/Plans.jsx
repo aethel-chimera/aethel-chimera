@@ -15,7 +15,7 @@ export default function Plans() {
   return (
     <section id="planos" className="relative z-[3] px-5 md:px-10 py-32">
       <div className="mb-16 max-w-2xl">
-        <SectionHead index="08" kicker="Operação contínua" title="Manutenção" accent="mensal" className="mb-6" />
+        <SectionHead index="07" kicker="Operação contínua" title="Manutenção" accent="mensal" className="mb-6" />
         <p className="text-titanium leading-relaxed">
           O site não termina no lançamento. Escolha o nível de operação contínua para manter o
           organismo saudável e em evolução.

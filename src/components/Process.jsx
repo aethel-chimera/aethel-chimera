@@ -51,7 +51,7 @@ export default function Process({ reducedMotion, invest = 8000, setInvest }) {
 
   return (
     <section id="processo" ref={rootRef} className="relative z-[3] px-5 md:px-10 py-32">
-      <SectionHead index="05" kicker="04 etapas · com diagnóstico" title="Protocolo" accent="de construção" className="mb-10" />
+      <SectionHead index="04" kicker="04 etapas · com diagnóstico" title="Protocolo" accent="de construção" className="mb-10" />
 
       {/* Controle de investimento — os indicadores de cada etapa projetam o
           quanto da meta a obra atinge com este orçamento (sincronizado com a

@@ -36,7 +36,7 @@ export default function FinalCTA({ reducedMotion }) {
     >
       <div className="relative z-10 w-full max-w-3xl flex flex-col items-center">
         <div className="cta-reveal flex items-center justify-center gap-4 mb-8">
-          <span className="mono-label text-amber">[ SEC 09 ]</span>
+          <span className="mono-label text-amber">[ SEC 08 ]</span>
           <span className="h-px w-12 bg-ivory/15" aria-hidden="true" />
           <span className="mono-label text-titanium/60">O próximo capítulo é o seu</span>
         </div>
