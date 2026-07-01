@@ -41,7 +41,7 @@ export default function RoiDashboard({ invest, setInvest }) {
   return (
     <section id="retorno" className="relative z-[3] px-5 md:px-10 py-32">
       <div className="relative z-10 mb-14 max-w-2xl">
-        <SectionHead index="05" kicker="Investimento × retorno" title="Calculadora" accent="de retorno" className="mb-6" />
+        <SectionHead index="04" kicker="Investimento × retorno" title="Calculadora" accent="de retorno" className="mb-6" />
         <p className="text-titanium leading-relaxed">
           Ajuste o investimento mensal e veja o retorno projetado por canal. A métrica combina os
           serviços da Aethel em um <span className="text-ivory">Índice de Retorno</span> — quanto cada

@@ -87,8 +87,8 @@ export default function App() {
         <Manifesto reducedMotion={reducedMotion} />
         <Services reducedMotion={reducedMotion} />
         <Catalog reducedMotion={reducedMotion} onOpenProject={setDetail} />
-        <Process reducedMotion={reducedMotion} invest={invest} setInvest={setInvest} />
         <RoiDashboard invest={invest} setInvest={setInvest} />
+        <Process reducedMotion={reducedMotion} invest={invest} />
         <Results reducedMotion={reducedMotion} />
         <Plans />
         <FinalCTA reducedMotion={reducedMotion} />
