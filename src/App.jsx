@@ -11,6 +11,7 @@ import Hero from './components/Hero'
 import Manifesto from './components/Manifesto'
 import Services from './components/Services'
 import Catalog from './components/Catalog'
+import Studio3D from './components/Studio3D'
 import Process from './components/Process'
 import RoiDashboard from './components/RoiDashboard'
 import Results from './components/Results'
@@ -87,6 +88,7 @@ export default function App() {
         <Manifesto reducedMotion={reducedMotion} />
         <Services reducedMotion={reducedMotion} />
         <Catalog reducedMotion={reducedMotion} onOpenProject={setDetail} />
+        <Studio3D reducedMotion={reducedMotion} />
         <RoiDashboard invest={invest} setInvest={setInvest} />
         <Process reducedMotion={reducedMotion} invest={invest} />
         <Results reducedMotion={reducedMotion} />

@@ -69,7 +69,7 @@ export default function Services({ reducedMotion }) {
 
   return (
     <section id="servicos" ref={rootRef} className="relative z-[3] px-5 md:px-10 py-32">
-      <SectionHead index="03" kicker="06 disciplinas" title="Serviços" accent="como dossiês" className="mb-16" />
+      <SectionHead index="03" kicker="07 disciplinas" title="Serviços" accent="como dossiês" className="mb-16" />
 
       <ul>
         {SERVICES.map((s, i) => {

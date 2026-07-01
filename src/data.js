@@ -64,6 +64,16 @@ export const SERVICES = [
     integrations: ['Pix', 'Asaas', 'WhatsApp', 'CRM', 'Agendamento'],
     image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=900&auto=format&fit=crop',
   },
+  {
+    id: '07',
+    title: 'Modelagem & Experiências 3D',
+    category: 'Diferencial',
+    description:
+      'O que nenhuma agência local entrega: ativos 3D exclusivos modelados in-house (Blender) — mascotes, produtos e cenas cinematográficas — e páginas imersivas em WebGL, otimizadas para carregar leve.',
+    deliverables: ['Modelagem e texturização PBR', 'Personagens e mascotes animados', 'Produto 3D interativo (girar/configurar)', 'Cenas e vídeos cinematográficos', 'Integração WebGL otimizada'],
+    integrations: ['Blender', 'WebGL / Three.js', 'glTF', 'AR-ready'],
+    image: '/catalogo-vivo-poster.jpg',
+  },
 ]
 
 // CATÁLOGO: cada projeto tem uma `image` (mostrada no card e no case).
@@ -309,6 +319,7 @@ export const PLANS = [
 export const NAV_LINKS = [
   { label: 'Serviços', href: '#servicos' },
   { label: 'Catálogo', href: '#catalogo' },
+  { label: '3D', href: '#studio3d' },
   { label: 'Processo', href: '#processo' },
   { label: 'Resultados', href: '#resultados' },
   { label: 'Contato', href: '#contato' },
