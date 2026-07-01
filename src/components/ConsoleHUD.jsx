@@ -5,13 +5,16 @@ import { sectionTone } from '../audio'
 // grade sutil e um log vivo (seção ativa, coordenada de scroll, relógio).
 // Reforça a leitura de "instrumento técnico" sem competir com o conteúdo.
 
+// ORDEM = ordem real das seções no DOM (App.jsx). O índice do HUD deriva daqui,
+// então precisa bater com o render: catálogo=04, studio3d=05, retorno=06...
 const SECTION_NAMES = {
   hero: 'TESE',
   manifesto: 'MANIFESTO',
   servicos: 'SERVIÇOS',
   catalogo: 'CATÁLOGO',
-  processo: 'PROTOCOLO',
+  studio3d: 'MODELAGEM 3D',
   retorno: 'RETORNO',
+  processo: 'PROTOCOLO',
   resultados: 'RESULTADOS',
   planos: 'MANUTENÇÃO',
   contato: 'PORTAL',

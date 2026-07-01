@@ -49,7 +49,7 @@ export default function Process({ reducedMotion, invest = 8000 }) {
 
   return (
     <section id="processo" ref={rootRef} className="relative z-[3] px-5 md:px-10 py-32">
-      <SectionHead index="06" kicker="04 etapas" title="Protocolo" accent="de construção" className="mb-10" />
+      <SectionHead index="07" kicker="04 etapas" title="Protocolo" accent="de construção" className="mb-10" />
 
       {/* Os indicadores de cada etapa reagem ao investimento definido na
           Calculadora de Retorno, logo acima (estado `invest` compartilhado). */}

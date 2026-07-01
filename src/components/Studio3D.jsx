@@ -47,7 +47,7 @@ export default function Studio3D({ reducedMotion }) {
       <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16 items-center">
         {/* copy */}
         <div>
-          <SectionHead index="04" kicker="Diferencial · in-house" title="Modelagem" accent="& 3D" className="mb-6" />
+          <SectionHead index="05" kicker="Diferencial · in-house" title="Modelagem" accent="& 3D" className="mb-6" />
           <p className="text-titanium leading-relaxed mb-8 max-w-xl">
             Enquanto agências montam páginas com banco de imagens, a Aethel{' '}
             <span className="text-ivory">modela os próprios ativos em 3D</span> — mascotes, produtos
