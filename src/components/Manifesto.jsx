@@ -20,7 +20,7 @@ const NATURES = [
     kicker: 'a face · identidade',
     title: 'Identidade visual',
     desc: 'A cara que o mercado reconhece. Marca e sistema visual que fazem a empresa ser lembrada antes de ser comparada.',
-    accent: '#D8D8DA',
+    accent: '#E0A458',
   },
   {
     ghost: 'bode',
@@ -28,7 +28,7 @@ const NATURES = [
     kicker: 'o motor · tráfego',
     title: 'Tráfego e performance',
     desc: 'O motor que impulsiona. Mídia paga e otimização que sobem terreno onde os outros param.',
-    accent: '#BFC1C6',
+    accent: '#C9A66B',
   },
   {
     ghost: 'serpente',
@@ -36,7 +36,7 @@ const NATURES = [
     kicker: 'a cauda · estratégia',
     title: 'Estratégia e marketing',
     desc: 'O jogo longo. Posicionamento e a leitura precisa do momento de dar o bote, sem pressa e sem ruído.',
-    accent: '#9CA0A6',
+    accent: '#9A7BD8',
   },
 ]
 

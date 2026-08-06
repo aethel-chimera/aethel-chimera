@@ -28,7 +28,7 @@ const fmt = (v, unit = '') =>
   (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ',')) + unit
 
 // cor distinta por métrica (premium, alto contraste) — facilita ler cada barra
-const DIAG_COLORS = ['#AEB2B8', '#9AA0A8', '#C8C2C6', '#D6D6DA', '#B6B2BE']
+const DIAG_COLORS = ['#E0A458', '#9A7BD8', '#C9A66B', '#5FA391', '#9A85C4']
 
 // curva de transição usada nas barras (suave, mas responsiva ao slider)
 const EASE = 'cubic-bezier(0.22,1,0.36,1)'
@@ -162,8 +162,8 @@ function Growth({ chart, shown }) {
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label={`Crescimento ${chart.delta}`}>
         <defs>
           <linearGradient id="grow-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#D6D6DA" stopOpacity="0.32" />
-            <stop offset="100%" stopColor="#D6D6DA" stopOpacity="0" />
+            <stop offset="0%" stopColor="#E0A458" stopOpacity="0.32" />
+            <stop offset="100%" stopColor="#E0A458" stopOpacity="0" />
           </linearGradient>
         </defs>
         {[0.5].map((g) => (
@@ -173,7 +173,7 @@ function Growth({ chart, shown }) {
         <path
           d={line}
           fill="none"
-          stroke="#D6D6DA"
+          stroke="#E0A458"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -192,7 +192,7 @@ function Growth({ chart, shown }) {
             cy={p[1]}
             r="3"
             fill="#0B0B10"
-            stroke="#D6D6DA"
+            stroke="#E0A458"
             strokeWidth="1.5"
             style={{ opacity: shown ? 1 : 0, transition: `opacity 0.4s ease ${0.5 + i * 0.12}s` }}
           />
@@ -200,7 +200,7 @@ function Growth({ chart, shown }) {
         {chart.months.map((m, i) => {
           const x = pad + (i / (chart.months.length - 1)) * (w - pad * 2)
           return (
-            <text key={m} x={x} y={h - 7} textAnchor="middle" fill="#BFC1C6" fillOpacity="0.5" style={{ font: "600 8px 'JetBrains Mono', monospace", letterSpacing: '0.1em' }}>
+            <text key={m} x={x} y={h - 7} textAnchor="middle" fill="#C8CAD0" fillOpacity="0.5" style={{ font: "600 8px 'JetBrains Mono', monospace", letterSpacing: '0.1em' }}>
               {m}
             </text>
           )

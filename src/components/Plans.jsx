@@ -1,14 +1,12 @@
 import { Check } from 'lucide-react'
-import { PLANS } from '../data'
+import { PLANS, waLink } from '../data'
 import LiquidButton from './LiquidButton'
 import SectionHead from './SectionHead'
 
-// rola até o contato respeitando o smooth scroll (Lenis), com fallback nativo
-function scrollToContact() {
-  const el = document.querySelector('#contato')
-  if (!el) return
-  if (window.__lenis) window.__lenis.scrollTo(el, { offset: -64 })
-  else el.scrollIntoView({ behavior: 'smooth' })
+// abre o WhatsApp já dizendo QUAL plano o cliente quer (mensagem contextual)
+function openPlanWhatsApp(plan) {
+  const msg = `Olá! Vim pelo site da Aethel Chimera e quero contratar o plano ${plan.name} (${plan.price}${plan.period}).`
+  window.open(waLink(undefined, msg), '_blank', 'noopener,noreferrer')
 }
 
 export default function Plans() {
@@ -76,10 +74,10 @@ export default function Plans() {
                 snapSpeed={1900}
                 sigma={50}
                 shape="pill"
-                color={plan.featured ? '#0B0B10' : '#F4F4F5'}
-                textColor={plan.featured ? '#F4F4F5' : undefined}
+                color={plan.featured ? '#0B0B10' : '#F4F2EC'}
+                textColor={plan.featured ? '#F4F2EC' : undefined}
                 aria-label={plan.cta}
-                onClick={scrollToContact}
+                onClick={() => openPlanWhatsApp(plan)}
               >
                 {plan.cta}
               </LiquidButton>

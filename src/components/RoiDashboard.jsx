@@ -8,11 +8,11 @@ import SectionHead from './SectionHead'
 //   SEO ~7,5x · mídia paga ~2–4x (ROAS) · conteúdo/social ~3x · automação/e-mail
 //   até ~40x · benchmark "bom" do setor = 5x. (Valores conservadores e mesclados.)
 const CHANNELS = [
-  { key: 'trafego', label: 'Gestão de Tráfego', alloc: 0.3, mult: 3.2, color: '#D6D6DA', note: 'ROAS de mídia paga otimizada (Meta / Google).' },
-  { key: 'sites', label: 'Sites & SEO', alloc: 0.25, mult: 5.0, color: '#AEB2B8', note: 'Tráfego orgânico que compõe mês a mês (ativo de longo prazo).' },
-  { key: 'lp', label: 'Landing Pages · CRO', alloc: 0.15, mult: 4.0, color: '#9AA0A8', note: 'Otimização de conversão: mais venda com o mesmo tráfego.' },
-  { key: 'social', label: 'Social & Conteúdo', alloc: 0.15, mult: 3.0, color: '#B6B2BE', note: 'Alcance, autoridade e demanda de marca.' },
-  { key: 'auto', label: 'Automações & CRM', alloc: 0.15, mult: 6.0, color: '#C8C2C6', note: 'Retenção e LTV (fluxos de e-mail/CRM — o maior retorno por R$).' },
+  { key: 'trafego', label: 'Gestão de Tráfego', alloc: 0.3, mult: 3.2, color: '#E0A458', note: 'ROAS de mídia paga otimizada (Meta / Google).' },
+  { key: 'sites', label: 'Sites & SEO', alloc: 0.25, mult: 5.0, color: '#9A7BD8', note: 'Tráfego orgânico que compõe mês a mês (ativo de longo prazo).' },
+  { key: 'lp', label: 'Landing Pages · CRO', alloc: 0.15, mult: 4.0, color: '#C9A66B', note: 'Otimização de conversão: mais venda com o mesmo tráfego.' },
+  { key: 'social', label: 'Social & Conteúdo', alloc: 0.15, mult: 3.0, color: '#9A85C4', note: 'Alcance, autoridade e demanda de marca.' },
+  { key: 'auto', label: 'Automações & CRM', alloc: 0.15, mult: 6.0, color: '#5FA391', note: 'Retenção e LTV (fluxos de e-mail/CRM — o maior retorno por R$).' },
 ]
 
 const brl = (v) =>

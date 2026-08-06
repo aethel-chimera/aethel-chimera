@@ -160,7 +160,7 @@ export default function Hero({ ready, reducedMotion }) {
               snapSpeed={1900}
               sigma={50}
               shape="pill"
-              color="#F4F4F5"
+              color="#F4F2EC"
               aria-label="Iniciar projeto"
               onClick={scrollToContact}
               style={{ marginLeft: -40 }}

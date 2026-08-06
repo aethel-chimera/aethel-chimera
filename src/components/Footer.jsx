@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NAV_LINKS, CONTACT } from '../data'
+import { NAV_LINKS, CONTACT, waLink } from '../data'
 
 function BrasiliaClock() {
   const [time, setTime] = useState('')
@@ -48,13 +48,16 @@ export default function Footer() {
         <div>
           <p className="mono-label text-titanium/70 mb-5">Redes</p>
           <ul className="space-y-3">
-            {['Instagram', 'LinkedIn', 'Behance'].map((s) => (
-              <li key={s}>
-                <a href="#" className="text-sm text-titanium hover:text-ivory transition-colors link-underline">
-                  {s}
-                </a>
-              </li>
-            ))}
+            <li>
+              <a
+                href={CONTACT.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-titanium hover:text-amber transition-colors link-underline"
+              >
+                Instagram {CONTACT.instagram}
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -62,15 +65,22 @@ export default function Footer() {
           <p className="mono-label text-titanium/70 mb-5">Contato</p>
           <ul className="space-y-3">
             <li>
-              <a href={`mailto:${CONTACT.email}`} className="text-sm text-titanium hover:text-ivory transition-colors break-all link-underline">
+              <a href={CONTACT.emailUrl} className="text-sm text-titanium hover:text-amber transition-colors break-all link-underline">
                 {CONTACT.email}
               </a>
             </li>
-            <li>
-              <a href={CONTACT.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-titanium hover:text-ivory transition-colors link-underline">
-                WhatsApp
-              </a>
-            </li>
+            {CONTACT.phones.map((p) => (
+              <li key={p.e164}>
+                <a
+                  href={waLink(p.e164)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-titanium hover:text-amber transition-colors link-underline"
+                >
+                  WhatsApp {p.label}
+                </a>
+              </li>
+            ))}
           </ul>
           <div className="flex items-center gap-3 mt-8">
             <span className="signal-dot" aria-hidden="true" />

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { CONTACT } from '../data'
+import { CONTACT, waLink } from '../data'
 import LiquidButton from './LiquidButton'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -70,7 +70,7 @@ export default function FinalCTA({ reducedMotion }) {
               minSpeed={400}
               snapSpeed={1900}
               shape="pill"
-              color="#F4F4F5"
+              color="#F4F2EC"
               aria-label="Iniciar projeto pelo WhatsApp"
               onClick={() => window.open(CONTACT.whatsappUrl, '_blank', 'noopener,noreferrer')}
             >
@@ -79,17 +79,29 @@ export default function FinalCTA({ reducedMotion }) {
           )}
         </div>
 
-        <div className="cta-reveal mt-12 flex flex-col sm:flex-row gap-4 sm:gap-10">
-          <a href={`mailto:${CONTACT.email}`} className="font-mono text-sm text-titanium hover:text-ivory link-underline">
+        {/* canais oficiais — todos com link funcional (wa.me / mailto / instagram) */}
+        <div className="cta-reveal mt-12 flex flex-wrap justify-center gap-x-8 gap-y-4">
+          {CONTACT.phones.map((p) => (
+            <a
+              key={p.e164}
+              href={waLink(p.e164)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-sm text-titanium hover:text-amber transition-colors link-underline"
+            >
+              WhatsApp {p.label}
+            </a>
+          ))}
+          <a href={CONTACT.emailUrl} className="font-mono text-sm text-titanium hover:text-amber transition-colors link-underline">
             {CONTACT.email}
           </a>
           <a
-            href={CONTACT.whatsappUrl}
+            href={CONTACT.instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-sm text-titanium hover:text-ivory link-underline"
+            className="font-mono text-sm text-titanium hover:text-amber transition-colors link-underline"
           >
-            {CONTACT.whatsapp}
+            {CONTACT.instagram}
           </a>
         </div>
       </div>

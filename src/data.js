@@ -334,8 +334,33 @@ export const TICKER_ITEMS = [
   'Integrações e Automações',
 ]
 
+// ---------------------------------------------------------------------------
+// CONTATOS OFICIAIS. Os links são as "APIs" públicas de cada canal:
+//   WhatsApp  -> Click-to-Chat (wa.me) com mensagem pré-preenchida
+//   E-mail    -> mailto: com assunto/corpo pré-preenchidos
+//   Instagram -> perfil público
+// `waLink()` monta o link do WhatsApp já com o texto de abertura.
+// ---------------------------------------------------------------------------
+const WHATSAPP_MSG =
+  'Olá! Vim pelo site da Aethel Chimera e quero iniciar um projeto.'
+
 export const CONTACT = {
-  email: 'contato@aethelchimera.com.br',
-  whatsapp: '+55 11 90000-0000',
-  whatsappUrl: 'https://wa.me/5511900000000',
+  email: 'aethelchimera@gmail.com',
+  emailUrl:
+    'mailto:aethelchimera@gmail.com' +
+    '?subject=' + encodeURIComponent('Novo projeto — via site') +
+    '&body=' + encodeURIComponent(WHATSAPP_MSG),
+  instagram: '@aethel.chimera',
+  instagramUrl: 'https://instagram.com/aethel.chimera',
+  // canal principal (mantém compatibilidade com quem usa CONTACT.whatsapp*)
+  whatsapp: '(31) 99482-8076',
+  whatsappUrl: 'https://wa.me/5531994828076?text=' + encodeURIComponent(WHATSAPP_MSG),
+  phones: [
+    { label: '(31) 99482-8076', e164: '5531994828076' },
+    { label: '(31) 99579-3122', e164: '5531995793122' },
+  ],
 }
+
+// link de WhatsApp com mensagem contextual (ex.: plano ou serviço escolhido)
+export const waLink = (e164 = '5531994828076', msg = WHATSAPP_MSG) =>
+  `https://wa.me/${e164}?text=${encodeURIComponent(msg)}`
