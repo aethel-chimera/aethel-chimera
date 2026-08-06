@@ -290,13 +290,14 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
 
             <img
               src={proj.image}
-              alt={`Mockup do site da ${proj.name}`}
+              alt={`Case ${proj.name} — ${proj.segment}`}
               className="w-full aspect-[16/10] object-cover"
               loading="lazy"
             />
             <div className="p-6">
               <p className="mono-label text-titanium/70">
-                {proj.segment} · {proj.year}
+                {proj.segment}
+                {proj.city ? ` · ${proj.city}` : ''} · {proj.year}
               </p>
               <DecodeText
                 text={proj.name}
@@ -322,6 +323,46 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                   </span>
                 ))}
               </div>
+
+              {/* canais REAIS do cliente — stopPropagation p/ o clique não abrir
+                  o case por trás. Só rendem o que está confirmado no CRM. */}
+              {(proj.instagram || proj.site || proj.whatsapp) && (
+                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-ivory/10 pt-4">
+                  {proj.instagram && (
+                    <a
+                      href={proj.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                    >
+                      Instagram ↗
+                    </a>
+                  )}
+                  {proj.site && (
+                    <a
+                      href={proj.site}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                    >
+                      Site ↗
+                    </a>
+                  )}
+                  {proj.whatsapp && (
+                    <a
+                      href={proj.whatsapp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                    >
+                      WhatsApp ↗
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </article>
