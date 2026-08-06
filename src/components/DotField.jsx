@@ -42,6 +42,10 @@ export default function DotField({ className = '' }) {
     const ro = new ResizeObserver(resize)
     ro.observe(canvas)
 
+    // TOUCH: não existe hover no celular — sem isso a onda ficaria cinza para
+    // sempre. Em ponteiro grosso o acento entra sozinho, num vaivém lento.
+    const coarse = window.matchMedia('(pointer: coarse)').matches
+
     // hover: detectado por bounds (canvas é pointer-events-none, não bloqueia texto)
     const mouse = { x: 0.5, y: 0.5, inside: false }
     const onMove = (e) => {
@@ -69,7 +73,9 @@ export default function DotField({ className = '' }) {
       // c/ o overscan), Y usa a ALTURA da faixa (amplitude + recuo do plano).
       const scaleX = W * 1.05
       const scaleY = H * 1.7
-      hov += ((mouse.inside ? 1 : 0) - hov) * 0.05
+      // no touch, o acento pulsa sozinho (0.15..0.75); no desktop segue o hover
+      const target = coarse ? 0.45 + 0.3 * sin(t * 0.6) : mouse.inside ? 1 : 0
+      hov += (target - hov) * 0.05
 
       ctx.clearRect(0, 0, W, H)
       // cor: neutra → acento que cicla matiz no hover

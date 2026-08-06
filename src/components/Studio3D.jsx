@@ -65,7 +65,7 @@ export default function Studio3D({ reducedMotion }) {
           <p className="mono-label text-[0.6rem] text-titanium/45">
             {reducedMotion
               ? 'Render estático (movimento reduzido ativado).'
-              : 'Arraste para girar · roda em WebGL, carregado sob demanda.'}
+              : (window.matchMedia('(pointer: coarse)').matches ? 'Gira sozinho · roda em WebGL, carregado sob demanda.' : 'Arraste para girar · roda em WebGL, carregado sob demanda.')}
           </p>
         </div>
 

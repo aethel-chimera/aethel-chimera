@@ -7,6 +7,8 @@ import { useGLTF, useAnimations, OrbitControls, Bounds, useBounds } from '@react
 // quadro. Aqui congelamos numa POSE de destaque e giramos devagar — beauty shot
 // sempre enquadrado. Carregado sob demanda (componente lazy + só monta em tela).
 const MODEL_URL = '/models/lune-amethyste.glb'
+// touch (sem mouse): desliga a rotação manual p/ não sequestrar o scroll
+const COARSE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 const POSE = 0.46 // fração da timeline do golpe usada como pose fixa (0..1)
 
 function Swordsman() {
@@ -53,17 +55,21 @@ export default function Model3DViewer() {
       <ambientLight intensity={0.9} />
       <directionalLight position={[4, 6, 5]} intensity={3.2} />
       <directionalLight position={[0, 2, 6]} intensity={1.5} />
-      <directionalLight position={[-5, 3, -4]} intensity={1.8} color="#8b5cf6" />
+      <directionalLight position={[-5, 3, -4]} intensity={1.8} color="#9A7BD8" />
       <spotLight position={[0, 9, 3]} angle={0.5} penumbra={1} intensity={1.4} />
       <Suspense fallback={null}>
         <Bounds observe margin={1.15}>
           <Swordsman />
         </Bounds>
       </Suspense>
+      {/* TOUCH: arrastar dentro do canvas sequestraria o scroll da página no
+          celular. Em ponteiro grosso o modelo só gira sozinho (sem rotação
+          manual), então o dedo continua rolando a página normalmente. */}
       <OrbitControls
         makeDefault
         autoRotate
         autoRotateSpeed={0.8}
+        enableRotate={!COARSE}
         enablePan={false}
         enableZoom={false}
         minPolarAngle={Math.PI / 3}

@@ -9,7 +9,10 @@ export default function Catalog({ onOpenProject, reducedMotion }) {
   const videoRef = useRef(null)
 
   return (
-    <section id="catalogo" className="relative z-[3] h-screen overflow-hidden bg-obsidian">
+    // MOBILE: a cena é widescreen — em tela retrato o object-cover cortava
+    // quase tudo. Aqui o vídeo aparece INTEIRO (altura automática) e o card
+    // vem empilhado abaixo, em seção definida. Desktop mantém a cena cheia.
+    <section id="catalogo" className="relative z-[3] md:h-[100svh] overflow-hidden bg-obsidian pb-6 md:pb-0">
       <video
         ref={videoRef}
         src="/catalogo-vivo.mp4"
@@ -19,7 +22,7 @@ export default function Catalog({ onOpenProject, reducedMotion }) {
         preload="auto"
         autoPlay={!reducedMotion || undefined}
         loop={!reducedMotion || undefined}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="block w-full h-auto md:absolute md:inset-0 md:h-full md:w-full md:object-cover"
       />
 
       {/* CARD OVERLAY — card sobre a cena, data-driven via CATALOG.

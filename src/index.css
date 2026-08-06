@@ -13,6 +13,11 @@
 
 html {
   scroll-behavior: auto;
+  /* `overflow-x: hidden` só no body não segura: o html continua rolando na
+     horizontal. Trava aqui também para nunca haver arrasto lateral no mobile. */
+  overflow-x: hidden;
+  /* iOS: evita o zoom automático de texto ao virar o aparelho */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -831,5 +836,36 @@ main > section::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   TOUCH (iOS/Android) — alvos de toque e efeitos sem mouse.
+   Regra de acessibilidade: alvo clicável >= 44px. Aplicado só em ponteiro
+   grosso p/ não inflar o layout no desktop.
+--------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .mono-label a,
+  a.arrow-link,
+  a.link-underline,
+  .nav-link,
+  nav a,
+  header button,
+  .roi-range + div + div button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* o cursor custom e a dica de "arrastar" não fazem sentido sem mouse */
+  .cursor-dot,
+  .cursor-ring {
+    display: none !important;
+  }
+
+  /* rolagem por toque suave e sem "bounce" horizontal */
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: none;
   }
 }

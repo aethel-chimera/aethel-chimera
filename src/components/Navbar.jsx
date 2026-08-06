@@ -100,7 +100,7 @@ export default function Navbar() {
               snapSpeed={1900}
               sigma={10}
               shape="pill"
-              color="#D8D8DA"
+              color="#C8CAD0"
               aria-label="Iniciar projeto"
               onClick={() => closeAnd('#contato')}
             >

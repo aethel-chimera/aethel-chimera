@@ -97,6 +97,7 @@ export const CATALOG = [
     instagram: null,
     url: 'https://jlopezdesigner.com.br',
     image: '/image/case-jlopez.webp',
+    logo: '/image/logos/jlopez.webp',
   },
   {
     name: 'Clínica de Nutrição Cláudio de Caux',
@@ -112,6 +113,7 @@ export const CATALOG = [
     instagram: 'https://www.instagram.com/claudiodecaux/',
     url: 'https://linktr.ee/claudiodecaux',
     image: '/image/case-caux.webp',
+    logo: '/image/logos/caux.webp',
   },
   {
     name: 'CT Diogo Alan',
@@ -127,15 +129,16 @@ export const CATALOG = [
     instagram: null,
     url: 'https://diogopersonal.com.br',
     image: '/image/case-diogo.webp',
+    logo: '/image/logos/diogo.webp',
   },
   {
-    name: "J's Pizza",
+    name: "Jota's Pizza",
     slug: 'jotas-pizza',
     segment: 'Alimentação',
     city: 'Itabira · MG',
     year: '2026',
     summary:
-      'Pizza de forno elétrico feita em Itabira, com a Jota como assinatura da casa. Operação de social media com calendário de quinta a domingo.',
+      'Pizzaria de Itabira, com a Jota como assinatura da casa. Operação de social media com calendário de quinta a domingo.',
     metrics: ['Social media com calendário semanal', 'Manual de marca completo', 'Pedido direto por WhatsApp'],
     tags: ['Social Media', 'WhatsApp', 'Food'],
     site: null,
@@ -143,6 +146,7 @@ export const CATALOG = [
     whatsapp: 'https://wa.me/5531995300456',
     url: 'https://www.instagram.com/jota_pizza_joaquim/',
     image: '/image/case-jotas.webp',
+    logo: '/image/logos/jotas.webp',
   },
 ]
 

@@ -405,6 +405,15 @@ export default function LiquidButton({
         placeItems: "center",
         width: paddingX != null ? "auto" : width + pad * 2,
         height: height + pad * 2,
+        // MOBILE: o canvas inclui a folga do efeito (width + pad*2) e chegava a
+        // 528px, estourando telas de 375px. Clampar aqui mantém o botão dentro
+        // da viewport — o canvas se re-mede sozinho pelo ResizeObserver.
+        // NÃO usar `100%` aqui: em pai com largura de conteúdo (flex +
+        // items-center) a porcentagem é circular e é ignorada no cálculo
+        // intrínseco — o pai continuava medindo 528px e gerava scroll
+        // horizontal. A unidade de viewport é resolvível e sempre clampa.
+        maxWidth: "calc(100vw - 2rem)",
+        boxSizing: "border-box",
         ...(paddingX != null ? { paddingLeft: pad, paddingRight: pad } : null),
         ...style,
       }}
@@ -427,6 +436,7 @@ export default function LiquidButton({
           alignItems: "center",
           justifyContent: "center",
           width: paddingX != null ? "auto" : width,
+          maxWidth: "100%",
           height,
           margin: 0,
           padding: paddingX != null ? `0 ${paddingX}px` : 0,

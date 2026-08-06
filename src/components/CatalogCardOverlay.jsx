@@ -23,8 +23,16 @@ import { blip } from '../audio'
 //   • blip curto no impacto (silencioso até o usuário ligar o som)
 //
 // AJUSTE FINO — tudo editável aqui em cima (tempos em s, clipe ~7s):
-const LAUNCH_T = 3.3 // a lâmina dispara o pulso -> o card é lançado
-const EXIT_T = 6.6 // perto do fim do loop -> o card sai
+// SINCRONIA COM A CENA: 4,42s é o instante em que a orbe de energia EXPLODE —
+// medido pelo pico de luminância do clipe (YAVG máx. em 4,46s; entramos ~40ms
+// antes p/ o card nascer junto com o flash, não depois dele).
+// Se o vídeo for re-renderizado, remedir com:
+//   ffmpeg -i catalogo-vivo.mp4 -vf signalstats,metadata=print:key=lavfi.signalstats.YAVG -f null -
+const LAUNCH_T = 4.42
+// O card ATRAVESSA a virada do loop e fica na tela até pouco antes da próxima
+// explosão: sai em EXIT_T do ciclo SEGUINTE (não no fim do ciclo em que entrou).
+// Clipe ≈ 8,83s -> tempo em tela ≈ (8,83 − 4,42) + 3,9 ≈ 8,3s.
+const EXIT_T = 3.9
 const ENTER_DUR = 0.62 // duração do voo de entrada
 const EXIT_DUR = 0.42 // duração da saída (glitch-out)
 const DEPTH_Z = -820 // quão "no fundo" o card começa (px de translateZ)
@@ -33,7 +41,7 @@ const START_BLUR = 11 // desfoque inicial do rack-focus (px)
 const RGB_SPLIT = 7 // separação inicial do rastro RGB (px)
 const DECODE_MS = 620 // duração do decode do texto
 const AMETHYST_FLASH = true // FLAG: respiro de cor ametista no lançamento (false = 100% monocromático)
-const AMETHYST = '139, 92, 246' // rgb do flash (a Lune Améthyste)
+const AMETHYST = '154, 123, 216' // violeta OFICIAL do manual (#9A7BD8) — a Lune Améthyste
 // ---------------------------------------------------------------------------
 
 const GLYPHS = '日Æ01<>/{}#*-+=•▒░█ΛΞΣΦΨ'
@@ -84,7 +92,9 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
   const ringRef = useRef(null)
   const noiseRef = useRef(null)
   const lastT = useRef(0)
-  const phase = useRef('idle') // idle | in | out
+  const phase = useRef('idle') // idle | in
+  const loopedSinceEnter = useRef(false) // o card já atravessou uma virada de loop?
+  const firstLaunch = useRef(true)
   const tlRef = useRef(null)
   const reduced = useRef(false)
 
@@ -98,6 +108,13 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
       ` drop-shadow(${(-splitPx).toFixed(2)}px 0 0 rgba(0,255,230,.5))`
   }
 
+  // Troca para o próximo projeto. Chamado no LANÇAMENTO (não na saída), quando
+  // o card ainda está invisível — assim o conteúdo nunca troca em tela.
+  const advance = () => {
+    if (firstLaunch.current) firstLaunch.current = false
+    else setIndex((i) => (i + 1) % CATALOG.length)
+  }
+
   // ENTRADA: voa do fundo, foca, gira pra câmera, assenta seco; bloom ametista,
   // power-on de scanline, ignição da borda, decode do texto e blip de impacto.
   const playEnter = () => {
@@ -105,6 +122,7 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
     if (!card) return
     tlRef.current?.kill()
     setActive(true)
+    advance() // próximo projeto (card ainda invisível)
     setLaunchKey((k) => k + 1) // re-dispara o decode
 
     const fx = { blur: START_BLUR, split: RGB_SPLIT }
@@ -185,30 +203,38 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
     let raf
     const loop = () => {
       const t = v.currentTime || 0
-      if (t + 0.4 < lastT.current) {
-        // o vídeo reiniciou -> próximo projeto
-        setIndex((i) => (i + 1) % CATALOG.length)
-        phase.current = 'idle'
+      // o vídeo reiniciou: o card NÃO sai aqui — ele atravessa a virada do loop
+      // e só sai pouco antes do próximo lançamento (EXIT_T do ciclo seguinte).
+      if (t + 0.4 < lastT.current && phase.current === 'in') {
+        loopedSinceEnter.current = true
       }
-      const inWindow = t >= LAUNCH_T && t < EXIT_T
+      const canLaunch = t >= LAUNCH_T && t < LAUNCH_T + 1.5
+      // só pode sair depois de ter atravessado ao menos uma virada de loop
+      const shouldExit = loopedSinceEnter.current && t >= EXIT_T && t < LAUNCH_T
+
       if (reduced.current) {
         // sem animação: aparece/some instantâneo, sem efeitos
-        if (phase.current === 'idle' && inWindow) {
+        if (phase.current !== 'in' && canLaunch) {
           if (card) { card.style.filter = ''; gsap.set(card, { clearProps: 'transform', autoAlpha: 1 }) }
+          advance()
           setActive(true)
           phase.current = 'in'
-        } else if (phase.current === 'in' && t >= EXIT_T) {
+          loopedSinceEnter.current = false
+        } else if (phase.current === 'in' && shouldExit) {
           if (card) gsap.set(card, { autoAlpha: 0 })
           setActive(false)
-          phase.current = 'out'
+          phase.current = 'idle'
+          loopedSinceEnter.current = false
         }
       } else {
-        if (phase.current === 'idle' && inWindow) {
+        if (phase.current !== 'in' && canLaunch) {
           playEnter()
           phase.current = 'in'
-        } else if (phase.current === 'in' && t >= EXIT_T) {
+          loopedSinceEnter.current = false
+        } else if (phase.current === 'in' && shouldExit) {
           playExit()
-          phase.current = 'out'
+          phase.current = 'idle'
+          loopedSinceEnter.current = false
         }
       }
       lastT.current = t
@@ -226,9 +252,11 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
   if (!proj) return null
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[2] hidden md:block [perspective:1200px]">
-      {/* âncora: lado direito, centralizado na vertical */}
-      <div className="absolute right-[5%] top-1/2 w-[clamp(260px,24vw,400px)] -translate-y-1/2">
+    // Desktop: card ARREMESSADO sobre a cena (overlay absoluto).
+    // Mobile: o mesmo card, mas ancorado embaixo e em largura total — sem
+    // depender de espaço lateral, que no celular não existe.
+    <div className="pointer-events-none relative md:absolute md:inset-0 z-[2] [perspective:1200px]">
+      <div className="mx-4 mt-4 md:mx-0 md:mt-0 md:absolute md:right-[5%] md:top-1/2 md:w-[clamp(260px,24vw,400px)] md:-translate-y-1/2">
         {/* flash ametista ATRÁS do card (o card nasce do pulso) */}
         {AMETHYST_FLASH && (
           <div
@@ -260,7 +288,7 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
               ref={ringRef}
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 z-[3] rounded-xl"
-              style={{ opacity: 0, boxShadow: 'inset 0 0 0 1px rgba(216,216,218,.9), 0 0 30px rgba(216,216,218,.35)' }}
+              style={{ opacity: 0, boxShadow: 'inset 0 0 0 1px rgba(200,202,208,.9), 0 0 30px rgba(200,202,208,.35)' }}
             />
             {/* power-on: barra de varredura */}
             <span
@@ -269,7 +297,7 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
               className="pointer-events-none absolute inset-x-0 top-0 z-[3] h-1/3"
               style={{
                 opacity: 0,
-                background: 'linear-gradient(to bottom, transparent, rgba(216,216,218,.16) 60%, rgba(216,216,218,.5))',
+                background: 'linear-gradient(to bottom, transparent, rgba(200,202,208,.16) 60%, rgba(200,202,208,.5))',
               }}
             />
             {/* ruído de TV (glitch-out na saída) */}
@@ -288,13 +316,22 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
               </svg>
             </div>
 
-            <img
-              src={proj.image}
-              alt={`Case ${proj.name} — ${proj.segment}`}
-              className="w-full aspect-[16/10] object-cover"
-              loading="lazy"
-            />
-            <div className="p-6">
+            {/* A LOGO DO CLIENTE ocupa a área de arte, acima das informações.
+                Placa clara: as marcas têm cores próprias (a do CT é preta, a da
+                Clínica é azul-marinho) e sobre o card escuro sumiriam. object-
+                contain para nunca cortar/deformar a marca. */}
+            <div className="relative w-full h-24 md:h-auto md:aspect-[16/10] overflow-hidden bg-gradient-to-b from-ivory to-[#E8E6DE]">
+              {/* h-full/w-full + object-contain: `max-h-full` sozinho não
+                  segurava a imagem dentro da placa (logos altas vazavam por
+                  cima do texto do card). */}
+              <img
+                src={proj.logo || proj.image}
+                alt={`Logo ${proj.name}`}
+                className="absolute inset-0 h-full w-full object-contain p-4 md:p-6"
+                loading="lazy"
+              />
+            </div>
+            <div className="p-4 md:p-6">
               <p className="mono-label text-titanium/70">
                 {proj.segment}
                 {proj.city ? ` · ${proj.city}` : ''} · {proj.year}
