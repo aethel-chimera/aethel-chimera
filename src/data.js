@@ -365,7 +365,7 @@ export const CONTACT = {
     '?subject=' + encodeURIComponent('Novo projeto — via site') +
     '&body=' + encodeURIComponent(WHATSAPP_MSG),
   instagram: '@aethel.chimera',
-  instagramUrl: 'https://instagram.com/aethel.chimera',
+  instagramUrl: 'https://www.instagram.com/aethel.chimera/',
   // canal principal (mantém compatibilidade com quem usa CONTACT.whatsapp*)
   whatsapp: '(31) 99482-8076',
   whatsappUrl: 'https://wa.me/5531994828076?text=' + encodeURIComponent(WHATSAPP_MSG),

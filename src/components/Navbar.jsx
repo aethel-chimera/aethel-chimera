@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
-import { NAV_LINKS } from '../data'
+import { NAV_LINKS, CONTACT, waLink } from '../data'
 import LiquidButton from './LiquidButton'
 import AudioToggle from './AudioToggle'
 
@@ -138,7 +138,45 @@ export default function Navbar() {
               </li>
             ))}
           </ul>
-          <p className="mono-label text-titanium/60 mt-16">Aethel Chimera — Engenharia de presença digital</p>
+          {/* CONTATOS no menu mobile: no celular o menu é o caminho principal
+              de ação — WhatsApp abre o app com a mensagem pronta, o e-mail
+              abre o cliente de e-mail e o Instagram vai pro perfil. */}
+          <div className="mt-12 border-t border-ivory/10 pt-6 space-y-3">
+            <p className="mono-label text-titanium/50 text-[0.55rem]">Falar agora</p>
+            {CONTACT.phones.map((p) => (
+              <a
+                key={p.e164}
+                href={waLink(p.e164)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 text-ivory text-base"
+              >
+                <span className="text-amber" aria-hidden="true">↗</span>
+                WhatsApp {p.label}
+              </a>
+            ))}
+            <a
+              href={CONTACT.emailUrl}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 text-titanium text-sm break-all"
+            >
+              <span className="text-amber" aria-hidden="true">↗</span>
+              {CONTACT.email}
+            </a>
+            <a
+              href={CONTACT.instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 text-titanium text-sm"
+            >
+              <span className="text-amber" aria-hidden="true">↗</span>
+              Instagram {CONTACT.instagram}
+            </a>
+          </div>
+
+          <p className="mono-label text-titanium/60 mt-10">Aethel Chimera — Engenharia de presença digital</p>
         </div>
       )}
     </>
