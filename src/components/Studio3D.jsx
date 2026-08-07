@@ -43,7 +43,7 @@ export default function Studio3D({ reducedMotion }) {
   }, [reducedMotion])
 
   return (
-    <section id="studio3d" className="relative z-[3] px-5 md:px-10 py-32">
+    <section id="studio3d" className="relative z-[3] px-5 md:px-10 py-20 md:py-32">
       <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16 items-center">
         {/* copy */}
         <div>
@@ -65,14 +65,14 @@ export default function Studio3D({ reducedMotion }) {
           <p className="mono-label text-[0.6rem] text-titanium/45">
             {reducedMotion
               ? 'Render estático (movimento reduzido ativado).'
-              : (window.matchMedia('(pointer: coarse)').matches ? 'Gira sozinho · roda em WebGL, carregado sob demanda.' : 'Arraste para girar · roda em WebGL, carregado sob demanda.')}
+              : (window.matchMedia('(pointer: coarse)').matches ? 'Gire com DOIS dedos · um dedo rola a página.' : 'Arraste para girar · roda em WebGL, carregado sob demanda.')}
           </p>
         </div>
 
         {/* viewer */}
         <div
           ref={holderRef}
-          className="relative aspect-[4/5] sm:aspect-square lg:aspect-[4/5] rounded-2xl border border-ivory/12 bg-obsidian-deep/50 overflow-hidden"
+          className="relative aspect-[5/4] sm:aspect-square lg:aspect-[4/5] rounded-2xl border border-ivory/12 bg-obsidian-deep/50 overflow-hidden"
         >
           {!reducedMotion && inView ? (
             <Suspense fallback={<Poster label="Carregando 3D…" />}>

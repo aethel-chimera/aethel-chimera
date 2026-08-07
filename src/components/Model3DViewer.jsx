@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { TOUCH } from 'three'
 import { useGLTF, useAnimations, OrbitControls, Bounds, useBounds } from '@react-three/drei'
 
 // Modelo do espadachim + Lune Améthyste exportado do Blender (public/models).
@@ -7,7 +8,7 @@ import { useGLTF, useAnimations, OrbitControls, Bounds, useBounds } from '@react
 // quadro. Aqui congelamos numa POSE de destaque e giramos devagar — beauty shot
 // sempre enquadrado. Carregado sob demanda (componente lazy + só monta em tela).
 const MODEL_URL = '/models/lune-amethyste.glb'
-// touch (sem mouse): desliga a rotação manual p/ não sequestrar o scroll
+// touch: um dedo rola a página, dois dedos giram o modelo (ver OrbitControls)
 const COARSE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 const POSE = 0.46 // fração da timeline do golpe usada como pose fixa (0..1)
 
@@ -29,9 +30,16 @@ function Swordsman() {
     const r1 = requestAnimationFrame(() => {
       r2 = requestAnimationFrame(() => bounds.refresh().clip().fit())
     })
+    // e reenquadra de novo quando a viewport muda (girar o aparelho, barra do
+    // navegador aparecendo/sumindo) — senão o modelo fica cortado no celular
+    const onResize = () => bounds.refresh().clip().fit()
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onResize)
     return () => {
       cancelAnimationFrame(r1)
       cancelAnimationFrame(r2)
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onResize)
       a.stop()
     }
   }, [actions, names, bounds])
@@ -58,20 +66,21 @@ export default function Model3DViewer() {
       <directionalLight position={[-5, 3, -4]} intensity={1.8} color="#9A7BD8" />
       <spotLight position={[0, 9, 3]} angle={0.5} penumbra={1} intensity={1.4} />
       <Suspense fallback={null}>
-        <Bounds observe margin={1.15}>
+        <Bounds observe margin={COARSE ? 1.45 : 1.15}>
           <Swordsman />
         </Bounds>
       </Suspense>
-      {/* TOUCH: arrastar dentro do canvas sequestraria o scroll da página no
-          celular. Em ponteiro grosso o modelo só gira sozinho (sem rotação
-          manual), então o dedo continua rolando a página normalmente. */}
+      {/* TOUCH: UM dedo não gira — ele rola a página (senão o canvas sequestra
+          o scroll). DOIS dedos giram o modelo, como o arrastar do mouse no
+          desktop. Assim dá para descer a página E girar, como pedido. */}
       <OrbitControls
         makeDefault
         autoRotate
         autoRotateSpeed={0.8}
-        enableRotate={!COARSE}
+        enableRotate
         enablePan={false}
         enableZoom={false}
+        touches={COARSE ? { ONE: null, TWO: TOUCH.ROTATE } : undefined}
         minPolarAngle={Math.PI / 3}
         maxPolarAngle={Math.PI / 1.85}
       />

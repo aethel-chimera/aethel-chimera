@@ -80,7 +80,7 @@ export default function RoiDashboard({ invest, setInvest }) {
           <label htmlFor="roi-invest" className="mono-label text-titanium/70 block mb-3">
             Investimento mensal
           </label>
-          <div className="font-display font-semibold text-4xl md:text-5xl text-ivory mb-1 tabular-nums">
+          <div className="font-display font-semibold text-[clamp(1.75rem,8vw,3rem)] text-ivory mb-1 tabular-nums">
             {brl(invest)}
           </div>
           <p className="font-mono text-xs text-titanium/60 mb-7">por mês em operação de marketing</p>
@@ -121,24 +121,24 @@ export default function RoiDashboard({ invest, setInvest }) {
         {/* ---- Resultado: ROI + breakdown por canal ---- */}
         <div className="rounded-2xl border border-ivory/12 bg-obsidian-deep/70 p-7 md:p-9">
           {/* indicadores principais (aria-live para acessibilidade) */}
-          <div className="grid grid-cols-3 gap-4 mb-8" aria-live="polite">
+          <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8" aria-live="polite">
             <div>
               <p className="mono-label text-[0.55rem] text-titanium/55 mb-1.5">Índice de retorno</p>
-              <p className="font-display font-semibold text-3xl md:text-4xl text-signal tabular-nums leading-none">
+              <p className="font-display font-semibold text-[clamp(1.05rem,4.6vw,2.25rem)] text-signal tabular-nums leading-none break-words">
                 {data.roi.toFixed(1)}×
               </p>
               <p className="font-mono text-[0.6rem] text-titanium/55 mt-1.5">por R$ 1 investido</p>
             </div>
             <div>
               <p className="mono-label text-[0.55rem] text-titanium/55 mb-1.5">Retorno / mês</p>
-              <p className="font-display font-semibold text-3xl md:text-4xl text-ivory tabular-nums leading-none">
+              <p className="font-display font-semibold text-[clamp(1.05rem,4.6vw,2.25rem)] text-ivory tabular-nums leading-none break-words">
                 {brl(data.totalReturn)}
               </p>
               <p className="font-mono text-[0.6rem] text-titanium/55 mt-1.5">projeção bruta</p>
             </div>
             <div>
               <p className="mono-label text-[0.55rem] text-titanium/55 mb-1.5">Lucro / ano</p>
-              <p className="font-display font-semibold text-3xl md:text-4xl text-amber tabular-nums leading-none">
+              <p className="font-display font-semibold text-[clamp(1.05rem,4.6vw,2.25rem)] text-amber tabular-nums leading-none break-words">
                 {brl(data.net * 12)}
               </p>
               <p className="font-mono text-[0.6rem] text-titanium/55 mt-1.5">retorno − investimento</p>

@@ -177,6 +177,11 @@ export default function LiquidButton({
     const geom = { cx: 0, cy: 0, bx: 0, by: 0, borderW: 1.6 * dpr };
     const s = { cx: 0, cy: 0, px: 0, py: 0, vx: 0, vy: 0, R: 0, B: 0, pressT: 0, pressE: 0, proxHist: [], engaged: false, peak: 0, wobStart: undefined, wobAmp: 1 };
     const mouse = { x: -99999, y: -99999, active: false, speed: 0, _lx: 0, _ly: 0, _lt: 0, _mt: 0 };
+    // TOUCH: não existe cursor, então o líquido ficava congelado. Aqui um
+    // "cursor virtual" orbita o botão sem parar enquanto ele está na tela —
+    // o efeito vive o tempo todo, como o usuário pediu. O toque dá um pico.
+    const COARSE_PTR = window.matchMedia('(pointer: coarse)').matches;
+    const touchFx = { onScreen: false, tap: 0 };
 
     const measure = () => {
       const cr = canvas.getBoundingClientRect();
@@ -224,6 +229,19 @@ export default function LiquidButton({
       const cfg = getCfg();
       const rect = canvas.getBoundingClientRect();
 
+      // cursor virtual do modo touch: orbita a pílula e reage ao toque
+      if (COARSE_PTR && touchFx.onScreen) {
+        const cr = canvas.getBoundingClientRect();
+        const tt = (performance.now() - t0) / 1000;
+        const rx = (geom.bx / dpr) * 0.72;
+        const ry = (geom.by / dpr) * 0.9;
+        mouse.x = cr.left + cr.width / 2 + Math.cos(tt * 1.15) * rx;
+        mouse.y = cr.top + cr.height / 2 + Math.sin(tt * 0.83) * ry;
+        mouse.active = true;
+        mouse.speed = 140;
+        mouse._mt = performance.now();
+        if (touchFx.tap > 0) { s.pressE = Math.max(s.pressE, touchFx.tap); touchFx.tap *= 0.92; }
+      }
       let prox = 0;
       if (mouse.active) {
         const cx = (mouse.x - rect.left) * dpr;
@@ -352,6 +370,15 @@ export default function LiquidButton({
       } else { s.wobX = s.cx; s.wobY = s.cy; }
       btn.dispatchEvent(new CustomEvent("liquidclick", { bubbles: true }));
     };
+    // liga/desliga o cursor virtual conforme o botão entra e sai da tela
+    let io;
+    if (COARSE_PTR) {
+      io = new IntersectionObserver(([e]) => { touchFx.onScreen = e.isIntersecting; }, { threshold: 0.15 });
+      io.observe(canvas);
+    }
+    const onTouchTap = () => { touchFx.tap = 1; s.pressT = 1; setTimeout(() => { s.pressT = 0; }, 160); };
+    if (COARSE_PTR) canvas.parentElement?.addEventListener('pointerdown', onTouchTap, { passive: true });
+
     const wrap = wrapRef.current;
     const onWrapDown = (e) => { if (e.target !== btn && hitShape(e.clientX, e.clientY)) s.pressT = 1; };
     const onBtnClick = () => activate();
@@ -392,6 +419,8 @@ export default function LiquidButton({
         wrap.removeEventListener("pointermove", onWrapMove);
       }
       window.removeEventListener("resize", measure);
+      io?.disconnect();
+      canvas.parentElement?.removeEventListener('pointerdown', onTouchTap);
     };
   }, [width, height]);
 
