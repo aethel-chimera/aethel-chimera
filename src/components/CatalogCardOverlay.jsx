@@ -317,9 +317,9 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
             </div>
 
             {/* A LOGO DO CLIENTE ocupa a área de arte, acima das informações.
-                Placa clara: as marcas têm cores próprias (a do CT é preta, a da
-                Clínica é azul-marinho) e sobre o card escuro sumiriam. object-
-                contain para nunca cortar/deformar a marca. */}
+                Os arquivos já são PLACAS 16:10 (fundo da marca + logo real
+                composta), então `object-cover` preenche a área por completo,
+                sem faixa vazia e sem deformar a marca. */}
             <div className="relative w-full h-24 md:h-auto md:aspect-[16/10] overflow-hidden bg-gradient-to-b from-ivory to-[#E8E6DE]">
               {/* h-full/w-full + object-contain: `max-h-full` sozinho não
                   segurava a imagem dentro da placa (logos altas vazavam por
@@ -327,7 +327,7 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
               <img
                 src={proj.logo || proj.image}
                 alt={`Logo ${proj.name}`}
-                className="absolute inset-0 h-full w-full object-contain p-4 md:p-6"
+                className="absolute inset-0 h-full w-full object-cover"
                 loading="lazy"
               />
             </div>

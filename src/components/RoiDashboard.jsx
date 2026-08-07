@@ -20,6 +20,16 @@ const brl = (v) =>
     ? 'R$ ' + Math.round(v).toLocaleString('pt-BR')
     : 'R$ ' + Math.round(v)
 
+// Faixa do slider (precisa bater com o <input type="range"> lá embaixo).
+const INVEST_MIN = 1500
+const INVEST_MAX = 50000
+// ESCALA FIXA das barras: o maior retorno possível de um canal no TETO do
+// investimento. Sem isso, normalizando pelo maior canal do momento, a razão
+// ret/maxRet é constante (todos os canais crescem juntos) e as barras ficavam
+// congeladas — só os números mudavam. Com a referência fixa, elas realmente
+// crescem e encolhem junto com o slider.
+const SCALE_REF = INVEST_MAX * Math.max(...CHANNELS.map((c) => c.alloc * c.mult))
+
 export default function RoiDashboard({ invest, setInvest }) {
   const [hover, setHover] = useState(null)
 
@@ -32,8 +42,7 @@ export default function RoiDashboard({ invest, setInvest }) {
     const totalReturn = rows.reduce((s, r) => s + r.ret, 0)
     const roi = totalReturn / invest // R$ de retorno por R$ 1
     const net = totalReturn - invest
-    const maxRet = Math.max(...rows.map((r) => r.ret))
-    return { rows, totalReturn, roi, net, maxRet }
+    return { rows, totalReturn, roi, net }
   }, [invest])
 
   const active = hover ? data.rows.find((r) => r.key === hover) : null
@@ -63,8 +72,8 @@ export default function RoiDashboard({ invest, setInvest }) {
           <input
             id="roi-invest"
             type="range"
-            min={1500}
-            max={50000}
+            min={INVEST_MIN}
+            max={INVEST_MAX}
             step={500}
             value={invest}
             onChange={(e) => setInvest(Number(e.target.value))}
@@ -72,8 +81,8 @@ export default function RoiDashboard({ invest, setInvest }) {
             aria-valuetext={brl(invest) + ' por mês'}
           />
           <div className="flex justify-between mono-label text-[0.55rem] text-titanium/45 mt-3">
-            <span>R$ 1.500</span>
-            <span>R$ 50.000</span>
+            <span>{brl(INVEST_MIN)}</span>
+            <span>{brl(INVEST_MAX)}</span>
           </div>
 
           <div className="grid grid-cols-3 gap-3 mt-8" role="group" aria-label="Atalhos de investimento">
@@ -123,7 +132,9 @@ export default function RoiDashboard({ invest, setInvest }) {
           {/* breakdown por canal — barras coloridas, reativas ao hover */}
           <div className="space-y-3.5" onMouseLeave={() => setHover(null)}>
             {data.rows.map((r) => {
-              const w = (r.ret / data.maxRet) * 100
+              // escala FIXA (não relativa ao maior canal do momento), para a
+              // barra acompanhar o slider. Piso de 2% p/ o canal nunca sumir.
+              const w = Math.max(2, Math.min(100, (r.ret / SCALE_REF) * 100))
               const dim = hover && hover !== r.key
               return (
                 <div

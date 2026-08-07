@@ -57,14 +57,29 @@ function Diagnostic({ chart, shown, factor }) {
                 <span className="text-amber tabular-nums">meta {fmt(proj, it.unit)}</span>
               </span>
             </div>
+            {/* DUAS CAMADAS para a leitura do valor ser imediata:
+                1) faixa translúcida até a META projetada (o ganho possível);
+                2) faixa sólida até o valor ATUAL (onde o site está hoje).
+                Antes só havia a barra do atual + um tracinho, e o gráfico
+                lia como se estivesse vazio. */}
             <div className="relative h-2.5 rounded-full bg-ivory/[0.08] overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full"
+                style={{
+                  width: shown ? `${metaW}%` : '0%',
+                  transition: `width 0.7s ${EASE}`,
+                  transitionDelay: `${i * 45}ms`,
+                  background: `${c}33`,
+                }}
+              />
               <div
                 className="chart-fill absolute inset-y-0 left-0 rounded-full"
                 style={{
                   width: shown ? `${atualW}%` : '0%',
                   transition: `width 0.6s ${EASE}`,
                   transitionDelay: `${i * 45}ms`,
-                  background: `linear-gradient(90deg, ${c}55, ${c})`,
+                  background: `linear-gradient(90deg, ${c}99, ${c})`,
+                  boxShadow: `0 0 12px ${c}55`,
                   '--flow-delay': `${i * 0.55}s`,
                 }}
               />
