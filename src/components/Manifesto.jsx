@@ -42,6 +42,9 @@ const NATURES = [
 
 export default function Manifesto({ reducedMotion }) {
   const rootRef = useRef(null)
+  // no celular a tela é pequena e o texto passa rápido: partir de 0.28 deixava
+  // a frase quase ilegível. Base mais alta no touch, sem perder o efeito.
+  const baseOpacity = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches ? 0.4 : 0.28
 
   // acende o texto palavra a palavra. no desktop com pin; em telas menores
   // (onde os cards empilham) o pin sairia da tela, então acende no scroll normal.
@@ -79,8 +82,8 @@ export default function Manifesto({ reducedMotion }) {
         stagger: 0.03,
         scrollTrigger: {
           trigger: rootRef.current,
-          start: 'top 85%',
-          end: 'bottom 60%',
+          start: 'top 90%',
+          end: 'bottom 75%',
           scrub: 0.5,
           invalidateOnRefresh: true,
         },
@@ -165,7 +168,7 @@ export default function Manifesto({ reducedMotion }) {
                 className={`manifesto-word inline-block mr-[0.32em] ${
                   KEYWORDS.has(word) ? 'text-amber font-serif italic' : ''
                 }`}
-                style={{ opacity: reducedMotion ? 1 : 0.28 }}
+                style={{ opacity: reducedMotion ? 1 : baseOpacity }}
               >
                 {word}
               </span>

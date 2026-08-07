@@ -77,12 +77,13 @@ export default function DotField({ className = '' }) {
       mouse.y = 1 - scrollProg
     }
 
-    if (coarse) {
-      window.addEventListener('scroll', onScroll, { passive: true })
-      onScroll()
-    } else {
-      window.addEventListener('mousemove', onMove, { passive: true })
-    }
+    // O SCROLL alimenta em TODOS os aparelhos (no celular é o único gesto
+    // disponível; no desktop vira um brilho de base). O hover só é escutado
+    // onde existe cursor, e soma por cima. Assim o efeito nunca fica preso a
+    // um matchMedia que pode falhar no aparelho real.
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    if (!coarse) window.addEventListener('mousemove', onMove, { passive: true })
 
     const sin = Math.sin, cos = Math.cos
     let raf = 0
@@ -101,10 +102,10 @@ export default function DotField({ className = '' }) {
       // TOUCH: o acento é comandado pelo SCROLL — acende conforme a faixa
       // cruza a tela e recebe um empurrão da velocidade do dedo.
       // DESKTOP: segue o hover, como antes.
-      const target = coarse
-        ? Math.min(1, 0.15 + 0.6 * scrollProg + 0.45 * scrollKick)
-        : mouse.inside ? 1 : 0
-      hov += (target - hov) * (coarse ? 0.12 : 0.05)
+      const byScroll = Math.min(1, 0.18 + 0.62 * scrollProg + 0.4 * scrollKick)
+      const byHover = mouse.inside ? 1 : 0
+      const target = Math.max(byScroll, byHover)
+      hov += (target - hov) * 0.1
       scrollKick *= 0.94 // o impulso decai quando o dedo para
 
       ctx.clearRect(0, 0, W, H)
