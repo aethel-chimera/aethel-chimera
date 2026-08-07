@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import SectionHead from './SectionHead'
+import { INVEST_MIN, INVEST_MAX, INVEST_REF } from '../data'
 
 // ---- Calculadora de Retorno (ROI) ----
 // Métrica "Índice de Retorno Aethel": o cliente define o investimento mensal e
@@ -8,11 +9,11 @@ import SectionHead from './SectionHead'
 //   SEO ~7,5x · mídia paga ~2–4x (ROAS) · conteúdo/social ~3x · automação/e-mail
 //   até ~40x · benchmark "bom" do setor = 5x. (Valores conservadores e mesclados.)
 const CHANNELS = [
-  { key: 'trafego', label: 'Gestão de Tráfego', alloc: 0.3, mult: 3.2, color: '#E0A458', note: 'ROAS de mídia paga otimizada (Meta / Google).' },
-  { key: 'sites', label: 'Sites & SEO', alloc: 0.25, mult: 5.0, color: '#9A7BD8', note: 'Tráfego orgânico que compõe mês a mês (ativo de longo prazo).' },
-  { key: 'lp', label: 'Landing Pages · CRO', alloc: 0.15, mult: 4.0, color: '#C9A66B', note: 'Otimização de conversão: mais venda com o mesmo tráfego.' },
-  { key: 'social', label: 'Social & Conteúdo', alloc: 0.15, mult: 3.0, color: '#9A85C4', note: 'Alcance, autoridade e demanda de marca.' },
-  { key: 'auto', label: 'Automações & CRM', alloc: 0.15, mult: 6.0, color: '#5FA391', note: 'Retenção e LTV (fluxos de e-mail/CRM — o maior retorno por R$).' },
+  { key: 'trafego', label: 'Gestão de Tráfego', alloc: 0.3, mult: 3.2, sat: 0.22, color: '#E0A458', note: 'ROAS de mídia paga otimizada (Meta / Google).' },
+  { key: 'sites', label: 'Sites & SEO', alloc: 0.25, mult: 5.0, sat: 0.07, color: '#9A7BD8', note: 'Tráfego orgânico que compõe mês a mês (ativo de longo prazo).' },
+  { key: 'lp', label: 'Landing Pages · CRO', alloc: 0.15, mult: 4.0, sat: 0.10, color: '#C9A66B', note: 'Otimização de conversão: mais venda com o mesmo tráfego.' },
+  { key: 'social', label: 'Social & Conteúdo', alloc: 0.15, mult: 3.0, sat: 0.15, color: '#9A85C4', note: 'Alcance, autoridade e demanda de marca.' },
+  { key: 'auto', label: 'Automações & CRM', alloc: 0.15, mult: 6.0, sat: 0.04, color: '#5FA391', note: 'Retenção e LTV (fluxos de e-mail/CRM — o maior retorno por R$).' },
 ]
 
 const brl = (v) =>
@@ -20,15 +21,30 @@ const brl = (v) =>
     ? 'R$ ' + Math.round(v).toLocaleString('pt-BR')
     : 'R$ ' + Math.round(v)
 
-// Faixa do slider (precisa bater com o <input type="range"> lá embaixo).
-const INVEST_MIN = 1500
-const INVEST_MAX = 50000
-// ESCALA FIXA das barras: o maior retorno possível de um canal no TETO do
-// investimento. Sem isso, normalizando pelo maior canal do momento, a razão
-// ret/maxRet é constante (todos os canais crescem juntos) e as barras ficavam
-// congeladas — só os números mudavam. Com a referência fixa, elas realmente
-// crescem e encolhem junto com o slider.
-const SCALE_REF = INVEST_MAX * Math.max(...CHANNELS.map((c) => c.alloc * c.mult))
+// ---- RETORNO COM SATURAÇÃO (retornos decrescentes) ----
+// Marketing não escala linearmente: público satura, CPM sobe. Um modelo linear
+// projetaria R$ 832 mil/mês em R$ 200 mil de verba — promessa que não se
+// sustenta. Aqui cada canal cresce por uma lei de potência:
+//     retorno = mult × gasto_ref × (gasto / gasto_ref)^(1 − sat)
+// `sat` é o quanto o canal satura: mídia paga satura rápido (0,22); SEO e CRM
+// compõem e seguram bem (0,07 / 0,04).
+// ÂNCORA: em INVEST_REF (R$ 8.000) o expoente não muda nada e a projeção bate
+// EXATAMENTE os multiplicadores de benchmark — ROI 4,16×.
+function channelReturn(c, invest) {
+  const spend = invest * c.alloc
+  const spendRef = INVEST_REF * c.alloc
+  if (spend <= 0) return 0
+  return c.mult * spendRef * Math.pow(spend / spendRef, 1 - c.sat)
+}
+
+// ESCALA FIXA das barras: o maior retorno possível no TETO do slider, com 10%
+// de folga p/ nenhuma barra encostar em 100%. Fixa (e não relativa ao maior
+// canal do momento) porque só assim a barra acompanha o slider.
+const SCALE_REF = 1.1 * Math.max(...CHANNELS.map((c) => channelReturn(c, INVEST_MAX)))
+// A faixa é de 133× (R$1.500 a R$200.000): numa escala linear os valores baixos
+// virariam fiapos invisíveis. O gama comprime o topo e abre a base, mantendo a
+// ordem entre canais — e cada barra continua rotulada com o valor exato em R$.
+const BAR_GAMMA = 0.7
 
 export default function RoiDashboard({ invest, setInvest }) {
   const [hover, setHover] = useState(null)
@@ -36,7 +52,7 @@ export default function RoiDashboard({ invest, setInvest }) {
   const data = useMemo(() => {
     const rows = CHANNELS.map((c) => {
       const spent = invest * c.alloc
-      const ret = spent * c.mult
+      const ret = channelReturn(c, invest)
       return { ...c, spent, ret }
     })
     const totalReturn = rows.reduce((s, r) => s + r.ret, 0)
@@ -86,7 +102,7 @@ export default function RoiDashboard({ invest, setInvest }) {
           </div>
 
           <div className="grid grid-cols-3 gap-3 mt-8" role="group" aria-label="Atalhos de investimento">
-            {[3000, 8000, 20000].map((v) => (
+            {[8000, 30000, 100000].map((v) => (
               <button
                 key={v}
                 onClick={() => setInvest(v)}
@@ -132,9 +148,7 @@ export default function RoiDashboard({ invest, setInvest }) {
           {/* breakdown por canal — barras coloridas, reativas ao hover */}
           <div className="space-y-3.5" onMouseLeave={() => setHover(null)}>
             {data.rows.map((r) => {
-              // escala FIXA (não relativa ao maior canal do momento), para a
-              // barra acompanhar o slider. Piso de 2% p/ o canal nunca sumir.
-              const w = Math.max(2, Math.min(100, (r.ret / SCALE_REF) * 100))
+              const w = Math.max(1.5, Math.min(100, Math.pow(r.ret / SCALE_REF, BAR_GAMMA) * 100))
               const dim = hover && hover !== r.key
               return (
                 <div

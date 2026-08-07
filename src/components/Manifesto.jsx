@@ -47,40 +47,68 @@ export default function Manifesto({ reducedMotion }) {
   // (onde os cards empilham) o pin sairia da tela, então acende no scroll normal.
   useEffect(() => {
     if (reducedMotion) return
-    const ctx = gsap.context(() => {
-      const words = rootRef.current.querySelectorAll('.manifesto-word')
-      const mm = gsap.matchMedia()
+    // O matchMedia NÃO pode ficar aninhado num gsap.context(): o revert do
+    // context derrubava os registros e, no mobile, o texto ficava congelado em
+    // opacity 0.28 (nenhuma palavra acendia). Padrão correto: matchMedia na
+    // raiz, com escopo, e mm.revert() na limpeza.
+    const mm = gsap.matchMedia(rootRef)
 
-      mm.add('(min-width: 1280px)', () => {
-        gsap.to(words, {
-          opacity: 1,
-          ease: 'none',
-          stagger: 0.06,
-          scrollTrigger: {
-            trigger: rootRef.current,
-            start: 'top top',
-            end: '+=140%',
-            pin: true,
-            scrub: 0.6,
-          },
-        })
+    // DESKTOP: pin + scrub (a seção "segura" a tela enquanto o texto acende).
+    mm.add('(min-width: 1280px) and (pointer: fine)', () => {
+      gsap.to('.manifesto-word', {
+        opacity: 1,
+        ease: 'none',
+        stagger: 0.06,
+        scrollTrigger: {
+          trigger: rootRef.current,
+          start: 'top top',
+          end: '+=140%',
+          pin: true,
+          scrub: 0.6,
+          invalidateOnRefresh: true,
+        },
       })
+    })
 
-      mm.add('(max-width: 1279px)', () => {
-        gsap.to(words, {
-          opacity: 1,
-          ease: 'none',
-          stagger: 0.04,
-          scrollTrigger: {
-            trigger: rootRef.current,
-            start: 'top 80%',
-            end: 'bottom 65%',
-            scrub: 0.6,
-          },
-        })
+    // MOBILE/TABLET: sem pin (prender a tela atrapalha o scroll por toque) —
+    // o texto acende conforme a seção atravessa a viewport, no ritmo do dedo.
+    mm.add('(max-width: 1279px), (pointer: coarse)', () => {
+      gsap.to('.manifesto-word', {
+        opacity: 1,
+        ease: 'none',
+        stagger: 0.03,
+        scrollTrigger: {
+          trigger: rootRef.current,
+          start: 'top 85%',
+          end: 'bottom 60%',
+          scrub: 0.5,
+          invalidateOnRefresh: true,
+        },
       })
-    }, rootRef)
-    return () => ctx.revert()
+    })
+
+    return () => mm.revert()
+  }, [reducedMotion])
+
+  // MOBILE (sem mouse): o tilt por cursor não existe, então o card ganha o
+  // mesmo destaque por SCROLL — acende e sobe levemente quando entra no centro
+  // da tela, e volta ao sair. Mesma leitura do hover, no gesto do celular.
+  useEffect(() => {
+    if (reducedMotion || window.matchMedia('(pointer: fine)').matches) return
+    const cards = rootRef.current.querySelectorAll('.nature-card')
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          const on = e.intersectionRatio > 0.55
+          e.target.style.setProperty('--rx', on ? '-3deg' : '0deg')
+          e.target.style.setProperty('--mx', on ? '6px' : '0px')
+          e.target.classList.toggle('is-active', on)
+        })
+      },
+      { threshold: [0, 0.55, 1], rootMargin: '-15% 0px -15% 0px' }
+    )
+    cards.forEach((c) => io.observe(c))
+    return () => io.disconnect()
   }, [reducedMotion])
 
   // tilt 3D sutil + brilho que segue o cursor em cada card (apenas mouse fino)

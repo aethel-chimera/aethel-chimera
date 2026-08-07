@@ -42,8 +42,10 @@ export default function DotField({ className = '' }) {
     const ro = new ResizeObserver(resize)
     ro.observe(canvas)
 
-    // TOUCH: não existe hover no celular — sem isso a onda ficaria cinza para
-    // sempre. Em ponteiro grosso o acento entra sozinho, num vaivém lento.
+    // No DESKTOP o cursor comanda (hover). No MOBILE não existe hover — quem
+    // comanda é o SCROLL: a cor acende conforme a faixa atravessa a tela e
+    // ganha um empurrão com a velocidade do dedo. Mesma linguagem visual,
+    // acionada pelo gesto que existe em cada aparelho.
     const coarse = window.matchMedia('(pointer: coarse)').matches
 
     // hover: detectado por bounds (canvas é pointer-events-none, não bloqueia texto)
@@ -57,7 +59,30 @@ export default function DotField({ className = '' }) {
         mouse.y = (e.clientY - r.top) / r.height
       }
     }
-    window.addEventListener('mousemove', onMove, { passive: true })
+
+    // --- comando por SCROLL (mobile) ---
+    let scrollProg = 0 // 0 = faixa entrando por baixo, 1 = saindo por cima
+    let scrollKick = 0 // impulso da velocidade do dedo, decai sozinho
+    let lastY = window.scrollY
+    const onScroll = () => {
+      const r = canvas.getBoundingClientRect()
+      const vh = window.innerHeight || 1
+      // progresso da faixa cruzando a viewport
+      scrollProg = Math.max(0, Math.min(1, 1 - (r.top + r.height) / (vh + r.height)))
+      const dy = Math.abs(window.scrollY - lastY)
+      lastY = window.scrollY
+      scrollKick = Math.min(1, scrollKick + dy / 120)
+      // a "origem" da ondulação acompanha o dedo subindo/descendo a página
+      mouse.x = 0.5 + 0.35 * Math.sin(scrollProg * Math.PI * 2)
+      mouse.y = 1 - scrollProg
+    }
+
+    if (coarse) {
+      window.addEventListener('scroll', onScroll, { passive: true })
+      onScroll()
+    } else {
+      window.addEventListener('mousemove', onMove, { passive: true })
+    }
 
     const sin = Math.sin, cos = Math.cos
     let raf = 0
@@ -73,9 +98,14 @@ export default function DotField({ className = '' }) {
       // c/ o overscan), Y usa a ALTURA da faixa (amplitude + recuo do plano).
       const scaleX = W * 1.05
       const scaleY = H * 1.7
-      // no touch, o acento pulsa sozinho (0.15..0.75); no desktop segue o hover
-      const target = coarse ? 0.45 + 0.3 * sin(t * 0.6) : mouse.inside ? 1 : 0
-      hov += (target - hov) * 0.05
+      // TOUCH: o acento é comandado pelo SCROLL — acende conforme a faixa
+      // cruza a tela e recebe um empurrão da velocidade do dedo.
+      // DESKTOP: segue o hover, como antes.
+      const target = coarse
+        ? Math.min(1, 0.15 + 0.6 * scrollProg + 0.45 * scrollKick)
+        : mouse.inside ? 1 : 0
+      hov += (target - hov) * (coarse ? 0.12 : 0.05)
+      scrollKick *= 0.94 // o impulso decai quando o dedo para
 
       ctx.clearRect(0, 0, W, H)
       // cor: neutra → acento que cicla matiz no hover
@@ -147,6 +177,7 @@ export default function DotField({ className = '' }) {
       cancelAnimationFrame(raf)
       ro.disconnect()
       window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('scroll', onScroll)
     }
   }, [])
 

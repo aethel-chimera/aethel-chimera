@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { PROCESS } from '../data'
+import { PROCESS, INVEST_MIN, INVEST_MAX, INVEST_REF } from '../data'
 import SectionHead from './SectionHead'
 import ProcessChart from './ProcessChart'
 
@@ -10,13 +10,12 @@ gsap.registerPlugin(ScrollTrigger)
 // Fator de entrega: quanto do alvo a obra atinge conforme o investimento mensal.
 // Ancorado em 1,0 no investimento de referência (R$ 8.000) — então no padrão o
 // gráfico mostra exatamente os números da oferta; abaixo entrega menos, acima um
-// pouco mais (retornos decrescentes). Faixa do slider: R$ 1.500–50.000.
+// pouco mais (retornos decrescentes). Faixa do slider: INVEST_MIN–INVEST_MAX (data.js).
 function deliveryFactor(invest) {
-  const REF = 8000
   const f =
-    invest <= REF
-      ? 0.55 + 0.45 * ((invest - 1500) / (REF - 1500))
-      : 1 + 0.14 * ((invest - REF) / (50000 - REF))
+    invest <= INVEST_REF
+      ? 0.55 + 0.45 * ((invest - INVEST_MIN) / (INVEST_REF - INVEST_MIN))
+      : 1 + 0.14 * ((invest - INVEST_REF) / (INVEST_MAX - INVEST_REF))
   return Math.max(0.55, Math.min(1.14, f))
 }
 

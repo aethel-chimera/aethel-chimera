@@ -3,6 +3,16 @@
 // componentes: cada seção consome apenas estes arrays.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// FAIXA DE INVESTIMENTO — fonte única para a Calculadora (RoiDashboard) e para
+// os gráficos do Protocolo (Process). Mudou aqui, muda nos dois.
+// REF é o investimento de referência: é nele que a projeção bate EXATAMENTE os
+// multiplicadores de benchmark (ROI 4,16×), sem correção de saturação.
+// ---------------------------------------------------------------------------
+export const INVEST_MIN = 1500
+export const INVEST_MAX = 200000
+export const INVEST_REF = 8000
+
 export const SERVICES = [
   {
     id: '01',
