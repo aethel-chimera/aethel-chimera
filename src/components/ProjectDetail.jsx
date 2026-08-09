@@ -73,14 +73,29 @@ export default function ProjectDetail({ index, onClose, onNav }) {
               {project.name}
             </h2>
             <p className="detail-reveal text-titanium text-lg leading-relaxed max-w-2xl">{project.summary}</p>
-            <a
-              href={project.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="detail-reveal arrow-link mt-8 inline-flex"
-            >
-              Visitar site <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
+            {/* CANAIS REAIS do cliente — só rende o que está confirmado */}
+            <div className="detail-reveal mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              {project.site && (
+                <a href={project.site} target="_blank" rel="noopener noreferrer" className="arrow-link inline-flex">
+                  Visitar site <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
+              )}
+              {project.instagram && (
+                <a href={project.instagram} target="_blank" rel="noopener noreferrer" className="arrow-link inline-flex">
+                  Instagram <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
+              )}
+              {project.tiktok && (
+                <a href={project.tiktok} target="_blank" rel="noopener noreferrer" className="arrow-link inline-flex">
+                  TikTok <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
+              )}
+              {project.whatsapp && (
+                <a href={project.whatsapp} target="_blank" rel="noopener noreferrer" className="arrow-link inline-flex">
+                  WhatsApp <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
+              )}
+            </div>
           </div>
 
           <div className="detail-reveal">

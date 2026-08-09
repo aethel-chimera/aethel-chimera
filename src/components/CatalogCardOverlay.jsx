@@ -363,7 +363,7 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
 
               {/* canais REAIS do cliente — stopPropagation p/ o clique não abrir
                   o case por trás. Só rendem o que está confirmado no CRM. */}
-              {(proj.instagram || proj.site || proj.whatsapp) && (
+              {(proj.instagram || proj.tiktok || proj.site || proj.whatsapp) && (
                 <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-ivory/10 pt-4">
                   {proj.instagram && (
                     <a
@@ -374,6 +374,17 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                       className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
                     >
                       Instagram ↗
+                    </a>
+                  )}
+                  {proj.tiktok && (
+                    <a
+                      href={proj.tiktok}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                    >
+                      TikTok ↗
                     </a>
                   )}
                   {proj.site && (
