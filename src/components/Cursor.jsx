@@ -31,10 +31,14 @@ export default function Cursor() {
     }
     raf = requestAnimationFrame(tick)
     window.addEventListener('mousemove', onMove)
+    // mouseover cobre o caso de o DOM trocar SOB o cursor parado (abrir/fechar
+    // o case): reavalia o alvo e limpa o rótulo herdado da tela anterior.
+    window.addEventListener('mouseover', onMove)
 
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseover', onMove)
       document.body.classList.remove('custom-cursor')
     }
   }, [])

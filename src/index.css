@@ -82,7 +82,10 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 200;
+  /* ACIMA de tudo, inclusive do case (z-200): com z igual, o modal pintava por
+     cima do cursor e — como o nativo fica oculto — o usuário perdia o ponteiro
+     dentro do case, com o anel congelado da tela anterior. */
+  z-index: 400;
   pointer-events: none;
   border-radius: 9999px;
   will-change: transform;
