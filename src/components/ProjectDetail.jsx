@@ -85,6 +85,11 @@ export default function ProjectDetail({ index, onClose, onNav }) {
                   Instagram <ArrowUpRight size={14} aria-hidden="true" />
                 </a>
               )}
+              {project.instagramAlt && (
+                <a href={project.instagramAlt} target="_blank" rel="noopener noreferrer" className="arrow-link inline-flex">
+                  {project.instagramAltLabel || 'Instagram 2'} <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
+              )}
               {project.tiktok && (
                 <a href={project.tiktok} target="_blank" rel="noopener noreferrer" className="arrow-link inline-flex">
                   TikTok <ArrowUpRight size={14} aria-hidden="true" />

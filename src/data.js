@@ -123,6 +123,7 @@ export const CATALOG = [
     tags: ['Landing Page', 'WhatsApp', 'Saúde'],
     site: 'https://linktr.ee/claudiodecaux',
     instagram: 'https://www.instagram.com/claudiodecaux/',
+    whatsapp: 'https://wa.me/5531988401292',
     url: 'https://linktr.ee/claudiodecaux',
     image: '/image/case-caux.webp',
     logo: '/image/logos/caux.webp',
@@ -139,6 +140,9 @@ export const CATALOG = [
     tags: ['Landing Page', 'Fitness', 'Modelagem 3D'],
     site: null, // diogopersonal.com.br ainda nao resolve — religar quando o dominio subir
     instagram: 'https://www.instagram.com/centro_de_treinamento_da/',
+    // perfil pessoal do Diogo — o usuário pediu os dois Instagrams no card
+    instagramAlt: 'https://www.instagram.com/diogoalanpersonal13/',
+    instagramAltLabel: 'Insta pessoal',
     whatsapp: 'https://wa.me/5531985014149',
     url: 'https://www.instagram.com/centro_de_treinamento_da/',
     image: '/image/case-diogo.webp',

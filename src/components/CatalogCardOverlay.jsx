@@ -376,6 +376,17 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                       Instagram ↗
                     </a>
                   )}
+                  {proj.instagramAlt && (
+                    <a
+                      href={proj.instagramAlt}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                    >
+                      {proj.instagramAltLabel || 'Instagram 2'} ↗
+                    </a>
+                  )}
                   {proj.tiktok && (
                     <a
                       href={proj.tiktok}
