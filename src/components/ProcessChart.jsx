@@ -37,8 +37,11 @@ function Diagnostic({ chart, shown, factor }) {
   return (
     <div className="space-y-5">
       {chart.items.map((it, i) => {
-        const max = it.scaleMax || 100
+        // a TRILHA tem 12% de folga sobre o teto: sem isso, no investimento
+        // máximo (fator 1,14) a meta clampava no teto e o tick colava na borda
+        // direita — o usuário não via mais a barra reagir ao slider.
         const ceil = it.scaleMax || 100
+        const max = ceil * 1.12
         // projeção: quanto da meta a obra atinge com o investimento escolhido
         const proj = Math.max(it.atual, Math.min(ceil, it.atual + (it.meta - it.atual) * factor))
         const atualW = Math.min(100, (it.atual / max) * 100)
@@ -69,7 +72,7 @@ function Diagnostic({ chart, shown, factor }) {
                   width: shown ? `${metaW}%` : '0%',
                   transition: `width 0.7s ${EASE}`,
                   transitionDelay: `${i * 45}ms`,
-                  background: `${c}33`,
+                  background: `${c}4D`,
                 }}
               />
               <div
@@ -78,8 +81,8 @@ function Diagnostic({ chart, shown, factor }) {
                   width: shown ? `${atualW}%` : '0%',
                   transition: `width 0.6s ${EASE}`,
                   transitionDelay: `${i * 45}ms`,
-                  background: `linear-gradient(90deg, ${c}99, ${c})`,
-                  boxShadow: `0 0 12px ${c}55`,
+                  background: `linear-gradient(90deg, ${c}CC, ${c})`,
+                  boxShadow: `0 0 14px ${c}77`,
                   '--flow-delay': `${i * 0.55}s`,
                 }}
               />
