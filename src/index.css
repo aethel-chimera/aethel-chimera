@@ -13,9 +13,11 @@
 
 html {
   scroll-behavior: auto;
-  /* `overflow-x: hidden` só no body não segura: o html continua rolando na
-     horizontal. Trava aqui também para nunca haver arrasto lateral no mobile. */
+  /* trava o arrasto lateral no mobile SEM quebrar position:sticky — `hidden`
+     cria um scroll container e desgruda os cards empilhados do Protocolo;
+     `clip` corta do mesmo jeito e preserva o sticky (fallback: hidden). */
   overflow-x: hidden;
+  overflow-x: clip;
   /* iOS: evita o zoom automático de texto ao virar o aparelho */
   -webkit-text-size-adjust: 100%;
 }
@@ -26,6 +28,7 @@ body {
   font-family: 'Space Grotesk', sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 ::selection {

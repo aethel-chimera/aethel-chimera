@@ -52,11 +52,11 @@ export default function Process({ reducedMotion, invest = 8000 }) {
 
       {/* Os indicadores de cada etapa reagem ao investimento definido na
           Calculadora de Retorno, logo acima (estado `invest` compartilhado). */}
-      <div className="space-y-6 md:space-y-0">
+      <div>
         {PROCESS.map((step, i) => (
           <div
             key={step.num}
-            className="process-card card-wave group relative md:sticky bg-obsidian-deep border border-ivory/10 rounded-2xl p-7 md:p-12 origin-top will-change-transform overflow-hidden"
+            className="process-card card-wave group sticky bg-obsidian-deep border border-ivory/10 rounded-2xl p-7 md:p-12 origin-top will-change-transform overflow-hidden"
             style={{ top: `calc(5rem + ${i * 1.1}rem)` }}
           >
             <div className="grid md:grid-cols-[1.05fr_0.95fr] gap-8 md:gap-12 items-center">
