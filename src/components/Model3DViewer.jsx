@@ -12,9 +12,9 @@ const MODEL_URL = '/models/lune-amethyste.glb'
 const COARSE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 const POSE = 0.46 // fração da timeline do golpe usada como pose fixa (0..1)
 
-function Swordsman() {
+function Swordsman({ src }) {
   const group = useRef(null)
-  const { scene, animations } = useGLTF(MODEL_URL)
+  const { scene, animations } = useGLTF(src)
   const { actions, names } = useAnimations(animations, group)
   const bounds = useBounds()
 
@@ -51,7 +51,8 @@ function Swordsman() {
   )
 }
 
-export default function Model3DViewer() {
+// `src` permite trocar o modelo exibido (galeria da vitrine 3D).
+export default function Model3DViewer({ src = MODEL_URL }) {
   return (
     <Canvas
       dpr={[1, 2]}
@@ -67,7 +68,7 @@ export default function Model3DViewer() {
       <spotLight position={[0, 9, 3]} angle={0.5} penumbra={1} intensity={1.4} />
       <Suspense fallback={null}>
         <Bounds observe margin={COARSE ? 1.45 : 1.15}>
-          <Swordsman />
+          <Swordsman src={src} />
         </Bounds>
       </Suspense>
       {/* TOUCH: UM dedo não gira — ele rola a página (senão o canvas sequestra
