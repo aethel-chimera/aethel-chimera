@@ -87,8 +87,48 @@
   </head>
   <body class="bg-obsidian">
     <div id="root">
+      <!-- CONTEÚDO ESTÁTICO PARA RASTREADORES (e LLMs). Esta é uma SPA: sem JS
+           o HTML vinha vazio e o Google/AEO não viam nada além das metatags.
+           O React substitui todo o #root ao montar, então isto só existe para
+           quem não executa JS. O texto ESPELHA o que a página renderiza —
+           não é cloaking, é o mesmo conteúdo em HTML inicial. -->
+      <main id="seo-static">
+        <h1>Presença digital é engenharia, não acaso.</h1>
+        <p>
+          A Aethel Chimera projeta, constrói e mantém o ecossistema digital completo da sua
+          empresa: site, tráfego, conteúdo e evolução contínua. Estúdio em Minas Gerais.
+        </p>
+
+        <h2>Serviços</h2>
+        <ul>
+          <li>Criação de Landing Pages — páginas para transformar visita em contato.</li>
+          <li>Reestruturação de Sites — redesign com migração sem perda de SEO.</li>
+          <li>Manutenção Mensal — monitoramento, backups e evolução contínua, a partir de R$ 497/mês.</li>
+          <li>Social Media — calendário editorial, design de posts e roteiros.</li>
+          <li>Gestão de Tráfego — Google Ads e Meta Ads operados com método.</li>
+          <li>Integrações e Automações — Pix, WhatsApp Business, CRM e agendamento.</li>
+          <li>Modelagem e Experiências 3D — ativos 3D próprios em Blender e páginas em WebGL.</li>
+        </ul>
+
+        <h2>Clientes</h2>
+        <ul>
+          <li>J'López Designer de Joias — joalheria, Ouro Preto/MG.</li>
+          <li>Clínica de Nutrição Cláudio de Caux — saúde e bem-estar, Itabira/MG.</li>
+          <li>CT Diogo Alan — fitness e performance, Itabira/MG.</li>
+          <li>Jota's Pizza — alimentação, Itabira/MG.</li>
+        </ul>
+
+        <h2>Contato</h2>
+        <ul>
+          <li><a href="https://wa.me/5531994828076">WhatsApp (31) 99482-8076</a></li>
+          <li><a href="https://wa.me/5531995793122">WhatsApp (31) 99579-3122</a></li>
+          <li><a href="mailto:aethelchimera@gmail.com">aethelchimera@gmail.com</a></li>
+          <li><a href="https://www.instagram.com/aethel.chimera/">Instagram @aethel.chimera</a></li>
+        </ul>
+      </main>
+
       <!-- splash estático: pinta instantaneamente (antes do JS), para FCP/LCP
-           baixos; o React substitui por seu próprio preloader ao montar -->
+           baixos; cobre o bloco acima e o React substitui tudo ao montar -->
       <div
         id="boot-splash"
         style="position:fixed;inset:0;background:#0B0B10;display:flex;align-items:center;justify-content:center;z-index:9999"
