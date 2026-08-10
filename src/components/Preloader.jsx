@@ -91,8 +91,15 @@ export default function Preloader({ onDone }) {
     }
     raf = requestAnimationFrame(tick)
 
+    // TRAVA DE SEGURANÇA: o reveal dependia SÓ do rAF e de todas as tasks
+    // resolverem. Se uma fonte/imagem pendurar na rede (targetProgress fica
+    // <100) ou o rAF for pausado, o site nunca aparecia — cortina preta eterna.
+    // Passados 6s, revela de qualquer jeito.
+    const failsafe = setTimeout(reveal, 6000)
+
     return () => {
       cancelAnimationFrame(raf)
+      clearTimeout(failsafe)
       clearInterval(wordTimer)
       document.body.style.overflow = ''
     }

@@ -106,7 +106,8 @@ export default function RoiDashboard({ invest, setInvest }) {
               <button
                 key={v}
                 onClick={() => setInvest(v)}
-                className={`mono-label text-[0.6rem] rounded-full py-2.5 border transition-colors ${
+                style={{ letterSpacing: '0.08em' }}
+                className={`mono-label text-[0.55rem] sm:text-[0.6rem] rounded-full py-2.5 px-1 border transition-colors text-center whitespace-nowrap flex items-center justify-center ${
                   invest === v
                     ? 'border-amber bg-amber/15 text-amber'
                     : 'border-ivory/15 text-titanium/70 hover:border-ivory/35 hover:text-ivory'

@@ -92,6 +92,8 @@ function hexToRgb(c) {
   return [1, 1, 1];
 }
 
+const COARSE_TEXT = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+
 export default function LiquidButton({
   children,
   width = 360,
@@ -482,8 +484,12 @@ export default function LiquidButton({
             font: `600 ${fontSize}px/1 'Space Grotesk', system-ui, sans-serif`,
             letterSpacing: "0.24em",
             textTransform: "uppercase",
-            color: textColor || color,
-            mixBlendMode: "difference",
+            // TOUCH: sem mix-blend (quebra sob ancestral com transform/opacity e
+            // sumia o texto na pílula cheia) — cor sólida contrastando com o
+            // preenchimento. Desktop mantém o difference, que lá funciona.
+            color: COARSE_TEXT ? "#0B0B10" : (textColor || color),
+            mixBlendMode: COARSE_TEXT ? "normal" : "difference",
+            textShadow: COARSE_TEXT ? "0 1px 2px rgba(244,242,236,.55)" : "none",
             userSelect: "none",
             whiteSpace: "nowrap",
           }}

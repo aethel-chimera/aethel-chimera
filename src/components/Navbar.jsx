@@ -121,7 +121,16 @@ export default function Navbar() {
 
       {/* menu mobile fullscreen com cortina */}
       {open && (
-        <div ref={menuRef} className="fixed inset-0 z-[99] bg-obsidian-deep flex flex-col justify-center px-8 md:hidden">
+        <div ref={menuRef} className="fixed inset-0 z-[120] bg-obsidian-deep flex flex-col justify-center px-8 md:hidden">
+          {/* o overlay agora cobre o header, então precisa do seu próprio
+              controle de fechar (o toggle do header fica por baixo) */}
+          <button
+            onClick={() => setOpen(false)}
+            className="mono-label absolute top-0 right-5 h-16 flex items-center text-ivory"
+            aria-label="Fechar menu"
+          >
+            Fechar
+          </button>
           <ul className="space-y-2">
             {NAV_LINKS.map((l, i) => (
               <li key={l.href} className="overflow-hidden">

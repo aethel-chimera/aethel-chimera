@@ -71,9 +71,9 @@ export default function Model3DViewer({ src = MODEL_URL }) {
           <Swordsman src={src} />
         </Bounds>
       </Suspense>
-      {/* TOUCH: UM dedo não gira — ele rola a página (senão o canvas sequestra
-          o scroll). DOIS dedos giram o modelo, como o arrastar do mouse no
-          desktop. Assim dá para descer a página E girar, como pedido. */}
+      {/* TOUCH: UM dedo gira o boneco (o usuário pediu manipulação direta). O
+          palco é uma caixa delimitada — para rolar a página basta tocar fora
+          dela. Dois dedos também giram. */}
       <OrbitControls
         makeDefault
         autoRotate
@@ -81,7 +81,7 @@ export default function Model3DViewer({ src = MODEL_URL }) {
         enableRotate
         enablePan={false}
         enableZoom={false}
-        touches={COARSE ? { ONE: null, TWO: TOUCH.ROTATE } : undefined}
+        touches={COARSE ? { ONE: TOUCH.ROTATE, TWO: TOUCH.ROTATE } : undefined}
         minPolarAngle={Math.PI / 3}
         maxPolarAngle={Math.PI / 1.85}
       />
