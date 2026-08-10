@@ -7,33 +7,83 @@
     <title>Aethel Chimera — Engenharia de Presença Digital</title>
     <meta
       name="description"
-      content="A Aethel Chimera projeta, constrói e mantém o ecossistema digital completo da sua empresa: sites de alta performance, tráfego pago, conteúdo e manutenção mensal contínua."
+      content="Engenharia de presença digital: sites de alta performance, tráfego pago, conteúdo, automações e modelagem 3D — com manutenção e evolução contínua."
     />
+    <!-- canonical: o site também responde em aliases *.vercel.app; isto define
+         o host oficial e evita conteúdo duplicado no índice -->
+    <link rel="canonical" href="https://www.aethelchimera.com/" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Aethel Chimera" />
+    <meta property="og:url" content="https://www.aethelchimera.com/" />
     <meta property="og:title" content="Aethel Chimera — Engenharia de Presença Digital" />
     <meta
       property="og:description"
-      content="Site, tráfego, conteúdo e evolução contínua. Um único organismo digital para a sua empresa."
+      content="Site, tráfego, conteúdo, automações e modelagem 3D. Um único organismo digital para a sua empresa."
     />
-    <meta property="og:image" content="/image/og.png" />
+    <!-- OG absoluta e 1200×630 (a anterior era relativa e 491×604) -->
+    <meta property="og:image" content="https://www.aethelchimera.com/image/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="pt_BR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Aethel Chimera — Engenharia de Presença Digital" />
+    <meta
+      name="twitter:description"
+      content="Site, tráfego, conteúdo, automações e modelagem 3D. Um único organismo digital para a sua empresa."
+    />
+    <meta name="twitter:image" content="https://www.aethelchimera.com/image/og.png" />
     <meta name="theme-color" content="#0B0B10" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- fontes carregadas de forma assíncrona (não bloqueiam o render); o texto
-         aparece de imediato com a fonte de sistema e troca via display=swap -->
+    <!-- stylesheet direto (sem handler inline de onload, que a CSP script-src
+         'self' bloquearia); preconnect + display=swap seguram o FCP -->
     <link
-      rel="preload"
-      as="style"
+      rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
     />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap"
-      />
-    </noscript>
+    <!-- dados estruturados: quem somos, contatos e serviços (schema.org) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "ProfessionalService",
+          "@id": "https://www.aethelchimera.com/#org",
+          "name": "Aethel Chimera",
+          "description": "Estúdio de engenharia de presença digital: criação e reestruturação de sites, landing pages, gestão de tráfego, social media, integrações e automações, modelagem 3D e manutenção mensal.",
+          "url": "https://www.aethelchimera.com/",
+          "logo": "https://www.aethelchimera.com/image/logo-white.png",
+          "image": "https://www.aethelchimera.com/image/og.png",
+          "email": "aethelchimera@gmail.com",
+          "telephone": "+55-31-99482-8076",
+          "address": { "@type": "PostalAddress", "addressRegion": "MG", "addressCountry": "BR" },
+          "areaServed": "BR",
+          "sameAs": ["https://www.instagram.com/aethel.chimera/"],
+          "contactPoint": [
+            { "@type": "ContactPoint", "telephone": "+55-31-99482-8076", "contactType": "sales", "availableLanguage": "pt-BR" },
+            { "@type": "ContactPoint", "telephone": "+55-31-99579-3122", "contactType": "customer service", "availableLanguage": "pt-BR" }
+          ],
+          "makesOffer": [
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Criação de Landing Pages" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Reestruturação de Sites" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Manutenção Mensal" }, "priceSpecification": { "@type": "PriceSpecification", "price": 497, "priceCurrency": "BRL" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Social Media" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Gestão de Tráfego" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Integrações e Automações" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Modelagem e Experiências 3D" } }
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.aethelchimera.com/#site",
+          "url": "https://www.aethelchimera.com/",
+          "name": "Aethel Chimera",
+          "inLanguage": "pt-BR",
+          "publisher": { "@id": "https://www.aethelchimera.com/#org" }
+        }
+      ]
+    }
+    </script>
   </head>
   <body class="bg-obsidian">
     <div id="root">

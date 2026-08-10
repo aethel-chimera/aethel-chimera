@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://aethelchimera.com.br/sitemap.xml
+Sitemap: https://www.aethelchimera.com/sitemap.xml
