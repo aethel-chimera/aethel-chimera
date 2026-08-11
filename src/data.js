@@ -138,13 +138,13 @@ export const CATALOG = [
       'Centro de treinamento e consultoria: foco, disciplina e execução. Landing page cinematográfica para captar alunos e consultorias.',
     metrics: ['Landing page cinematográfica', 'Captação de alunos e consultoria', 'Experiência 3D no hero'],
     tags: ['Landing Page', 'Fitness', 'Modelagem 3D'],
-    site: null, // diogopersonal.com.br ainda nao resolve — religar quando o dominio subir
+    site: 'https://diogoalanpersonal.com',
     instagram: 'https://www.instagram.com/centro_de_treinamento_da/',
     // perfil pessoal do Diogo — o usuário pediu os dois Instagrams no card
     instagramAlt: 'https://www.instagram.com/diogoalanpersonal13/',
     instagramAltLabel: 'Insta pessoal',
     whatsapp: 'https://wa.me/5531985014149',
-    url: 'https://www.instagram.com/centro_de_treinamento_da/',
+    url: 'https://diogoalanpersonal.com',
     image: '/image/case-diogo.webp',
     logo: '/image/logos/diogo.webp',
   },
