@@ -408,13 +408,16 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
             </div>
 
             {/* A LOGO DO CLIENTE ocupa a área de arte, acima das informações.
-                Os arquivos já são PLACAS 16:10 (fundo da marca + logo real
-                composta), então `object-cover` preenche a área por completo,
-                sem faixa vazia e sem deformar a marca. */}
-            <div className="relative w-full h-20 md:h-auto md:aspect-[16/10] overflow-hidden bg-gradient-to-b from-ivory to-[#E8E6DE]">
-              {/* h-full/w-full + object-contain: `max-h-full` sozinho não
-                  segurava a imagem dentro da placa (logos altas vazavam por
-                  cima do texto do card). */}
+                Os arquivos são PLACAS 1280x800 (16:10) — fundo da marca com a
+                logo real composta por cima e centralizada.
+                A caixa mantém a MESMA proporção da arte em todas as larguras, e
+                é isso que garante corte zero. Com altura fixa (eram 80px no
+                mobile) a imagem escalava por largura para ~224px e o
+                object-cover mostrava só a faixa central de ~36%, decepando o
+                selo do Jota's e o texto do CT Diogo Alan. A marca mais extensa
+                das quatro ocupa 74% da altura da placa, então nada menor que a
+                placa inteira resolve. */}
+            <div className="relative w-full aspect-[16/10] overflow-hidden bg-gradient-to-b from-ivory to-[#E8E6DE]">
               <img
                 src={proj.logo || proj.image}
                 alt={`Logo ${proj.name}`}
