@@ -42,52 +42,37 @@ const NATURES = [
 
 export default function Manifesto({ reducedMotion }) {
   const rootRef = useRef(null)
-  // no celular a tela é pequena e o texto passa rápido: partir de 0.28 deixava
-  // a frase quase ilegível. Base mais alta no touch, sem perder o efeito.
-  const baseOpacity = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches ? 0.4 : 0.28
 
-  // acende o texto palavra a palavra. no desktop com pin; em telas menores
-  // (onde os cards empilham) o pin sairia da tela, então acende no scroll normal.
+  // O texto nasce legível (opacity 1) para todo mundo. Só o desktop apaga as
+  // palavras e as acende no scroll: no mobile o efeito não funcionava bem (tela
+  // curta, a frase passa rápido demais e ficava só um texto apagado).
   useEffect(() => {
     if (reducedMotion) return
     // O matchMedia NÃO pode ficar aninhado num gsap.context(): o revert do
-    // context derrubava os registros e, no mobile, o texto ficava congelado em
-    // opacity 0.28 (nenhuma palavra acendia). Padrão correto: matchMedia na
-    // raiz, com escopo, e mm.revert() na limpeza.
+    // context derrubava os registros. Padrão correto: matchMedia na raiz, com
+    // escopo, e mm.revert() na limpeza (que também devolve o texto ao estado
+    // cheio se a janela sair do breakpoint de desktop).
     const mm = gsap.matchMedia(rootRef)
 
     // DESKTOP: pin + scrub (a seção "segura" a tela enquanto o texto acende).
     mm.add('(min-width: 1280px) and (pointer: fine)', () => {
-      gsap.to('.manifesto-word', {
-        opacity: 1,
-        ease: 'none',
-        stagger: 0.06,
-        scrollTrigger: {
-          trigger: rootRef.current,
-          start: 'top top',
-          end: '+=140%',
-          pin: true,
-          scrub: 0.6,
-          invalidateOnRefresh: true,
-        },
-      })
-    })
-
-    // MOBILE/TABLET: sem pin (prender a tela atrapalha o scroll por toque) —
-    // o texto acende conforme a seção atravessa a viewport, no ritmo do dedo.
-    mm.add('(max-width: 1279px), (pointer: coarse)', () => {
-      gsap.to('.manifesto-word', {
-        opacity: 1,
-        ease: 'none',
-        stagger: 0.03,
-        scrollTrigger: {
-          trigger: rootRef.current,
-          start: 'top 90%',
-          end: 'bottom 75%',
-          scrub: 0.5,
-          invalidateOnRefresh: true,
-        },
-      })
+      gsap.fromTo(
+        '.manifesto-word',
+        { opacity: 0.28 },
+        {
+          opacity: 1,
+          ease: 'none',
+          stagger: 0.06,
+          scrollTrigger: {
+            trigger: rootRef.current,
+            start: 'top top',
+            end: '+=140%',
+            pin: true,
+            scrub: 0.6,
+            invalidateOnRefresh: true,
+          },
+        }
+      )
     })
 
     return () => mm.revert()
@@ -168,7 +153,6 @@ export default function Manifesto({ reducedMotion }) {
                 className={`manifesto-word inline-block mr-[0.32em] ${
                   KEYWORDS.has(word) ? 'text-amber font-serif italic' : ''
                 }`}
-                style={{ opacity: reducedMotion ? 1 : baseOpacity }}
               >
                 {word}
               </span>
