@@ -42,6 +42,13 @@ const RGB_SPLIT = 7 // separação inicial do rastro RGB (px)
 const DECODE_MS = 620 // duração do decode do texto
 const AMETHYST_FLASH = true // FLAG: respiro de cor ametista no lançamento (false = 100% monocromático)
 const AMETHYST = '154, 123, 216' // violeta OFICIAL do manual (#9A7BD8) — a Lune Améthyste
+// NAVEGAÇÃO MANUAL: setas, ticks e swipe. Ao primeiro comando do usuário o
+// ciclo automático PARA DE VEZ — o card não sai nem troca mais sozinho, pra
+// não sumir no meio da leitura de um case.
+const SWAP_DUR = 0.44 // duração da troca manual (saída lateral + entrada)
+const SWAP_SHIFT = 13 // deslocamento lateral da troca (% da largura do card)
+const SWIPE_MIN = 44 // arrasto horizontal mínimo p/ contar como swipe (px)
+const SWIPE_SLOP = 10 // a partir daqui o gesto é horizontal e não é mais clique
 // ---------------------------------------------------------------------------
 
 const GLYPHS = '日Æ01<>/{}#*-+=•▒░█ΛΞΣΦΨ'
@@ -97,6 +104,8 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
   const firstLaunch = useRef(true)
   const tlRef = useRef(null)
   const reduced = useRef(false)
+  const manual = useRef(false) // usuário assumiu o controle: ciclo automático desligado
+  const touch = useRef({ x: 0, y: 0, dx: 0, dy: 0, moved: false })
 
   // compõe blur + aberração cromática (rastro RGB) num único filter
   const setFx = (blurPx, splitPx) => {
@@ -192,6 +201,71 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
     }
   }
 
+  // TROCA MANUAL: o card desliza pro lado com RGB split, o conteúdo troca fora
+  // de tela e ele volta do lado oposto — mesma língua visual da entrada, só que
+  // curta e lateral (o arremesso pertence ao golpe da cena, não ao usuário).
+  const goTo = (next, dir) => {
+    const card = cardRef.current
+    if (!card || next === index) return
+
+    // a partir daqui o vídeo não comanda mais o card
+    manual.current = true
+    phase.current = 'in'
+    loopedSinceEnter.current = false
+    tlRef.current?.kill()
+    setActive(true)
+
+    if (reduced.current) {
+      card.style.filter = ''
+      gsap.set(card, { clearProps: 'transform', autoAlpha: 1 })
+      setIndex(next)
+      setLaunchKey((k) => k + 1)
+      return
+    }
+
+    const fx = { blur: 0, split: 0 }
+    const out = SWAP_DUR * 0.4
+    const back = SWAP_DUR * 0.6
+
+    const tl = gsap.timeline()
+    tlRef.current = tl
+
+    tl.to(card, { duration: out, xPercent: -SWAP_SHIFT * dir, autoAlpha: 0.08, ease: 'power2.in' }, 0)
+    tl.to(fx, { duration: out, blur: 4, split: 9, ease: 'power2.in', onUpdate: () => setFx(fx.blur, fx.split) }, 0)
+    // conteúdo troca com o card fora de vista (nunca troca texto em tela)
+    tl.add(() => {
+      setIndex(next)
+      setLaunchKey((k) => k + 1) // re-dispara o decode do nome e das métricas
+      blip(300, 0.03, 'sine')
+    })
+    tl.set(card, { xPercent: SWAP_SHIFT * dir })
+    tl.to(card, { duration: back, xPercent: 0, autoAlpha: 1, ease: 'power3.out' })
+    tl.to(fx, { duration: back, blur: 0, split: 0, ease: 'power3.out', onUpdate: () => setFx(fx.blur, fx.split) }, '<')
+  }
+
+  const go = (dir) => goTo((index + dir + CATALOG.length) % CATALOG.length, dir)
+
+  // SWIPE (mobile): só conta arrasto predominantemente horizontal, pra não
+  // roubar o scroll vertical da página. `moved` também cancela o clique que
+  // abriria o case ao soltar o dedo.
+  const onTouchStart = (e) => {
+    const t = e.touches[0]
+    touch.current = { x: t.clientX, y: t.clientY, dx: 0, dy: 0, moved: false }
+  }
+  const onTouchMove = (e) => {
+    const t = e.touches[0]
+    const dx = t.clientX - touch.current.x
+    const dy = t.clientY - touch.current.y
+    touch.current.dx = dx
+    touch.current.dy = dy
+    if (Math.abs(dx) > SWIPE_SLOP && Math.abs(dx) > Math.abs(dy)) touch.current.moved = true
+  }
+  const onTouchEnd = () => {
+    const { dx, dy, moved } = touch.current
+    if (!moved || Math.abs(dx) < SWIPE_MIN || Math.abs(dx) <= Math.abs(dy)) return
+    go(dx < 0 ? 1 : -1) // arrastar pra esquerda = próximo
+  }
+
   // máquina de estados sincronizada ao tempo do vídeo
   useEffect(() => {
     reduced.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -203,6 +277,13 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
     let raf
     const loop = () => {
       const t = v.currentTime || 0
+      // usuário assumiu o controle: a cena segue rodando, mas o card fica onde
+      // ele deixou (não sai nem troca sozinho).
+      if (manual.current) {
+        lastT.current = t
+        raf = requestAnimationFrame(loop)
+        return
+      }
       // o vídeo reiniciou: o card NÃO sai aqui — ele atravessa a virada do loop
       // e só sai pouco antes do próximo lançamento (EXIT_T do ciclo seguinte).
       if (t + 0.4 < lastT.current && phase.current === 'in') {
@@ -272,8 +353,18 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
 
         <article
           ref={cardRef}
-          onClick={() => active && onOpenProject?.(index)}
-          onKeyDown={(e) => active && (e.key === 'Enter' || e.key === ' ') && onOpenProject?.(index)}
+          // swipe não abre o case; e as teclas só valem no próprio card (os
+          // botões de navegação dentro dele tratam as suas).
+          onClick={() => active && !touch.current.moved && onOpenProject?.(index)}
+          onKeyDown={(e) => {
+            if (!active || e.target !== e.currentTarget) return
+            if (e.key === 'Enter' || e.key === ' ') onOpenProject?.(index)
+            else if (e.key === 'ArrowRight') { e.preventDefault(); go(1) }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1) }
+          }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
           role="button"
           tabIndex={active ? 0 : -1}
           aria-label={`Abrir case ${proj.name}`}
@@ -320,7 +411,7 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                 Os arquivos já são PLACAS 16:10 (fundo da marca + logo real
                 composta), então `object-cover` preenche a área por completo,
                 sem faixa vazia e sem deformar a marca. */}
-            <div className="relative w-full h-24 md:h-auto md:aspect-[16/10] overflow-hidden bg-gradient-to-b from-ivory to-[#E8E6DE]">
+            <div className="relative w-full h-20 md:h-auto md:aspect-[16/10] overflow-hidden bg-gradient-to-b from-ivory to-[#E8E6DE]">
               {/* h-full/w-full + object-contain: `max-h-full` sozinho não
                   segurava a imagem dentro da placa (logos altas vazavam por
                   cima do texto do card). */}
@@ -331,8 +422,16 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                 loading="lazy"
               />
             </div>
-            <div className="p-4 md:p-6">
-              <p className="mono-label text-titanium/70">
+            {/* MOBILE COMPACTO: a cena empilhada acima é curta, então o card
+                não pode dominar a tela. Tudo que encolhe aqui volta ao normal
+                em `md:`.
+                O `!` nos tamanhos de fonte é necessário: `.mono-label` está
+                declarada DEPOIS de `@tailwind utilities` em index.css e, com a
+                mesma especificidade, vence na cascata — sem ele os
+                `text-[0.55rem]` viram 0.7rem e cada fileira quebra em duas
+                linhas. */}
+            <div className="px-4 py-3.5 md:p-6">
+              <p className="mono-label !text-[0.58rem] text-titanium/70 md:!text-[0.7rem]">
                 {proj.segment}
                 {proj.city ? ` · ${proj.city}` : ''} · {proj.year}
               </p>
@@ -340,9 +439,9 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                 text={proj.name}
                 trigger={launchKey}
                 as="h3"
-                className="font-display font-semibold text-2xl text-ivory mt-1 mb-4 block"
+                className="font-display font-semibold text-xl md:text-2xl text-ivory mt-1 mb-3 md:mb-4 block"
               />
-              <ul className="space-y-2 mb-4">
+              <ul className="space-y-1.5 mb-3 md:space-y-2 md:mb-4">
                 {proj.metrics.map((m) => (
                   <li key={m} className="font-mono text-xs text-amber flex items-center gap-2">
                     <span className="text-amber/50">+</span>
@@ -350,11 +449,11 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                   </li>
                 ))}
               </ul>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 md:gap-2">
                 {proj.tags.map((tg) => (
                   <span
                     key={tg}
-                    className="mono-label text-[0.55rem] border border-ivory/15 rounded-full px-3 py-1.5 text-titanium"
+                    className="mono-label !text-[0.55rem] border border-ivory/15 rounded-full px-2.5 py-1 md:px-3 md:py-1.5 text-titanium"
                   >
                     {tg}
                   </span>
@@ -364,14 +463,14 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
               {/* canais REAIS do cliente — stopPropagation p/ o clique não abrir
                   o case por trás. Só rendem o que está confirmado no CRM. */}
               {(proj.instagram || proj.tiktok || proj.site || proj.whatsapp) && (
-                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-ivory/10 pt-4">
+                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-ivory/10 pt-3 md:mt-5 md:gap-x-4 md:gap-y-2 md:pt-4">
                   {proj.instagram && (
                     <a
                       href={proj.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                      className="mono-label !text-[0.55rem] text-titanium hover:text-amber transition-colors"
                     >
                       Instagram ↗
                     </a>
@@ -382,7 +481,7 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                      className="mono-label !text-[0.55rem] text-titanium hover:text-amber transition-colors"
                     >
                       {proj.instagramAltLabel || 'Instagram 2'} ↗
                     </a>
@@ -393,7 +492,7 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                      className="mono-label !text-[0.55rem] text-titanium hover:text-amber transition-colors"
                     >
                       TikTok ↗
                     </a>
@@ -404,7 +503,7 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                      className="mono-label !text-[0.55rem] text-titanium hover:text-amber transition-colors"
                     >
                       Site ↗
                     </a>
@@ -415,13 +514,73 @@ export default function CatalogCardOverlay({ videoRef, onOpenProject }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="mono-label text-[0.55rem] text-titanium hover:text-amber transition-colors"
+                      className="mono-label !text-[0.55rem] text-titanium hover:text-amber transition-colors"
                     >
                       WhatsApp ↗
                     </a>
                   )}
                 </div>
               )}
+
+              {/* NAVEGAÇÃO ENTRE OS CASES — setas + ticks + contador (no toque,
+                  também swipe). Sem rótulo de texto nas setas: no desktop o
+                  card chega a 260px de largura e "Anterior/Próximo" não cabe
+                  ao lado dos ticks. Alvo de 44px no toque, 36px no ponteiro
+                  fino. stopPropagation em tudo: clicar aqui troca o card, não
+                  abre o case por trás. */}
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-ivory/10 pt-1.5 md:mt-4 md:pt-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    go(-1)
+                  }}
+                  aria-label="Case anterior"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-ivory/15 text-titanium transition-colors hover:border-amber/50 hover:text-amber focus-visible:border-amber focus-visible:text-amber focus-visible:outline-none md:h-9 md:w-9"
+                >
+                  <span aria-hidden="true" className="text-sm leading-none">←</span>
+                </button>
+
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {CATALOG.map((c, i) => (
+                      <button
+                        key={c.slug}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          goTo(i, i > index ? 1 : -1)
+                        }}
+                        aria-label={`Ver case ${c.name}`}
+                        aria-current={i === index ? 'true' : undefined}
+                        className="flex h-11 w-5 items-center justify-center focus-visible:outline-none md:h-9 md:w-3"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`block h-[3px] w-full transition-colors ${
+                            i === index ? 'bg-amber' : 'bg-ivory/25'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span className="mono-label shrink-0 !text-[0.55rem] tabular-nums text-titanium/60">
+                    {String(index + 1).padStart(2, '0')}/{String(CATALOG.length).padStart(2, '0')}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    go(1)
+                  }}
+                  aria-label="Próximo case"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-ivory/15 text-titanium transition-colors hover:border-amber/50 hover:text-amber focus-visible:border-amber focus-visible:text-amber focus-visible:outline-none md:h-9 md:w-9"
+                >
+                  <span aria-hidden="true" className="text-sm leading-none">→</span>
+                </button>
+              </div>
             </div>
           </div>
         </article>
