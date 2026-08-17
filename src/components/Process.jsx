@@ -52,12 +52,27 @@ export default function Process({ reducedMotion, invest = 8000 }) {
 
       {/* Os indicadores de cada etapa reagem ao investimento definido na
           Calculadora de Retorno, logo acima (estado `invest` compartilhado). */}
+      {/* EMPILHAMENTO — o card gruda enquanto o próximo sobe por cima.
+          DESKTOP: gruda pelo TOPO, com offset crescente, então as bordas dos
+          cards de trás formam a cascata acima do card ativo.
+          MOBILE: o card é MAIS ALTO que a viewport (texto + gráfico passam de
+          800px numa tela de ~730px). Grudando pelo topo, o rodapé nunca chegava
+          a aparecer: o card travava, o seguinte subia e cobria justamente o
+          trecho ainda não lido. Grudando pela BASE ele rola inteiro primeiro e
+          só trava quando o rodapé encosta no fim da tela — dá tempo de ler
+          tudo. O offset cresce com o índice para o card seguinte travar mais
+          alto e deixar à mostra uma faixa do anterior (a cascata vem por baixo,
+          não por cima). O scale do empilhamento acompanha: encolhe a partir da
+          âncora (base no mobile, topo no desktop). */}
       <div>
         {PROCESS.map((step, i) => (
           <div
             key={step.num}
-            className="process-card card-wave group sticky bg-obsidian-deep border border-ivory/10 rounded-2xl p-7 md:p-12 origin-top will-change-transform overflow-hidden"
-            style={{ top: `calc(5rem + ${i * 1.1}rem)` }}
+            className="process-card card-wave group sticky top-auto bottom-[var(--stick-bottom)] md:bottom-auto md:top-[var(--stick-top)] bg-obsidian-deep border border-ivory/10 rounded-2xl p-7 md:p-12 origin-bottom md:origin-top will-change-transform overflow-hidden"
+            style={{
+              '--stick-top': `calc(5rem + ${i * 1.1}rem)`,
+              '--stick-bottom': `calc(0.5rem + ${i * 1.1}rem)`,
+            }}
           >
             <div className="grid md:grid-cols-[1.05fr_0.95fr] gap-8 md:gap-12 items-center">
               {/* conteúdo */}
