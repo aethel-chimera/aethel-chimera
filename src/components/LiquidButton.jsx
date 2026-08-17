@@ -94,6 +94,17 @@ function hexToRgb(c) {
 
 const COARSE_TEXT = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
+// Luminância relativa (aproximação WCAG, sem correção de gama) usada só para
+// decidir se o rótulo por cima do preenchimento deve ser claro ou escuro.
+// Aceita hex de 6 dígitos, o formato de todas as chamadas; qualquer outra coisa
+// cai no fallback "preenchimento claro", que preserva o texto escuro anterior.
+function isLight(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''))
+  if (!m) return true
+  const n = parseInt(m[1], 16)
+  return (0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255 > 0.5
+}
+
 export default function LiquidButton({
   children,
   width = 360,
@@ -426,6 +437,21 @@ export default function LiquidButton({
     };
   }, [width, height]);
 
+  // TOUCH: sem mix-blend a cor do rótulo é FIXA, então ela precisa contrastar
+  // com o PREENCHIMENTO (`color`) — que no card destacado dos planos é escuro,
+  // não claro. Antes o rótulo era sempre "#0B0B10" e a prop `textColor` era
+  // ignorada no toque, então na pílula preta virava preto sobre preto.
+  // Sem `textColor`, a cor sai da luminância do preenchimento; a sombra é
+  // sempre a oposta do rótulo, para segurar a leitura enquanto o líquido
+  // entra e sai por baixo do texto.
+  const coarseLabel = textColor || (isLight(color) ? '#0B0B10' : '#F4F2EC')
+  // Duas camadas: um halo curto que cerca a letra (segura a leitura nos ~3s de
+  // fillTime, quando o rótulo ainda está sobre o fundo do card e não sobre o
+  // preenchimento) e a sombra de apoio embaixo.
+  const coarseShadow = isLight(coarseLabel)
+    ? '0 0 2px rgba(11,11,16,.9), 0 1px 2px rgba(11,11,16,.5)'
+    : '0 0 2px rgba(244,242,236,.9), 0 1px 2px rgba(244,242,236,.5)'
+
   return (
     <div
       ref={wrapRef}
@@ -487,9 +513,9 @@ export default function LiquidButton({
             // TOUCH: sem mix-blend (quebra sob ancestral com transform/opacity e
             // sumia o texto na pílula cheia) — cor sólida contrastando com o
             // preenchimento. Desktop mantém o difference, que lá funciona.
-            color: COARSE_TEXT ? "#0B0B10" : (textColor || color),
+            color: COARSE_TEXT ? coarseLabel : (textColor || color),
             mixBlendMode: COARSE_TEXT ? "normal" : "difference",
-            textShadow: COARSE_TEXT ? "0 1px 2px rgba(244,242,236,.55)" : "none",
+            textShadow: COARSE_TEXT ? coarseShadow : "none",
             userSelect: "none",
             whiteSpace: "nowrap",
           }}
