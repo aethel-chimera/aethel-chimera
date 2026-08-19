@@ -254,7 +254,7 @@ export const PROCESS = [
 ]
 
 export const STATS = [
-  { value: 47, suffix: '+', label: 'Projetos entregues' },
+  { value: 5, suffix: '', label: 'Projetos entregues' },
   { value: 99.9, suffix: '%', decimals: 1, label: 'Uptime médio' },
   { value: 94, suffix: '%', label: 'Retenção em manutenção mensal' },
 ]
