@@ -106,13 +106,30 @@ export default function BriefingRequest({ invest }) {
   if (enviado) {
     return (
       <div className="relative rounded-2xl border border-signal/30 bg-obsidian-deep/70 p-8 md:p-12 text-center">
-        <p className="mono-label text-signal mb-3">Briefing enviado</p>
+        <p className="mono-label text-signal mb-3">
+          {CRM_ENDPOINT ? 'Briefing recebido' : 'Briefing pronto'}
+        </p>
         <h3 className="font-display font-semibold text-2xl md:text-3xl text-ivory mb-3">
-          Recebemos sua solicitação.
+          {CRM_ENDPOINT ? 'Recebemos sua solicitação.' : 'Falta só confirmar o envio.'}
         </h3>
         <p className="text-titanium max-w-md mx-auto leading-relaxed mb-7">
-          Vamos analisar o escopo e a expectativa de investimento e responder pelo canal que você
-          deixou. Se quiser adiantar, é só continuar a conversa no WhatsApp.
+          {CRM_ENDPOINT ? (
+            'Vamos analisar o escopo e a expectativa de investimento e responder pelo canal que você deixou.'
+          ) : (
+            <>
+              Abrimos o WhatsApp com o seu briefing preenchido — toque em enviar por lá para ele
+              chegar até nós. Se a janela não abriu, use <span className="text-ivory">Copiar
+              briefing</span> e mande para{' '}
+              <a href={CONTACT.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-amber underline underline-offset-2">
+                {CONTACT.whatsapp}
+              </a>{' '}
+              ou{' '}
+              <a href={'mailto:' + CONTACT.email} className="text-amber underline underline-offset-2">
+                {CONTACT.email}
+              </a>
+              .
+            </>
+          )}
         </p>
         <button
           onClick={() => {
@@ -266,7 +283,7 @@ export default function BriefingRequest({ invest }) {
           type="submit"
           className="rounded-full bg-ivory text-obsidian font-display font-semibold text-sm px-7 min-h-[48px] hover:bg-amber transition-colors"
         >
-          Enviar solicitação
+          {CRM_ENDPOINT ? 'Enviar solicitação' : 'Enviar pelo WhatsApp'}
         </button>
         <button
           type="button"
@@ -277,8 +294,10 @@ export default function BriefingRequest({ invest }) {
         </button>
       </div>
       <p className="font-mono text-[0.62rem] text-titanium/45 mt-4 leading-relaxed">
-        Vai direto para a nossa fila de análise. Usamos seus dados só para responder esta
-        solicitação — nada de lista de disparo.
+        {CRM_ENDPOINT
+          ? 'Vai direto para a nossa fila de análise. '
+          : 'Ao enviar, abrimos o WhatsApp com o briefing já preenchido — é só tocar em enviar. '}
+        Usamos seus dados só para responder esta solicitação — nada de lista de disparo.
       </p>
     </form>
   )
