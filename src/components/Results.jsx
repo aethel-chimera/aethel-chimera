@@ -103,28 +103,44 @@ function TestimonialCarousel() {
       <div ref={trackRef} className="flex gap-6 will-change-transform">
         {TESTIMONIALS.map((t) => (
           <figure
-            key={t.name}
-            className="shrink-0 w-[85vw] md:w-[34rem] bg-obsidian-deep border border-ivory/10 rounded-2xl p-8 md:p-12"
+            key={t.slug}
+            className="shrink-0 w-[85vw] md:w-[34rem] bg-obsidian-deep border border-ivory/10 rounded-2xl p-8 md:p-12 flex flex-col"
           >
-            <blockquote className="font-serif italic text-xl md:text-2xl text-ivory leading-relaxed mb-8">
-              “{t.quote}”
-            </blockquote>
-            <figcaption className="flex items-end justify-between gap-6">
-              <div>
-                <p className="mono-label text-ivory">{t.name}</p>
-                <p className="mono-label text-titanium/60 mt-1">
-                  {t.role} — {t.company}
+            {/* Com depoimento colhido, o card vira citação. Sem, mostra o que
+                foi ENTREGUE — nada de frase inventada em nome de cliente real. */}
+            {t.quote ? (
+              <blockquote className="font-serif italic text-xl md:text-2xl text-ivory leading-relaxed mb-8">
+                “{t.quote}”
+              </blockquote>
+            ) : (
+              <div className="mb-8 flex-1">
+                <p className="mono-label text-amber mb-4">O que entregamos</p>
+                <ul className="space-y-2.5">
+                  {t.delivered.map((d) => (
+                    <li key={d} className="flex gap-2.5 text-ivory text-base md:text-lg leading-snug">
+                      <span className="text-amber mt-1 shrink-0" aria-hidden="true">+</span>
+                      {d}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <figcaption className="flex items-end justify-between gap-6 border-t border-ivory/10 pt-6">
+              <div className="min-w-0">
+                {t.quote && <p className="mono-label text-ivory">{t.person}</p>}
+                <p className="mono-label text-ivory truncate">{t.company}</p>
+                <p className="mono-label text-titanium/60 mt-1 truncate">
+                  {t.quote ? `${t.role} — ${t.segment}` : `${t.segment} · ${t.city}`}
                 </p>
               </div>
-              {/* avaliação como barra preenchida, não estrelas */}
-              <div className="w-24">
-                <div className="h-px bg-ivory/15">
-                  <div className="h-full bg-amber" style={{ width: `${t.rating * 100}%` }} />
-                </div>
-                <p className="font-mono text-[0.6rem] text-titanium/60 mt-2 text-right">
-                  {(t.rating * 5).toFixed(1).replace('.', ',')} / 5,0
-                </p>
-              </div>
+              {t.logo && (
+                <img
+                  src={t.logo}
+                  alt=""
+                  loading="lazy"
+                  className="h-12 w-20 object-cover rounded-md border border-ivory/10 shrink-0"
+                />
+              )}
             </figcaption>
           </figure>
         ))}
@@ -148,7 +164,7 @@ export default function Results({ reducedMotion }) {
         ))}
       </div>
 
-      <p className="mono-label text-titanium/60 mb-8">O que as afiliadas dizem — arraste</p>
+      <p className="mono-label text-titanium/60 mb-8">Clientes que a Aethel construiu — arraste</p>
       <TestimonialCarousel />
     </section>
   )

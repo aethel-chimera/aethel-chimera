@@ -259,36 +259,31 @@ export const STATS = [
   { value: 94, suffix: '%', label: 'Retenção em manutenção mensal' },
 ]
 
-export const TESTIMONIALS = [
-  {
-    quote: 'O site deixou de ser um cartão de visitas parado e virou nossa principal fonte de orçamentos. O relatório mensal mostra exatamente para onde o investimento vai.',
-    name: 'Ricardo Tavares',
-    role: 'Diretor',
-    company: 'Vetra Engenharia',
-    rating: 0.98,
-  },
-  {
-    quote: 'Em três meses, o agendamento online superou o telefone. A equipe da Aethel cuida de tudo: a gente só acompanha os números subindo.',
-    name: 'Dra. Marina Costa',
-    role: 'Fundadora',
-    company: 'Clínica Aurum',
-    rating: 1,
-  },
-  {
-    quote: 'Já tínhamos passado por duas agências. A diferença aqui é engenharia: tudo é medido, testado e melhorado. Nada é opinião solta.',
-    name: 'Felipe Andrade',
-    role: 'Sócio',
-    company: 'Mosaico Arquitetura',
-    rating: 0.95,
-  },
-  {
-    quote: 'A migração do site antigo foi cirúrgica: não perdemos uma posição no Google e o novo carrega em menos de dois segundos.',
-    name: 'Camila Reis',
-    role: 'Gerente de Marketing',
-    company: 'Atlas Logística',
-    rating: 0.97,
-  },
-]
+// ---------------------------------------------------------------------------
+// PROVA SOCIAL — os 4 clientes REAIS.
+// Não há depoimento aqui porque não há depoimento colhido. Os anteriores eram
+// pessoas e empresas inventadas (Vetra Engenharia, Clínica Aurum...); assinar
+// uma frase inventada com o nome de um cliente REAL seria pior ainda, porque
+// dá para conferir. Enquanto `quote` for null, o card mostra o ESCOPO
+// ENTREGUE — fato verificável, herdado do próprio CATALOG (fonte única).
+//
+// PARA PUBLICAR UM DEPOIMENTO DE VERDADE: preencha `quote`, `person` e `role`
+// no QUOTES abaixo, na chave do slug do cliente. O card vira citação sozinho.
+// ---------------------------------------------------------------------------
+const QUOTES = {
+  // jlopez: { quote: '...', person: '...', role: 'Fundadora' },
+}
+
+export const TESTIMONIALS = CATALOG.map((c) => ({
+  slug: c.slug,
+  company: c.name,
+  segment: c.segment,
+  city: c.city,
+  logo: c.logo,
+  delivered: c.metrics,
+  url: c.url,
+  ...(QUOTES[c.slug] || { quote: null, person: null, role: null }),
+}))
 
 export const PLANS = [
   {
