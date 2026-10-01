@@ -6,7 +6,7 @@ import LiquidButton from './LiquidButton'
 import Scramble from './Scramble'
 import HalftoneBackground from './HalftoneBackground'
 
-const HERO_FADE = 'linear-gradient(to bottom, #000 40%, transparent 96%)'
+const HERO_FADE = 'linear-gradient(to bottom, #000 25%, rgba(0,0,0,0.55) 62%, transparent 100%)'
 
 // rola até o contato respeitando o smooth scroll (Lenis), com fallback nativo
 function scrollToContact() {

@@ -6,6 +6,8 @@ import { useEffect, useRef } from 'react'
 const DEFAULT_COLOR = [165, 161, 245]
 const STEPS = 10 // faixas de brilho: um fillStyle e um path por faixa
 const TICK_MS = 28 // passo fixo do crescimento, independente do FPS
+const SEEDS = 3 // focos iniciais; com um só a tela passa muito tempo vazia
+const WARMUP_STEPS = 260 // a colônia já nasce crescida: sem isso o hero abre quase vazio
 
 export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, speed = 1, reducedMotion = false, className = '' }) {
   const canvasRef = useRef(null)
@@ -38,12 +40,14 @@ export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, sp
       val = val && val.length === n ? val : new Float32Array(n)
       inf = new Uint8Array(n)
       front = []
-      const i = ((0.12 + Math.random() * 0.76) * cols) | 0
-      const j = ((0.12 + Math.random() * 0.76) * rows) | 0
-      const k = j * cols + i
-      inf[k] = 1
-      val[k] = 1.9
-      front.push(k)
+      for (let s = 0; s < SEEDS; s++) {
+        const i = ((0.12 + Math.random() * 0.76) * cols) | 0
+        const j = ((0.12 + Math.random() * 0.76) * rows) | 0
+        const k = j * cols + i
+        inf[k] = 1
+        val[k] = 1.9
+        front.push(k)
+      }
     }
 
     const resize = () => {
@@ -202,10 +206,14 @@ export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, sp
       }
     }
 
+    const warmUp = () => {
+      for (let n = 0; n < WARMUP_STEPS; n++) stepVirus()
+    }
+
     resize()
+    warmUp()
 
     if (reducedMotion) {
-      for (let n = 0; n < 400; n++) stepVirus()
       draw(0)
       return undefined
     }
@@ -266,7 +274,10 @@ export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, sp
     let resizeTimer = 0
     const onResize = () => {
       clearTimeout(resizeTimer)
-      resizeTimer = setTimeout(resize, 150)
+      resizeTimer = setTimeout(() => {
+        resize()
+        warmUp()
+      }, 150)
     }
 
     window.addEventListener('resize', onResize)
