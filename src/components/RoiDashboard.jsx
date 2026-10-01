@@ -7,32 +7,32 @@ import { INVEST_MIN, INVEST_MAX, INVEST_REF } from '../data'
 // Métrica "Índice de Retorno Aethel": o cliente define o investimento mensal e
 // vê o retorno projetado por canal + ROI consolidado.
 //
-// BENCHMARK REVISADO — setembro/2026. Cada multiplicador abaixo é rastreável a
+// BENCHMARK REVISADO - setembro/2026. Cada multiplicador abaixo é rastreável a
 // um dado público, e não a uma estimativa nossa:
-//   • Mídia paga — mediana 2026: Google Ads 3,31× e Meta Ads ~2,19× de ROAS.
+//   • Mídia paga - mediana 2026: Google Ads 3,31× e Meta Ads ~2,19× de ROAS.
 //     Misturados na proporção que operamos, dá ~2,75×; adotamos 2,8×. Note que
 //     CAIU (era 3,2×): o CPC no Brasil subiu ~13% em 2026, então o mesmo real
-//     compra menos clique. `sat` subiu de 0,22 p/ 0,26 pelo mesmo motivo —
+//     compra menos clique. `sat` subiu de 0,22 p/ 0,26 pelo mesmo motivo -
 //     escalar verba em leilão mais caro satura mais rápido.
-//   • SEO — 8,75× em B2B SaaS é o TETO do estudo, com ciclo de venda longo.
+//   • SEO - 8,75× em B2B SaaS é o TETO do estudo, com ciclo de venda longo.
 //     PME local rende menos: adotamos 5,5× (era 5,0×), ainda bem abaixo do teto.
-//   • CRO / Landing Pages — 3,6×: CRO não traz tráfego novo, amplifica o que já
+//   • CRO / Landing Pages - 3,6×: CRO não traz tráfego novo, amplifica o que já
 //     existe; fica atrelado ao desempenho da mídia, que caiu neste ciclo.
-//   • Social & Conteúdo — 2,6× (era 3,0×) e `sat` 0,18: alcance orgânico segue
+//   • Social & Conteúdo - 2,6× (era 3,0×) e `sat` 0,18: alcance orgânico segue
 //     em queda, é o canal que mais perde eficiência ao escalar.
-//   • Automações & CRM — e-mail é o campeão de ROI do mercado (36:1 a 42:1),
+//   • Automações & CRM - e-mail é o campeão de ROI do mercado (36:1 a 42:1),
 //     mas esse número conta só o custo da ferramenta. Descontando a mão de obra
 //     de construir e operar os fluxos, adotamos 7,0× (era 6,0×).
 //
-// RESULTADO no investimento de referência (R$ 8.000): ROI 4,20× — abaixo do
+// RESULTADO no investimento de referência (R$ 8.000): ROI 4,20× - abaixo do
 // benchmark "bom" de mercado (5×) de propósito. A calculadora não deve prometer
 // o melhor caso.
 const CHANNELS = [
-  { key: 'trafego', label: 'Gestão de Tráfego', alloc: 0.3, mult: 2.8, sat: 0.26, color: '#E0A458', note: 'ROAS de mídia paga otimizada — mediana 2026: Google 3,3× / Meta 2,2×.' },
+  { key: 'trafego', label: 'Gestão de Tráfego', alloc: 0.3, mult: 2.8, sat: 0.26, color: '#E0A458', note: 'ROAS de mídia paga otimizada - mediana 2026: Google 3,3× / Meta 2,2×.' },
   { key: 'sites', label: 'Sites & SEO', alloc: 0.25, mult: 5.5, sat: 0.07, color: '#9A7BD8', note: 'Tráfego orgânico que compõe mês a mês (ativo de longo prazo).' },
   { key: 'lp', label: 'Landing Pages · CRO', alloc: 0.15, mult: 3.6, sat: 0.10, color: '#C9A66B', note: 'Otimização de conversão: mais venda com o mesmo tráfego.' },
   { key: 'social', label: 'Social & Conteúdo', alloc: 0.15, mult: 2.6, sat: 0.18, color: '#9A85C4', note: 'Alcance, autoridade e demanda de marca.' },
-  { key: 'auto', label: 'Automações & CRM', alloc: 0.15, mult: 7.0, sat: 0.04, color: '#5FA391', note: 'Retenção e LTV — e-mail/CRM tem o maior retorno por R$ do mercado.' },
+  { key: 'auto', label: 'Automações & CRM', alloc: 0.15, mult: 7.0, sat: 0.04, color: '#5FA391', note: 'Retenção e LTV - e-mail/CRM tem o maior retorno por R$ do mercado.' },
 ]
 
 const brl = (v) =>
@@ -42,13 +42,13 @@ const brl = (v) =>
 
 // ---- RETORNO COM SATURAÇÃO (retornos decrescentes) ----
 // Marketing não escala linearmente: público satura, CPM sobe. Um modelo linear
-// projetaria R$ 832 mil/mês em R$ 200 mil de verba — promessa que não se
+// projetaria R$ 832 mil/mês em R$ 200 mil de verba - promessa que não se
 // sustenta. Aqui cada canal cresce por uma lei de potência:
 //     retorno = mult × gasto_ref × (gasto / gasto_ref)^(1 − sat)
 // `sat` é o quanto o canal satura: mídia paga satura rápido (0,22); SEO e CRM
 // compõem e seguram bem (0,07 / 0,04).
 // ÂNCORA: em INVEST_REF (R$ 8.000) o expoente não muda nada e a projeção bate
-// EXATAMENTE os multiplicadores de benchmark — ROI 4,20×.
+// EXATAMENTE os multiplicadores de benchmark - ROI 4,20×.
 function channelReturn(c, invest) {
   const spend = invest * c.alloc
   const spendRef = INVEST_REF * c.alloc
@@ -62,7 +62,7 @@ function channelReturn(c, invest) {
 const SCALE_REF = 1.1 * Math.max(...CHANNELS.map((c) => channelReturn(c, INVEST_MAX)))
 // A faixa é de 133× (R$1.500 a R$200.000): numa escala linear os valores baixos
 // virariam fiapos invisíveis. O gama comprime o topo e abre a base, mantendo a
-// ordem entre canais — e cada barra continua rotulada com o valor exato em R$.
+// ordem entre canais - e cada barra continua rotulada com o valor exato em R$.
 const BAR_GAMMA = 0.7
 
 export default function RoiDashboard({ invest, setInvest }) {
@@ -85,10 +85,10 @@ export default function RoiDashboard({ invest, setInvest }) {
   return (
     <section id="retorno" className="relative z-[3] px-5 md:px-10 py-32">
       <div className="relative z-10 mb-14 max-w-2xl">
-        <SectionHead index="06" kicker="Investimento × retorno" title="Calculadora" accent="de retorno" className="mb-6" />
+        <SectionHead index="05" kicker="Investimento × retorno" title="Calculadora" accent="de retorno" className="mb-6" />
         <p className="text-titanium leading-relaxed">
           Ajuste o investimento mensal e veja o retorno projetado por canal. A métrica combina os
-          serviços da Aethel em um <span className="text-ivory">Índice de Retorno</span> — quanto cada
+          serviços da Aethel em um <span className="text-ivory">Índice de Retorno</span> - quanto cada
           R$ 1 tende a devolver, com base em benchmarks de mercado.
         </p>
       </div>
@@ -165,7 +165,7 @@ export default function RoiDashboard({ invest, setInvest }) {
             </div>
           </div>
 
-          {/* breakdown por canal — barras coloridas, reativas ao hover */}
+          {/* breakdown por canal - barras coloridas, reativas ao hover */}
           <div className="space-y-3.5" onMouseLeave={() => setHover(null)}>
             {data.rows.map((r) => {
               const w = Math.max(1.5, Math.min(100, Math.pow(r.ret / SCALE_REF, BAR_GAMMA) * 100))
@@ -219,11 +219,11 @@ export default function RoiDashboard({ invest, setInvest }) {
 
       <p className="mono-label text-titanium/55 mt-10 text-center max-w-3xl mx-auto leading-relaxed">
         Projeção calibrada com benchmarks de setembro/2026: ROAS mediano de 3,3× no Google Ads e
-        2,2× no Meta, SEO até 8,8× e e-mail/CRM de 36:1 — todos descontados para o porte de PME e
+        2,2× no Meta, SEO até 8,8× e e-mail/CRM de 36:1 - todos descontados para o porte de PME e
         para a alta de ~13% no CPC brasileiro. O modelo aplica retornos decrescentes, então o índice
         CAI conforme a verba sobe. Resultado real varia por segmento, oferta e maturidade.
       </p>
-      {/* ESPAÇO DO BRIEFING — a calculadora mostra o retorno projetado; aqui o
+      {/* ESPAÇO DO BRIEFING - a calculadora mostra o retorno projetado; aqui o
           visitante transforma isso num pedido real. Fica na MESMA seção de
           propósito: o valor do slider vira a expectativa orçamentária do
           briefing, sem a pessoa digitar nada de novo. */}

@@ -107,7 +107,7 @@ function TestimonialCarousel() {
             className="shrink-0 w-[85vw] md:w-[34rem] bg-obsidian-deep border border-ivory/10 rounded-2xl p-8 md:p-12 flex flex-col"
           >
             {/* Com depoimento colhido, o card vira citação. Sem, mostra o que
-                foi ENTREGUE — nada de frase inventada em nome de cliente real. */}
+                foi ENTREGUE - nada de frase inventada em nome de cliente real. */}
             {t.quote ? (
               <blockquote className="font-serif italic text-xl md:text-2xl text-ivory leading-relaxed mb-8">
                 “{t.quote}”
@@ -130,7 +130,7 @@ function TestimonialCarousel() {
                 {t.quote && <p className="mono-label text-ivory">{t.person}</p>}
                 <p className="mono-label text-ivory truncate">{t.company}</p>
                 <p className="mono-label text-titanium/60 mt-1 truncate">
-                  {t.quote ? `${t.role} — ${t.segment}` : `${t.segment} · ${t.city}`}
+                  {t.quote ? `${t.role} - ${t.segment}` : `${t.segment} · ${t.city}`}
                 </p>
               </div>
               {t.logo && (
@@ -152,7 +152,7 @@ function TestimonialCarousel() {
 export default function Results({ reducedMotion }) {
   return (
     <section id="resultados" className="relative z-[3] px-5 md:px-10 py-32">
-      <SectionHead index="08" kicker="Prova" title="Resultados" accent="medidos" className="mb-20" />
+      <SectionHead index="07" kicker="Prova" title="Resultados" accent="medidos" className="mb-20" />
 
       {/* faixa de números */}
       <div className="grid md:grid-cols-3 gap-12 border-y border-ivory/10 py-16 mb-24">
@@ -164,7 +164,7 @@ export default function Results({ reducedMotion }) {
         ))}
       </div>
 
-      <p className="mono-label text-titanium/60 mb-8">Clientes que a Aethel construiu — arraste</p>
+      <p className="mono-label text-titanium/60 mb-8">Clientes que a Aethel construiu - arraste</p>
       <TestimonialCarousel />
     </section>
   )

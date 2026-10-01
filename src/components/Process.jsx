@@ -8,9 +8,9 @@ import ProcessChart from './ProcessChart'
 gsap.registerPlugin(ScrollTrigger)
 
 // Fator de entrega: quanto do alvo a obra atinge conforme o investimento mensal.
-// Ancorado em 1,0 no investimento de referência (R$ 8.000) — então no padrão o
+// Ancorado em 1,0 no investimento de referência (R$ 8.000) - então no padrão o
 // gráfico mostra exatamente os números da oferta; abaixo entrega menos, acima um
-// pouco mais (retornos decrescentes). Faixa do slider: INVEST_MIN–INVEST_MAX (data.js).
+// pouco mais (retornos decrescentes). Faixa do slider: INVEST_MIN a INVEST_MAX (data.js).
 function deliveryFactor(invest) {
   const f =
     invest <= INVEST_REF
@@ -26,7 +26,7 @@ export default function Process({ reducedMotion, invest = 8000 }) {
   // O recuo de escala e o escurecimento SÓ existem onde há empilhamento, ou
   // seja, no desktop. No mobile os cards ficam um abaixo do outro em fluxo
   // normal: nada cobre nada, então escurecer o card anterior não faria sentido.
-  // O matchMedia NÃO pode ficar dentro de um gsap.context — o revert do context
+  // O matchMedia NÃO pode ficar dentro de um gsap.context - o revert do context
   // derruba os registros do matchMedia e os efeitos param de rodar (foi o que
   // aconteceu no Manifesto). Por isso o escopo do seletor vem por rootRef.
   useEffect(() => {
@@ -55,15 +55,15 @@ export default function Process({ reducedMotion, invest = 8000 }) {
 
   return (
     <section id="processo" ref={rootRef} className="relative z-[3] px-5 md:px-10 py-32">
-      <SectionHead index="07" kicker="04 etapas" title="Protocolo" accent="de construção" className="mb-10" />
+      <SectionHead index="06" kicker="04 etapas" title="Protocolo" accent="de construção" className="mb-10" />
 
       {/* Os indicadores de cada etapa reagem ao investimento definido na
           Calculadora de Retorno, logo acima (estado `invest` compartilhado). */}
-      {/* EMPILHAMENTO — só no DESKTOP: o card gruda pelo topo, com offset
+      {/* EMPILHAMENTO - só no DESKTOP: o card gruda pelo topo, com offset
           crescente, e o seguinte sobe por cima formando a cascata.
           MOBILE: sem empilhamento. O card é MAIS ALTO que a viewport (texto +
           gráfico passam de 800px numa tela de ~730px) e, grudado, o rodapé
-          nunca chegava a aparecer — o card travava e o seguinte cobria
+          nunca chegava a aparecer - o card travava e o seguinte cobria
           justamente o trecho ainda não lido. Aqui eles ficam um abaixo do
           outro, em fluxo normal e com respiro entre eles: cada card rola
           inteiro e nada cobre nada. */}

@@ -63,7 +63,7 @@ export default function Navbar() {
         <nav className="flex items-center justify-between px-5 md:px-10 h-16" aria-label="Principal">
           {/* pílula de marca + status no estilo AT */}
           <div className="at-pill">
-            <a href="#hero" className="flex items-center gap-2.5 leading-none" aria-label="Aethel Chimera — início">
+            <a href="#hero" className="flex items-center gap-2.5 leading-none" aria-label="Aethel Chimera - início">
               <img src="/image/logo-white.png" alt="Aethel Chimera" className="h-7 w-auto" />
               <span className="font-display font-semibold text-xl text-ivory">Æ</span>
             </a>
@@ -148,7 +148,7 @@ export default function Navbar() {
             ))}
           </ul>
           {/* CONTATOS no menu mobile: no celular o menu é o caminho principal
-              de ação — WhatsApp abre o app com a mensagem pronta, o e-mail
+              de ação - WhatsApp abre o app com a mensagem pronta, o e-mail
               abre o cliente de e-mail e o Instagram vai pro perfil. */}
           <div className="mt-12 border-t border-ivory/10 pt-6 space-y-3">
             <p className="mono-label text-titanium/50 text-[0.55rem]">Falar agora</p>
@@ -185,7 +185,7 @@ export default function Navbar() {
             </a>
           </div>
 
-          <p className="mono-label text-titanium/60 mt-10">Aethel Chimera — Engenharia de presença digital</p>
+          <p className="mono-label text-titanium/60 mt-10">Aethel Chimera - Engenharia de presença digital</p>
         </div>
       )}
     </>

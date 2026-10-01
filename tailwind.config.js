@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       // PALETA OFICIAL DA MARCA (manual): duotone âmbar + violeta sobre
-      // obsidiana. `signal` (verde) é SEMÂNTICO — reservado a status
+      // obsidiana. `signal` (verde) é SEMÂNTICO - reservado a status
       // vivo/uptime, nunca decorativo.
       colors: {
         obsidian: '#0B0B10',

@@ -1,17 +1,17 @@
 /* ------------------------------------------------------------------ *
- * liquidGLRenderer — renderer WebGL2 ÚNICO e compartilhado
+ * liquidGLRenderer - renderer WebGL2 ÚNICO e compartilhado
  * ------------------------------------------------------------------ *
  * Cada <LiquidButton> costumava criar seu próprio contexto WebGL2. Os
  * navegadores limitam o número de contextos simultâneos (em GPUs fracas /
  * headless o teto chega a ~4-8); com 6 botões na página, os contextos
  * criados PRIMEIRO (Navbar, Hero) eram silenciosamente esvaziados pelo
- * browser e renderizavam preto — mesmo com isContextLost()===false.
+ * browser e renderizavam preto - mesmo com isContextLost()===false.
  *
  * Solução: UM único contexto WebGL2 (numa canvas offscreen) que desenha
  * o efeito de QUALQUER botão. Cada botão mantém sua própria <canvas> 2D
  * visível e copia (drawImage) o resultado da canvas GL compartilhada.
  * Assim a página inteira usa 1 contexto WebGL, independente de quantos
- * botões existam — imune ao estouro de contextos.
+ * botões existam - imune ao estouro de contextos.
  *
  * É resiliente a perda de contexto: ao receber `webglcontextlost` ele
  * impede o default e recompila tudo em `webglcontextrestored`.

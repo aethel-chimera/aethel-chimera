@@ -73,7 +73,7 @@ export default function ProjectDetail({ index, onClose, onNav }) {
               {project.name}
             </h2>
             <p className="detail-reveal text-titanium text-lg leading-relaxed max-w-2xl">{project.summary}</p>
-            {/* CANAIS REAIS do cliente — só rende o que está confirmado */}
+            {/* CANAIS REAIS do cliente - só rende o que está confirmado */}
             <div className="detail-reveal mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
               {project.site && (
                 <a href={project.site} target="_blank" rel="noopener noreferrer" className="arrow-link inline-flex">

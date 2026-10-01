@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
-// Camada nova E — som sincronizado (linhagem Igloo / Active Theory).
+// Camada nova E - som sincronizado (linhagem Igloo / Active Theory).
 // Web Audio puro: blips curtos e graves em marcos de scroll/hover. SEMPRE
 // inicia MUDO (autoplay de áudio é bloqueado e intrusivo); o usuário liga no
-// toggle visível. Sintetizado em runtime — nenhum asset de áudio carregado.
+// toggle visível. Sintetizado em runtime - nenhum asset de áudio carregado.
 // ---------------------------------------------------------------------------
 
 let ctx = null

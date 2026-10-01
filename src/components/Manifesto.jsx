@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import DotField from './DotField'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -11,7 +10,7 @@ const TEXT =
 // palavras que acendem em destaque (serif)
 const KEYWORDS = new Set(['ativo', 'vivo:', 'organismo.'])
 
-// as três naturezas da Quimera — leão (face), bode (motor), serpente (cauda).
+// as três naturezas da Quimera - leão (face), bode (motor), serpente (cauda).
 // o emblema 4:5 é o slot onde entram os renders de cada natureza.
 const NATURES = [
   {
@@ -79,7 +78,7 @@ export default function Manifesto({ reducedMotion }) {
   }, [reducedMotion])
 
   // MOBILE (sem mouse): o tilt por cursor não existe, então o card ganha o
-  // mesmo destaque por SCROLL — acende e sobe levemente quando entra no centro
+  // mesmo destaque por SCROLL - acende e sobe levemente quando entra no centro
   // da tela, e volta ao sair. Mesma leitura do hover, no gesto do celular.
   useEffect(() => {
     if (reducedMotion || window.matchMedia('(pointer: fine)').matches) return
@@ -136,7 +135,7 @@ export default function Manifesto({ reducedMotion }) {
       ref={rootRef}
       className="relative z-[3] min-h-[100dvh] flex flex-col px-5 md:px-10 py-24 xl:py-0 overflow-hidden"
     >
-      {/* CONTEÚDO centralizado no espaço acima da faixa de onda */}
+      {/* CONTEÚDO centralizado na altura da seção */}
       <div className="flex-1 flex items-center w-full">
       <div className="relative z-10 w-full grid xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-12 xl:gap-16 items-center">
         {/* coluna do texto */}
@@ -172,7 +171,7 @@ export default function Manifesto({ reducedMotion }) {
                 <div className="nature-emblem">
                   <img
                     src={n.img}
-                    alt={`Quimera · ${n.ghost} — ${n.title}`}
+                    alt={`Quimera · ${n.ghost} - ${n.title}`}
                     loading="lazy"
                     className="absolute inset-0 h-full w-full object-cover"
                   />
@@ -192,14 +191,6 @@ export default function Manifesto({ reducedMotion }) {
           </div>
         </div>
       </div>
-      </div>
-
-      {/* FAIXA DE ONDA no rodapé da seção — largura total (do início do texto ao
-          fim dos cards), abaixo do conteúdo, como uma margem. Não sobrepõe nada
-          (reservada via flex-col). Hover muda as cores. O fade das bordas é feito
-          dentro do próprio canvas (laterais e base). Não bloqueia cliques/seleção. */}
-      <div className="pointer-events-none relative z-0 w-full h-[clamp(110px,20vh,240px)] mt-4 xl:mt-2">
-        <DotField />
       </div>
     </section>
   )

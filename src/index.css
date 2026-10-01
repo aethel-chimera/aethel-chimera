@@ -13,7 +13,7 @@
 
 html {
   scroll-behavior: auto;
-  /* trava o arrasto lateral no mobile SEM quebrar position:sticky — `hidden`
+  /* trava o arrasto lateral no mobile SEM quebrar position:sticky - `hidden`
      cria um scroll container e desgruda os cards empilhados do Protocolo;
      `clip` corta do mesmo jeito e preserva o sticky (fallback: hidden). */
   overflow-x: hidden;
@@ -83,7 +83,7 @@ body {
   top: 0;
   left: 0;
   /* ACIMA de tudo, inclusive do case (z-200): com z igual, o modal pintava por
-     cima do cursor e — como o nativo fica oculto — o usuário perdia o ponteiro
+     cima do cursor e - como o nativo fica oculto - o usuário perdia o ponteiro
      dentro do case, com o anel congelado da tela anterior. */
   z-index: 400;
   pointer-events: none;
@@ -257,7 +257,7 @@ button:focus-visible {
 }
 
 /* ===========================================================================
-   CAMADA ACTIVE THEORY — design system "mundo 3D / console técnico"
+   CAMADA ACTIVE THEORY - design system "mundo 3D / console técnico"
    Base preta, tipografia mono-arquitetural, HUD de canto, aberração cromática,
    pílula brilhante, painéis flutuantes. Identidade Aethel preservada (âmbar).
    =========================================================================== */
@@ -350,7 +350,7 @@ button:focus-visible {
   55%, 100% { transform: translateX(100%); }
 }
 
-/* aberração cromática (glitch RGB) em títulos no hover/entrada — gesto AT */
+/* aberração cromática (glitch RGB) em títulos no hover/entrada - gesto AT */
 .chroma {
   position: relative;
 }
@@ -422,6 +422,14 @@ button:focus-visible {
   transition: opacity 0.4s;
 }
 .at-panel:hover .panel-media::after { opacity: 1; }
+
+/* card do catálogo: sobe no hover, somado ao brilho do .at-panel */
+.catalog-card {
+  transition: border-color 0.4s, box-shadow 0.4s, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.catalog-card:hover {
+  transform: translateY(-6px);
+}
 
 /* slider da calculadora de retorno (ROI) */
 .roi-range {
@@ -558,7 +566,7 @@ button:focus-visible {
   color: var(--accent, #e0a458);
 }
 
-/* ===== FLUXO DE ONDAS — luz que corre nas interações (inspirado no vídeo) ===== */
+/* ===== FLUXO DE ONDAS - luz que corre nas interações (inspirado no vídeo) ===== */
 /* linha de luz que percorre a borda superior do card no hover */
 .card-wave::before {
   content: '';
@@ -647,7 +655,7 @@ button:focus-visible {
 }
 
 /* ===========================================================================
-   GRÁFICOS VIVOS — motion holográfico inspirado no vídeo: um feixe de luz CORRE
+   GRÁFICOS VIVOS - motion holográfico inspirado no vídeo: um feixe de luz CORRE
    dentro das barras de conquista (dados fluindo) e um valor SOBE pela curva de
    crescimento. Discreto (lento, baixa opacidade, só nas barras-resultado) p/
    dar vida sem poluir. reduced-motion zera tudo (regra global no fim).
@@ -689,7 +697,7 @@ button:focus-visible {
 }
 
 /* ===========================================================================
-   TRANSIÇÃO ENTRE SEÇÕES — cada seção emerge de e some na sombra, dando
+   TRANSIÇÃO ENTRE SEÇÕES - cada seção emerge de e some na sombra, dando
    profundidade e um corte suave entre fundos (sem editar cada componente).
    Fades em obsidiana no topo e na base; ficam atrás do conteúdo da seção.
    =========================================================================== */
@@ -718,7 +726,7 @@ main > section::after {
 }
 
 /* ===========================================================================
-   HOVER "TV ESTRAGADA" — CTA do catálogo (componente GlitchCaseButton em
+   HOVER "TV ESTRAGADA" - CTA do catálogo (componente GlitchCaseButton em
    Catalog.jsx): ruído de TV (SVG), fantasma RGB e scanlines piscam em espasmos
    aleatórios e independentes; o botão treme de leve. Keyframes referenciados
    via style inline no componente.
@@ -728,7 +736,7 @@ main > section::after {
 @keyframes glitch-scan { from { background-position: 0 0; } to { background-position: 0 3px; } }
 
 /* ===========================================================================
-   TRÊS NATUREZAS — cards da Quimera ao lado do Manifesto. Emblema 4:5 (slot
+   TRÊS NATUREZAS - cards da Quimera ao lado do Manifesto. Emblema 4:5 (slot
    para os renders), tilt 3D sutil no mouse e brilho neutro que segue o cursor.
    Monocromático, na gramática de console do site. O tilt zera em reduced-motion
    (as variáveis --rx/--ry/--mx/--my ficam em 0 sem o JS).
@@ -850,7 +858,7 @@ main > section::after {
 }
 
 /* ---------------------------------------------------------------------------
-   TOUCH (iOS/Android) — alvos de toque e efeitos sem mouse.
+   TOUCH (iOS/Android) - alvos de toque e efeitos sem mouse.
    Regra de acessibilidade: alvo clicável >= 44px. Aplicado só em ponteiro
    grosso p/ não inflar o layout no desktop.
 --------------------------------------------------------------------------- */

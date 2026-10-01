@@ -1,4 +1,4 @@
-# MCP — Mapa de Contexto do Projeto · Aethel Chimera
+# MCP - Mapa de Contexto do Projeto · Aethel Chimera
 
 > Documento de referência da estrutura, arquitetura e estado do site-vitrine
 > da **Aethel Chimera**. Serve de contexto compartilhado para continuar o
@@ -10,7 +10,7 @@
 
 ## 1. O que é
 
-Site-vitrine e **catálogo vivo** da Aethel Chimera — agência de "engenharia de
+Site-vitrine e **catálogo vivo** da Aethel Chimera - agência de "engenharia de
 presença digital" (landing pages, reestruturação de sites, manutenção mensal,
 social media, tráfego pago, integrações). Não é um site institucional comum: é
 uma **experiência imersiva de scroll** (escola Active Theory / Igloo / Lusion)
@@ -18,7 +18,7 @@ com um mundo WebGL ao fundo, narrativa por seção, áudio sintetizado e um
 catálogo 3D clicável.
 
 - **Idioma:** PT-BR (`<html lang="pt-BR">`).
-- **Tese da marca:** o site como **ativo vivo**, não despesa estática — ver
+- **Tese da marca:** o site como **ativo vivo**, não despesa estática - ver
   [src/components/Manifesto.jsx](src/components/Manifesto.jsx).
 - **Identidade visual:** monograma `Æ` + quimera; estética obsidiana/âmbar,
   "gramática de console" técnica (colchetes, mono, índices `SEC 0X`).
@@ -40,7 +40,7 @@ catálogo 3D clicável.
 
 > **Atenção R3F v9:** sensível a cópias duplicadas de React. O
 > [vite.config.js](vite.config.js) faz `dedupe` de `react`, `react-dom`,
-> `@react-three/fiber` e pré-bundla `three`/drei. Não remover sem motivo —
+> `@react-three/fiber` e pré-bundla `three`/drei. Não remover sem motivo -
 > evita o `Invalid hook call`.
 
 Chunks manuais no build: `three` e `motion` (gsap+lenis) separados.
@@ -68,9 +68,9 @@ aethel-chimera/
 │   │   ├── tree.glb        # bonsai do catálogo (4,4 MB, otimizado)
 │   │   └── README.md       # como incorporar/otimizar GLB
 │   ├── video/
-│   │   ├── hero-loop.mp4    # vídeo motion da Quimera, boomerang 16s mudo (4,4 MB) — fundo do Hero e do FinalCTA
+│   │   ├── hero-loop.mp4    # vídeo motion da Quimera, boomerang 16s mudo (4,4 MB) - fundo do Hero e do FinalCTA
 │   │   ├── hero-poster.jpg  # poster do vídeo (paint imediato + fallback reduced-motion)
-│   │   └── video-motion-aethel-chimera.mp4  # MASTER cru 3896×2128 34 MB — gitignored (não vai pro deploy; fonte p/ re-encode)
+│   │   └── video-motion-aethel-chimera.mp4  # MASTER cru 3896×2128 34 MB - gitignored (não vai pro deploy; fonte p/ re-encode)
 │   └── portfolio/          # gravações .mp4 dos cases (nome = slug); ignoradas no git
 │       └── README.md
 │
@@ -89,7 +89,7 @@ aethel-chimera/
 ## 4. Arquitetura de runtime (fluxo)
 
 1. **`index.html`** pinta um **boot-splash** estático (o `Æ`) antes do JS rodar
-   — FCP/LCP baixos. Fontes (Space Grotesk, Instrument Serif, JetBrains Mono)
+   - FCP/LCP baixos. Fontes (Space Grotesk, Instrument Serif, JetBrains Mono)
    carregam de forma assíncrona (`preload as=style` + swap).
 2. **`main.jsx`** monta `<App>` em `#root` dentro de `<StrictMode>`.
 3. **[App.jsx](src/App.jsx)** é o orquestrador:
@@ -100,39 +100,39 @@ aethel-chimera/
    - **Gate de 3D** (`enable3D`): desliga o mundo WebGL em **mobile**
      (`max-width:767px` ou `pointer:coarse`) e em **reduced-motion**, trocando
      por um fallback estático (gradiente radial). Mantém o Lighthouse mobile alto.
-   - **`ImmersiveWorld`** é **`lazy()`** + `<Suspense>` — não bloqueia o paint.
+   - **`ImmersiveWorld`** é **`lazy()`** + `<Suspense>` - não bloqueia o paint.
    - Estado **`detail`** controla a abertura do case de projeto
      (`<ProjectDetail>`), alimentado por `onOpenProject` do catálogo.
    - Ordem das seções (`<main>`): Hero → Manifesto → Services → Catalog →
      Process → RoiDashboard → Results → Plans → FinalCTA. `Footer` fora do main.
 
-### Sincronização DOM ↔ 3D — [scrollBus.js](src/scrollBus.js)
+### Sincronização DOM ↔ 3D - [scrollBus.js](src/scrollBus.js)
 
-Objeto `bus` mutável (sem estado React, por performance — escrito por frame):
+Objeto `bus` mutável (sem estado React, por performance - escrito por frame):
 
 | Campo | Quem escreve | Quem lê | Para quê |
 |---|---|---|---|
 | `catalogP` | Catalog (ScrollTrigger) | ImmersiveWorld | progresso 0..1 do catálogo move os painéis 3D |
 | `tint` | seção/projeto ativo | árvore 3D + aurora DOM | cor reativa coesa |
 | `cardHits` | ImmersiveWorld (por frame, `worldPos.project(camera)`) | Catalog (`CardHitAreas`) | posiciona áreas clicáveis sobre **todos** os cards 3D visíveis |
-| `openProject(i)` | App/Catalog | — | abre o `ProjectDetail` do índice `i` |
+| `openProject(i)` | App/Catalog | - | abre o `ProjectDetail` do índice `i` |
 
 ---
 
-## 5. O mundo imersivo — [ImmersiveWorld.jsx](src/components/ImmersiveWorld.jsx) (1585 linhas)
+## 5. O mundo imersivo - [ImmersiveWorld.jsx](src/components/ImmersiveWorld.jsx) (1585 linhas)
 
 Um único `<Canvas>` de fundo, coreografado por uma narrativa de **atos por
 seção** (`ACTS`), com pesos que ligam/desligam elementos conforme o scroll:
 
-- **Hero** — sem vídeo e sem a criatura GLB: respira só o mundo 3D/ambiente
+- **Hero** - sem vídeo e sem a criatura GLB: respira só o mundo 3D/ambiente
   (poeira/brasas, `glass:1`). O vídeo da Quimera (`hero-loop.mp4`) vive **apenas
   no FinalCTA**, numa moldura integrada (texto acima, não sobreposto), com o
   entorno seguindo a cor do vídeo via [useMotionTint.js](src/useMotionTint.js)
   (amostra a cor saturada do frame → `--mt`). Ver [FinalCTA.jsx](src/components/FinalCTA.jsx).
-- **Catálogo** — `panels:1` sinaliza "catálogo ativo" → **árvore GLB**
+- **Catálogo** - `panels:1` sinaliza "catálogo ativo" → **árvore GLB**
   (`tree.glb`, `CatalogTreeGLB`) com os **cards orbitando** em hélice; o card
   frontal sobe ao centro (`y→0`) e a seção segura (HOLD ~15%) antes de soltar.
-- **Contato/Rodapé** — `logo:1`, âmbar da marca.
+- **Contato/Rodapé** - `logo:1`, âmbar da marca.
 
 **Infra GLB genérica:** `GLBModel` + `SceneModels` + registro `GLB_MODELS`
 (`{key,url,section,position,scale,rotation}`), com `useGLTF.preload()`
@@ -144,7 +144,7 @@ tingidas por `tint`; pós-processamento `Bloom` (~1.0) + `Noise` + `Vignette`.
 
 **Aterramento:** `GroundShadow` (plano com gradiente radial) ancora a árvore.
 
-> ⚠️ **Dívida técnica viva:** código **procedural** antigo (`DnaHelix`,
+> **Dívida técnica viva:** código **procedural** antigo (`DnaHelix`,
 > `Tree3D`, `NervousSystem`) e o `Fluid` (logo de partículas) ainda existem no
 > arquivo **sem render** (tree-shaken). Podem ser apagados numa limpeza.
 > O logo de partículas foi substituído por **vídeo** no DOM (ver Footer/FinalCTA).
@@ -158,12 +158,12 @@ formas (a última amostrada dos pixels de `logo-mark.png`). Descrita no
 
 ---
 
-## 6. Componentes — [src/components/](src/components/)
+## 6. Componentes - [src/components/](src/components/)
 
 | Componente | Linhas | Papel |
 |---|---|---|
 | [ImmersiveWorld](src/components/ImmersiveWorld.jsx) | 1585 | Mundo WebGL de fundo (atos, GLB, cards 3D, atmosfera) |
-| [ChimeraCore](src/components/ChimeraCore.jsx) | 487 | Quimera de partículas (provável legado — ver §5) |
+| [ChimeraCore](src/components/ChimeraCore.jsx) | 487 | Quimera de partículas (provável legado - ver §5) |
 | [Catalog](src/components/Catalog.jsx) | 281 | Catálogo pinado; filtros; `CardHitAreas` (botões DOM sobre cards 3D) |
 | [ProcessChart](src/components/ProcessChart.jsx) | 199 | Gráficos SVG (diagnóstico / antes→depois / crescimento) |
 | [RoiDashboard](src/components/RoiDashboard.jsx) | 183 | Calculadora de ROI ("Índice de Retorno Aethel") por canal |
@@ -187,7 +187,7 @@ formas (a última amostrada dos pixels de `logo-mark.png`). Descrita no
 
 ---
 
-## 7. Conteúdo — [src/data.js](src/data.js) (fonte única, "CMS-ready")
+## 7. Conteúdo - [src/data.js](src/data.js) (fonte única, "CMS-ready")
 
 Todo o conteúdo editável vive aqui; os componentes só consomem estes arrays.
 
@@ -205,7 +205,7 @@ Todo o conteúdo editável vive aqui; os componentes só consomem estes arrays.
 
 **Vídeos de case:** colocar `.mp4` em `public/portfolio/<slug>.mp4` (ex.:
 `vetra.mp4`); sem o arquivo, a seção mostra a `image`. Os `.mp4` são
-**ignorados no git** (binários grandes — adicionar no deploy).
+**ignorados no git** (binários grandes - adicionar no deploy).
 
 > Placeholders a trocar antes de publicar: `url: '#'` nos projetos, imagens
 > Unsplash, e o `CONTACT` (e-mail/WhatsApp ainda fictícios: `+55 11 90000-0000`).
@@ -240,8 +240,8 @@ animações `chimera-drift`/`chimera-hue` do vídeo do rodapé, keyframes divers
 - **`prefers-reduced-motion`** desativa Lenis, pins e o 3D animado; conteúdo
   permanece completo e legível.
 - **Gate mobile:** WebGL pesado **não** carrega em mobile/coarse pointer.
-- **`ImmersiveWorld` é lazy** — nunca torná-lo import síncrono no caminho do LCP.
-- **Boot-splash** estático no HTML pinta antes do JS — não remover.
+- **`ImmersiveWorld` é lazy** - nunca torná-lo import síncrono no caminho do LCP.
+- **Boot-splash** estático no HTML pinta antes do JS - não remover.
 - **GLB:** sempre otimizar antes de commitar (ver §11). GitHub bloqueia >100 MB.
 - Catálogo horizontal pinado → vira **pilha vertical** abaixo de 768px.
 
@@ -269,7 +269,7 @@ correspondente em [src/data.js](src/data.js). Nada nos componentes.
 3. Trocar `url:'#'` pelo link real e `image` pelo screenshot real.
 
 **Incorporar um modelo GLB no mundo 3D:**
-1. Otimizar o GLB cru (obrigatório — referência: bonsai foi de **134 MB → 4,4 MB**):
+1. Otimizar o GLB cru (obrigatório - referência: bonsai foi de **134 MB → 4,4 MB**):
    ```bash
    npx @gltf-transform/cli simplify in.glb mid.glb --ratio 0.25 --error 0.008
    npx @gltf-transform/cli optimize mid.glb out.glb \
@@ -283,7 +283,7 @@ correspondente em [src/data.js](src/data.js). Nada nos componentes.
 
 **Mexer no fundo 3D:** trabalhar em `ACTS` (pesos por seção) e nos componentes
 do `ImmersiveWorld`. Lembrar que `bus.cardHits` é o que mantém os cards 3D
-clicáveis — se mudar a projeção, ajustar `CardHitAreas` no Catalog.
+clicáveis - se mudar a projeção, ajustar `CardHitAreas` no Catalog.
 
 ---
 
@@ -298,7 +298,7 @@ clicáveis — se mudar a projeção, ajustar `CardHitAreas` no Catalog.
 **Pendências conhecidas** (memória do projeto):
 - **Limpeza:** remover do `ImmersiveWorld` o código procedural morto
   (`DnaHelix`, `Tree3D`, `NervousSystem`, `Fluid`) que não renderiza mais.
-- **Confirmar o papel de `ChimeraCore.jsx`** — provável legado da abordagem
+- **Confirmar o papel de `ChimeraCore.jsx`** - provável legado da abordagem
   anterior (partículas) substituída por GLB+vídeo; o README ainda o descreve
   como "a assinatura". Decidir manter ou remover.
 - **Conteúdo placeholder:** `CONTACT`, `url:'#'` dos projetos, imagens Unsplash,

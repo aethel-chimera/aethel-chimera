@@ -1,10 +1,10 @@
-// Cabeçalho de seção unificado — a "gramática de console" do Active Theory
+// Cabeçalho de seção unificado - a "gramática de console" do Active Theory
 // aplicada a toda a página: índice técnico SEC 0X, linha-guia, kicker em mono
 // e o título display com destaque em serif âmbar. Dá ritmo coeso ao site.
 export default function SectionHead({ index, kicker, title, accent, align = 'left', className = '' }) {
   return (
     <header className={`relative ${align === 'center' ? 'text-center' : ''} ${className}`}>
-      {/* régua técnica: [ SEC 0X ] ———— kicker */}
+      {/* régua técnica: [ SEC 0X ] ---- kicker */}
       <div className={`flex items-center gap-4 mb-6 ${align === 'center' ? 'justify-center' : ''}`}>
         <span className="mono-label text-amber whitespace-nowrap">[ SEC {index} ]</span>
         <span className="flow-rule h-px w-12 md:w-24 bg-ivory/15" aria-hidden="true" />

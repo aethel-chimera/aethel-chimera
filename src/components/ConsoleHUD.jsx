@@ -6,13 +6,12 @@ import { sectionTone } from '../audio'
 // Reforça a leitura de "instrumento técnico" sem competir com o conteúdo.
 
 // ORDEM = ordem real das seções no DOM (App.jsx). O índice do HUD deriva daqui,
-// então precisa bater com o render: catálogo=04, studio3d=05, retorno=06...
+// então precisa bater com o render: catálogo=04, retorno=05...
 const SECTION_NAMES = {
   hero: 'TESE',
   manifesto: 'MANIFESTO',
   servicos: 'SERVIÇOS',
   catalogo: 'CATÁLOGO',
-  studio3d: 'MODELAGEM 3D',
   retorno: 'RETORNO',
   processo: 'PROTOCOLO',
   resultados: 'RESULTADOS',
@@ -26,32 +25,6 @@ export default function ConsoleHUD() {
   const [active, setActive] = useState('hero')
   const [coord, setCoord] = useState('0000')
   const [clock, setClock] = useState('--:--:--')
-  const [showHint, setShowHint] = useState(true)
-
-  // dica de orbitar sai após o primeiro drag (ou 8s)
-  useEffect(() => {
-    if (window.matchMedia('(pointer: coarse)').matches) {
-      setShowHint(false)
-      return
-    }
-    let moved = false
-    const start = { x: 0, y: 0 }
-    const down = (e) => { start.x = e.clientX; start.y = e.clientY }
-    const move = (e) => {
-      if (!moved && (e.buttons & 1) && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 12) {
-        moved = true
-        setShowHint(false)
-      }
-    }
-    window.addEventListener('pointerdown', down)
-    window.addEventListener('pointermove', move)
-    const t = setTimeout(() => setShowHint(false), 8000)
-    return () => {
-      window.removeEventListener('pointerdown', down)
-      window.removeEventListener('pointermove', move)
-      clearTimeout(t)
-    }
-  }, [])
 
   // seção ativa por IntersectionObserver
   useEffect(() => {
@@ -110,13 +83,6 @@ export default function ConsoleHUD() {
       {/* log técnico só em telas médias+ (no mobile sobrepõe o conteúdo) */}
       <div className="hud-log hidden md:block" aria-hidden="true">
         <span className="amber">SEC {idx}</span> // {SECTION_NAMES[active]} · POS <span className="amber">{coord}</span> · BRT {clock}
-      </div>
-      <div
-        className="fixed bottom-[22px] right-[46px] z-[88] pointer-events-none mono-label text-[0.6rem] text-titanium/60 transition-opacity duration-700"
-        style={{ opacity: showHint ? 1 : 0 }}
-        aria-hidden="true"
-      >
-        Arraste <span className="text-amber">⟳</span> orbitar
       </div>
     </>
   )

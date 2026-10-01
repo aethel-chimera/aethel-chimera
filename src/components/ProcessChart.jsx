@@ -27,7 +27,7 @@ function useShown() {
 const fmt = (v, unit = '') =>
   (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ',')) + unit
 
-// cor distinta por métrica (premium, alto contraste) — facilita ler cada barra
+// cor distinta por métrica (premium, alto contraste) - facilita ler cada barra
 const DIAG_COLORS = ['#E0A458', '#9A7BD8', '#C9A66B', '#5FA391', '#9A85C4']
 
 // curva de transição usada nas barras (suave, mas responsiva ao slider)
@@ -39,7 +39,7 @@ function Diagnostic({ chart, shown, factor }) {
       {chart.items.map((it, i) => {
         // a TRILHA tem 12% de folga sobre o teto: sem isso, no investimento
         // máximo (fator 1,14) a meta clampava no teto e o tick colava na borda
-        // direita — o usuário não via mais a barra reagir ao slider.
+        // direita - o usuário não via mais a barra reagir ao slider.
         const ceil = it.scaleMax || 100
         const max = ceil * 1.12
         // projeção: quanto da meta a obra atinge com o investimento escolhido

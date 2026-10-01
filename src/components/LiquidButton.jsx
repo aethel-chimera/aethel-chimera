@@ -191,7 +191,7 @@ export default function LiquidButton({
     const s = { cx: 0, cy: 0, px: 0, py: 0, vx: 0, vy: 0, R: 0, B: 0, pressT: 0, pressE: 0, proxHist: [], engaged: false, peak: 0, wobStart: undefined, wobAmp: 1 };
     const mouse = { x: -99999, y: -99999, active: false, speed: 0, _lx: 0, _ly: 0, _lt: 0, _mt: 0 };
     // TOUCH: não existe cursor, então o líquido ficava congelado. Aqui um
-    // "cursor virtual" orbita o botão sem parar enquanto ele está na tela —
+    // "cursor virtual" orbita o botão sem parar enquanto ele está na tela -
     // o efeito vive o tempo todo, como o usuário pediu. O toque dá um pico.
     const COARSE_PTR = window.matchMedia('(pointer: coarse)').matches;
     const touchFx = { onScreen: false, tap: 0 };
@@ -303,7 +303,7 @@ export default function LiquidButton({
       s.B += (targetB - s.B) * cfg.kR;
 
       // "balançadinha" LOCAL: a bolha no ponto exato onde o cursor saiu recua
-      // — empurra pra fora e pra dentro algumas vezes — em vez do botão inteiro.
+      // - empurra pra fora e pra dentro algumas vezes - em vez do botão inteiro.
       if (proxNow > 0.25) { s.holdX = s.cx; s.holdY = s.cy; }   // último ponto de contato forte
       if (proxNow > 0.05) { s.engaged = true; s.peak = Math.max(s.peak || 0, dprox); s.snapFill = false; }
       if (s.engaged && proxNow < 0.35 && !inGrace) {        // exit fires near the edge, almost immediately
@@ -414,7 +414,7 @@ export default function LiquidButton({
     if (wrapRef.current) ro.observe(wrapRef.current);
     window.addEventListener("resize", measure);
 
-    // NOTE: não chamamos loseContext() aqui — em React.StrictMode (dev) o
+    // NOTE: não chamamos loseContext() aqui - em React.StrictMode (dev) o
     // efeito roda mount→unmount→mount, e perder o contexto deixaria o canvas
     // em branco na segunda montagem. Parar o rAF e remover listeners basta.
     return () => {
@@ -438,7 +438,7 @@ export default function LiquidButton({
   }, [width, height]);
 
   // TOUCH: sem mix-blend a cor do rótulo é FIXA, então ela precisa contrastar
-  // com o PREENCHIMENTO (`color`) — que no card destacado dos planos é escuro,
+  // com o PREENCHIMENTO (`color`) - que no card destacado dos planos é escuro,
   // não claro. Antes o rótulo era sempre "#0B0B10" e a prop `textColor` era
   // ignorada no toque, então na pílula preta virava preto sobre preto.
   // Sem `textColor`, a cor sai da luminância do preenchimento; a sombra é
@@ -464,10 +464,10 @@ export default function LiquidButton({
         height: height + pad * 2,
         // MOBILE: o canvas inclui a folga do efeito (width + pad*2) e chegava a
         // 528px, estourando telas de 375px. Clampar aqui mantém o botão dentro
-        // da viewport — o canvas se re-mede sozinho pelo ResizeObserver.
+        // da viewport - o canvas se re-mede sozinho pelo ResizeObserver.
         // NÃO usar `100%` aqui: em pai com largura de conteúdo (flex +
         // items-center) a porcentagem é circular e é ignorada no cálculo
-        // intrínseco — o pai continuava medindo 528px e gerava scroll
+        // intrínseco - o pai continuava medindo 528px e gerava scroll
         // horizontal. A unidade de viewport é resolvível e sempre clampa.
         maxWidth: "calc(100vw - 2rem)",
         boxSizing: "border-box",
@@ -511,7 +511,7 @@ export default function LiquidButton({
             letterSpacing: "0.24em",
             textTransform: "uppercase",
             // TOUCH: sem mix-blend (quebra sob ancestral com transform/opacity e
-            // sumia o texto na pílula cheia) — cor sólida contrastando com o
+            // sumia o texto na pílula cheia) - cor sólida contrastando com o
             // preenchimento. Desktop mantém o difference, que lá funciona.
             color: COARSE_TEXT ? coarseLabel : (textColor || color),
             mixBlendMode: COARSE_TEXT ? "normal" : "difference",

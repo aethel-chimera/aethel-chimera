@@ -36,7 +36,7 @@ export default function FinalCTA({ reducedMotion }) {
     >
       <div className="relative z-10 w-full max-w-3xl flex flex-col items-center">
         <div className="cta-reveal flex items-center justify-center gap-4 mb-8">
-          <span className="mono-label text-amber">[ SEC 10 ]</span>
+          <span className="mono-label text-amber">[ SEC 09 ]</span>
           <span className="h-px w-12 bg-ivory/15" aria-hidden="true" />
           <span className="mono-label text-titanium/60">O próximo capítulo é o seu</span>
         </div>
@@ -47,7 +47,7 @@ export default function FinalCTA({ reducedMotion }) {
         </h2>
 
         {/* O LiquidButton usa mix-blend-mode no texto, que quebra sob um
-            ancestral com transform/opacity — por isso fica fora do Magnetic e
+            ancestral com transform/opacity - por isso fica fora do Magnetic e
             da animação .cta-reveal. reduced-motion cai no link simples. */}
         <div className="mt-14">
           {reducedMotion ? (
@@ -79,7 +79,7 @@ export default function FinalCTA({ reducedMotion }) {
           )}
         </div>
 
-        {/* canais oficiais — todos com link funcional (wa.me / mailto / instagram) */}
+        {/* canais oficiais - todos com link funcional (wa.me / mailto / instagram) */}
         <div className="cta-reveal mt-12 flex flex-wrap justify-center gap-x-8 gap-y-4">
           {CONTACT.phones.map((p) => (
             <a

@@ -4,35 +4,9 @@ import { ArrowDown } from 'lucide-react'
 import { TICKER_ITEMS } from '../data'
 import LiquidButton from './LiquidButton'
 import Scramble from './Scramble'
+import HalftoneBackground from './HalftoneBackground'
 
-// tríptico do hero: 3 vídeos retrato lado a lado, como uma tela única.
-const HERO_VIDEOS = [
-  { src: '/video/leao-cyber.mp4', poster: '/video/leao-cyber-poster.jpg', alt: 'Leão cibernético' },
-  { src: '/video/mid-hero.mp4', poster: '/video/mid-hero-poster.jpg', alt: 'Quimera central' },
-  { src: '/video/mulher-cyber.mp4', poster: '/video/mulher-cyber-poster.jpg', alt: 'Mulher cibernética', flip: true },
-]
-
-// largura da zona de cross-fade sobre cada costura, em % da largura da tela.
-// 0 = sem sobreposição (vídeos encostados lado a lado, cada um no seu terço).
-const HERO_BLEND = 4
-
-// Layout de cada painel do tríptico. Em vez de 3 vídeos encostados (que deixam
-// uma linha de corte dura na emenda), cada vídeo estende além do seu terço e
-// invade a costura. O painel da direita de cada costura entra POR CIMA com
-// fade-in, enquanto o da esquerda continua opaco POR BAIXO: cross-fade sem
-// faixa escura no meio (a cobertura total permanece 100% em toda a largura).
-function heroPanelLayout(i, count) {
-  const slot = 100 / count
-  const left = i === 0 ? 0 : i * slot - HERO_BLEND / 2
-  const right = i === count - 1 ? 100 : (i + 1) * slot + HERO_BLEND / 2
-  const width = right - left
-  return {
-    left,
-    width,
-    fade: (HERO_BLEND / width) * 100, // largura do fade em % do próprio painel
-    hasFade: i > 0, // o primeiro fica totalmente opaco; os demais entram por cima
-  }
-}
+const HERO_FADE = 'linear-gradient(to bottom, #000 40%, transparent 96%)'
 
 // rola até o contato respeitando o smooth scroll (Lenis), com fallback nativo
 function scrollToContact() {
@@ -78,48 +52,15 @@ export default function Hero({ ready, reducedMotion }) {
 
   return (
     <section id="hero" ref={rootRef} className="relative min-h-[100dvh] flex flex-col z-[3] overflow-hidden">
-      {/* TRÍPTICO: 3 vídeos retrato lado a lado (leão · meio · mulher) compondo
-          uma tela única, em loop. reduced-motion → posters. Scrims garantem a
-          leitura do texto sobre os vídeos. */}
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute inset-0">
-          {HERO_VIDEOS.map((v, i) => {
-            const { left, width, fade, hasFade } = heroPanelLayout(i, HERO_VIDEOS.length)
-            // o gradiente é espelhado junto com o vídeo no flip (scaleX), então
-            // invertemos a direção (to left) para o fade cair sempre na costura.
-            const dir = v.flip ? 'to left' : 'to right'
-            const maskImage = hasFade
-              ? `linear-gradient(${dir}, transparent 0%, #000 ${fade.toFixed(2)}%, #000 100%)`
-              : undefined
-            const style = {
-              left: `${left}%`,
-              width: `${width}%`,
-              transform: v.flip ? 'scaleX(-1)' : undefined,
-              WebkitMaskImage: maskImage,
-              maskImage,
-            }
-            return reducedMotion ? (
-              <img key={v.src} src={v.poster} alt="" style={style} className="absolute top-0 h-full object-cover" />
-            ) : (
-              <video
-                key={v.src}
-                style={style}
-                className="absolute top-0 h-full object-cover"
-                src={v.src}
-                poster={v.poster}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-              />
-            )
-          })}
-        </div>
-        {/* base escurece (texto/CTA/ticker) e topo livre (rostos visíveis) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/55 to-obsidian/15" />
-        {/* leve reforço à esquerda p/ o título */}
-        <div className="absolute inset-0 bg-gradient-to-r from-obsidian/70 via-transparent to-transparent" />
+      {/* sem fundo próprio e com máscara na base: o efeito some aos poucos e
+          a página segue sem emenda para a próxima seção */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        style={{ maskImage: HERO_FADE, WebkitMaskImage: HERO_FADE }}
+        aria-hidden="true"
+      >
+        <HalftoneBackground reducedMotion={reducedMotion} />
+        <div className="absolute inset-0 bg-gradient-to-r from-obsidian/60 via-transparent to-transparent" />
       </div>
 
       <div className="relative z-10 flex-1 flex items-end px-5 md:px-10 pb-28 pt-32">
@@ -178,7 +119,7 @@ export default function Hero({ ready, reducedMotion }) {
         </div>
       </div>
 
-      {/* dica de interação: cue de scroll (só desktop — no mobile colide com os CTAs) */}
+      {/* dica de interação: cue de scroll (só desktop - no mobile colide com os CTAs) */}
       <div
         className="hero-cta pointer-events-none absolute z-10 left-1/2 -translate-x-1/2 bottom-24 hidden md:flex flex-col items-center gap-3 transition-opacity duration-500"
         style={{ opacity: hideHint ? 0 : 1 }}

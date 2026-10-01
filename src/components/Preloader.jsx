@@ -24,7 +24,7 @@ export default function Preloader({ onDone }) {
     const wordTimer = setInterval(() => setWordIndex((i) => (i + 1) % WORDS.length), 400)
 
     // Progresso REAL pelo carregamento de fontes + imagens críticas. O mundo
-    // WebGL é DECORATIVO e carrega de forma assíncrona (lazy) — não trava o
+    // WebGL é DECORATIVO e carrega de forma assíncrona (lazy) - não trava o
     // conteúdo, o que mantém o LCP baixo no mobile. Um tempo mínimo garante a
     // intro cinematográfica sem depender do parse do Three.js.
     // tempo mínimo da intro: curto no mobile (LCP) e cinematográfico no desktop
@@ -76,7 +76,7 @@ export default function Preloader({ onDone }) {
 
     const tick = () => {
       const elapsed = performance.now() - startT
-      // o número não ultrapassa o "portão de tempo" — progresso honesto e
+      // o número não ultrapassa o "portão de tempo" - progresso honesto e
       // cinematográfico mesmo quando as fontes resolvem instantaneamente
       const timeGate = Math.min(elapsed / MIN_TIME, 1) * 100
       const effective = Math.min(targetProgress, timeGate)
@@ -93,7 +93,7 @@ export default function Preloader({ onDone }) {
 
     // TRAVA DE SEGURANÇA: o reveal dependia SÓ do rAF e de todas as tasks
     // resolverem. Se uma fonte/imagem pendurar na rede (targetProgress fica
-    // <100) ou o rAF for pausado, o site nunca aparecia — cortina preta eterna.
+    // <100) ou o rAF for pausado, o site nunca aparecia - cortina preta eterna.
     // Passados 6s, revela de qualquer jeito.
     const failsafe = setTimeout(reveal, 6000)
 

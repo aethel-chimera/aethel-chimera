@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// FAIXA DE INVESTIMENTO — fonte única para a Calculadora (RoiDashboard) e para
+// FAIXA DE INVESTIMENTO - fonte única para a Calculadora (RoiDashboard) e para
 // os gráficos do Protocolo (Process). Mudou aqui, muda nos dois.
 // REF é o investimento de referência: é nele que a projeção bate EXATAMENTE os
 // multiplicadores de benchmark (ROI 4,16×), sem correção de saturação.
@@ -79,7 +79,7 @@ export const SERVICES = [
     title: 'Modelagem & Experiências 3D',
     category: 'Diferencial',
     description:
-      'O que nenhuma agência local entrega: ativos 3D exclusivos modelados in-house (Blender) — mascotes, produtos e cenas cinematográficas — e páginas imersivas em WebGL, otimizadas para carregar leve.',
+      'O que nenhuma agência local entrega: ativos 3D exclusivos modelados in-house (Blender) - mascotes, produtos e cenas cinematográficas - e páginas imersivas em WebGL, otimizadas para carregar leve.',
     deliverables: ['Modelagem e texturização PBR', 'Personagens e mascotes animados', 'Produto 3D interativo (girar/configurar)', 'Cenas e vídeos cinematográficos', 'Integração WebGL otimizada'],
     integrations: ['Blender', 'WebGL / Three.js', 'glTF', 'AR-ready'],
     image: '/catalogo-vivo-poster.jpg',
@@ -87,7 +87,7 @@ export const SERVICES = [
 ]
 
 // ---------------------------------------------------------------------------
-// CATÁLOGO — clientes REAIS da Aethel Chimera (fonte: CRM "Empresas" no Notion).
+// CATÁLOGO - clientes REAIS da Aethel Chimera (fonte: CRM "Empresas" no Notion).
 // `metrics` lista o ESCOPO ENTREGUE, não resultados inventados: enquanto os
 // números reais de cada conta não forem apurados, nada de porcentagem fictícia.
 // `instagram`/`site` só são preenchidos quando o canal está confirmado.
@@ -140,7 +140,7 @@ export const CATALOG = [
     tags: ['Landing Page', 'Fitness', 'Modelagem 3D'],
     site: 'https://diogoalanpersonal.com',
     instagram: 'https://www.instagram.com/centro_de_treinamento_da/',
-    // perfil pessoal do Diogo — o usuário pediu os dois Instagrams no card
+    // perfil pessoal do Diogo - o usuário pediu os dois Instagrams no card
     instagramAlt: 'https://www.instagram.com/diogoalanpersonal13/',
     instagramAltLabel: 'Insta pessoal',
     whatsapp: 'https://wa.me/5531985014149',
@@ -172,7 +172,7 @@ export const PROCESS = [
     num: '01',
     title: 'Diagnóstico',
     description:
-      'Antes de tocar no código, auditamos tudo: Core Web Vitals, SEO técnico, segurança, conteúdo, jornada e concorrência. Você recebe um diagnóstico com nota e um mapa de prioridades — onde o site perde dinheiro hoje e quanto dá para recuperar.',
+      'Antes de tocar no código, auditamos tudo: Core Web Vitals, SEO técnico, segurança, conteúdo, jornada e concorrência. Você recebe um diagnóstico com nota e um mapa de prioridades - onde o site perde dinheiro hoje e quanto dá para recuperar.',
     how: [
       'Auditoria técnica: performance, SEO e segurança',
       'Análise da jornada e dos pontos de fuga',
@@ -194,7 +194,7 @@ export const PROCESS = [
     num: '02',
     title: 'Arquitetura e Design',
     description:
-      'Arquitetura de informação, design system da marca e protótipo navegável — cada tela aprovada antes de uma linha de código. O foco é cortar fricção: menos passos até a ação, hierarquia que guia o olho e copy que converte.',
+      'Arquitetura de informação, design system da marca e protótipo navegável - cada tela aprovada antes de uma linha de código. O foco é cortar fricção: menos passos até a ação, hierarquia que guia o olho e copy que converte.',
     how: [
       'Arquitetura de informação e fluxo de conversão',
       'Design system com a identidade da marca',
@@ -236,7 +236,7 @@ export const PROCESS = [
     num: '04',
     title: 'Operação Contínua',
     description:
-      'Monitoramento 24/7, manutenção, SEO, tráfego pago e conteúdo em ciclo mensal. O site vira um ativo que cresce: cada mês mais leads, mais velocidade, mais autoridade — com relatório transparente do que foi feito e do retorno.',
+      'Monitoramento 24/7, manutenção, SEO, tráfego pago e conteúdo em ciclo mensal. O site vira um ativo que cresce: cada mês mais leads, mais velocidade, mais autoridade - com relatório transparente do que foi feito e do retorno.',
     how: [
       'Monitoramento de uptime e backups',
       'SEO e performance evoluídos todo mês',
@@ -245,7 +245,7 @@ export const PROCESS = [
     ],
     chart: {
       type: 'growth',
-      caption: 'Leads por mês — índice 100 = mês 1',
+      caption: 'Leads por mês - índice 100 = mês 1',
       months: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6'],
       data: [100, 126, 152, 184, 214, 240],
       delta: '+140%',
@@ -260,12 +260,12 @@ export const STATS = [
 ]
 
 // ---------------------------------------------------------------------------
-// PROVA SOCIAL — os 4 clientes REAIS.
+// PROVA SOCIAL - os 4 clientes REAIS.
 // Não há depoimento aqui porque não há depoimento colhido. Os anteriores eram
 // pessoas e empresas inventadas (Vetra Engenharia, Clínica Aurum...); assinar
 // uma frase inventada com o nome de um cliente REAL seria pior ainda, porque
 // dá para conferir. Enquanto `quote` for null, o card mostra o ESCOPO
-// ENTREGUE — fato verificável, herdado do próprio CATALOG (fonte única).
+// ENTREGUE - fato verificável, herdado do próprio CATALOG (fonte única).
 //
 // PARA PUBLICAR UM DEPOIMENTO DE VERDADE: preencha `quote`, `person` e `role`
 // no QUOTES abaixo, na chave do slug do cliente. O card vira citação sozinho.
@@ -335,7 +335,6 @@ export const PLANS = [
 export const NAV_LINKS = [
   { label: 'Serviços', href: '#servicos' },
   { label: 'Catálogo', href: '#catalogo' },
-  { label: '3D', href: '#studio3d' },
   { label: 'Processo', href: '#processo' },
   { label: 'Resultados', href: '#resultados' },
   { label: 'Contato', href: '#contato' },
@@ -364,7 +363,7 @@ export const CONTACT = {
   email: 'aethelchimera@gmail.com',
   emailUrl:
     'mailto:aethelchimera@gmail.com' +
-    '?subject=' + encodeURIComponent('Novo projeto — via site') +
+    '?subject=' + encodeURIComponent('Novo projeto - via site') +
     '&body=' + encodeURIComponent(WHATSAPP_MSG),
   instagram: '@aethel.chimera',
   instagramUrl: 'https://www.instagram.com/aethel.chimera/',

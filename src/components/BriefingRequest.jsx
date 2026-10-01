@@ -2,15 +2,15 @@ import { useMemo, useState } from 'react'
 import { SERVICES, CONTACT, waLink } from '../data'
 
 // ---------------------------------------------------------------------------
-// BRIEFING — solicitação de orçamento, dentro da seção da Calculadora.
+// BRIEFING - solicitação de orçamento, dentro da seção da Calculadora.
 //
 // O visitante marca os serviços, descreve a empresa e a ideia, e o formulário
 // monta um briefing ESTRUTURADO destinado à aba de Solicitações do CRM.
 // A expectativa orçamentária não é digitada do zero: vem do slider que a pessoa
-// acabou de mexer logo acima (prop `invest`) — que é justamente o número que
+// acabou de mexer logo acima (prop `invest`) - que é justamente o número que
 // queremos analisar antes de responder.
 //
-// ROTA DE ENTREGA — trocar em um lugar só:
+// ROTA DE ENTREGA - trocar em um lugar só:
 //   CRM_ENDPOINT = null  -> entrega pelo WhatsApp com o briefing já formatado
 //                           (funciona hoje, sem backend nenhum).
 //   CRM_ENDPOINT = 'url' -> passa a fazer POST do JSON direto para o CRM.
@@ -43,12 +43,12 @@ export default function BriefingRequest({ invest }) {
   const toggleServico = (titulo) =>
     setServicos((s) => (s.includes(titulo) ? s.filter((x) => x !== titulo) : [...s, titulo]))
 
-  // O briefing em texto — é exatamente este bloco que vira uma linha no CRM.
+  // O briefing em texto - é exatamente este bloco que vira uma linha no CRM.
   const briefing = useMemo(() => {
     const L = []
-    L.push('SOLICITAÇÃO DE ORÇAMENTO — via aethelchimera.com', '')
-    L.push('Empresa: ' + (form.empresa || '—'))
-    L.push('Responsável: ' + (form.responsavel || '—'))
+    L.push('SOLICITAÇÃO DE ORÇAMENTO - via aethelchimera.com', '')
+    L.push('Empresa: ' + (form.empresa || '-'))
+    L.push('Responsável: ' + (form.responsavel || '-'))
     if (form.email) L.push('E-mail: ' + form.email)
     if (form.whatsapp) L.push('WhatsApp: ' + form.whatsapp)
     if (form.segmento) L.push('Segmento: ' + form.segmento)
@@ -117,7 +117,7 @@ export default function BriefingRequest({ invest }) {
             'Vamos analisar o escopo e a expectativa de investimento e responder pelo canal que você deixou.'
           ) : (
             <>
-              Abrimos o WhatsApp com o seu briefing preenchido — toque em enviar por lá para ele
+              Abrimos o WhatsApp com o seu briefing preenchido - toque em enviar por lá para ele
               chegar até nós. Se a janela não abriu, use <span className="text-ivory">Copiar
               briefing</span> e mande para{' '}
               <a href={CONTACT.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-amber underline underline-offset-2">
@@ -164,7 +164,7 @@ export default function BriefingRequest({ invest }) {
       </h3>
       <p className="text-titanium text-sm leading-relaxed mb-8 max-w-xl">
         Marque os serviços, conte a ideia e o que precisamos entender do seu negócio. O valor do
-        slider acima vai junto como expectativa de investimento — é com ele que montamos a proposta.
+        slider acima vai junto como expectativa de investimento - é com ele que montamos a proposta.
       </p>
 
       {/* serviços desejados */}
@@ -192,7 +192,7 @@ export default function BriefingRequest({ invest }) {
         </div>
       </fieldset>
 
-      {/* expectativa orçamentária — herdada do slider da calculadora */}
+      {/* expectativa orçamentária - herdada do slider da calculadora */}
       <div className="mb-8 rounded-xl border border-amber/25 bg-amber/5 px-4 py-3.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="mono-label text-titanium/70">Investimento mensal previsto</span>
         <span className="font-display font-semibold text-xl text-amber tabular-nums">{brl(invest)}</span>
@@ -228,7 +228,7 @@ export default function BriefingRequest({ invest }) {
 
       <div className="mb-4">
         <label htmlFor="bf-site" className="mono-label text-titanium/60 block mb-2">Site ou perfil atual</label>
-        <input id="bf-site" value={form.siteAtual} onChange={set('siteAtual')} className={campo} placeholder="instagram.com/seu.perfil — ou deixe vazio se ainda não tem" />
+        <input id="bf-site" value={form.siteAtual} onChange={set('siteAtual')} className={campo} placeholder="instagram.com/seu.perfil - ou deixe vazio se ainda não tem" />
       </div>
 
       <div className="mb-4">
@@ -247,7 +247,7 @@ export default function BriefingRequest({ invest }) {
         <textarea
           id="bf-ctx" value={form.contexto} onChange={set('contexto')} rows={4} maxLength={900}
           className={campo + ' resize-y'}
-          placeholder="Público, concorrentes, o que já tentou, restrições — tudo que ajude a entender o pedido."
+          placeholder="Público, concorrentes, o que já tentou, restrições - tudo que ajude a entender o pedido."
         />
       </div>
 
@@ -296,8 +296,8 @@ export default function BriefingRequest({ invest }) {
       <p className="font-mono text-[0.62rem] text-titanium/45 mt-4 leading-relaxed">
         {CRM_ENDPOINT
           ? 'Vai direto para a nossa fila de análise. '
-          : 'Ao enviar, abrimos o WhatsApp com o briefing já preenchido — é só tocar em enviar. '}
-        Usamos seus dados só para responder esta solicitação — nada de lista de disparo.
+          : 'Ao enviar, abrimos o WhatsApp com o briefing já preenchido - é só tocar em enviar. '}
+        Usamos seus dados só para responder esta solicitação - nada de lista de disparo.
       </p>
     </form>
   )

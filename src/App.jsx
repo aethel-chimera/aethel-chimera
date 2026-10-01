@@ -11,7 +11,6 @@ import Hero from './components/Hero'
 import Manifesto from './components/Manifesto'
 import Services from './components/Services'
 import Catalog from './components/Catalog'
-import Studio3D from './components/Studio3D'
 import Process from './components/Process'
 import RoiDashboard from './components/RoiDashboard'
 import Results from './components/Results'
@@ -30,7 +29,7 @@ export default function App() {
   const alreadyLoaded = useMemo(() => sessionStorage.getItem('aethel-preloaded') === '1', [])
   const [loaded, setLoaded] = useState(alreadyLoaded)
   const [detail, setDetail] = useState(null) // índice do projeto aberto (ou null)
-  // investimento mensal — estado compartilhado entre o diagnóstico (Process) e a calculadora de retorno (RoiDashboard)
+  // investimento mensal - estado compartilhado entre o diagnóstico (Process) e a calculadora de retorno (RoiDashboard)
   const [invest, setInvest] = useState(8000)
 
   const handlePreloaderDone = useCallback(() => setLoaded(true), [])
@@ -88,7 +87,6 @@ export default function App() {
         <Manifesto reducedMotion={reducedMotion} />
         <Services reducedMotion={reducedMotion} />
         <Catalog reducedMotion={reducedMotion} onOpenProject={setDetail} />
-        <Studio3D reducedMotion={reducedMotion} />
         <RoiDashboard invest={invest} setInvest={setInvest} />
         <Process reducedMotion={reducedMotion} invest={invest} />
         <Results reducedMotion={reducedMotion} />
