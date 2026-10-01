@@ -68,6 +68,32 @@ export default function Services({ reducedMotion }) {
     }
   }, [reducedMotion])
 
+  // rolar com o mouse parado não dispara mouseleave: confere o que ficou sob o cursor
+  useEffect(() => {
+    if (!window.matchMedia('(pointer: fine)').matches) return
+    let pointer = null
+    let raf = 0
+    const onMove = (e) => {
+      pointer = { x: e.clientX, y: e.clientY }
+    }
+    const check = () => {
+      raf = 0
+      if (!pointer) return
+      const row = document.elementFromPoint(pointer.x, pointer.y)?.closest('[data-preview]')
+      setHoverImage(row ? row.getAttribute('data-preview') : null)
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(check)
+    }
+    window.addEventListener('mousemove', onMove, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [])
+
   return (
     <section id="servicos" ref={rootRef} className="relative z-[3] px-5 md:px-10 py-32">
       <SectionHead index="03" kicker="07 disciplinas" title="Serviços" accent="como dossiês" className="mb-16" />
@@ -83,6 +109,7 @@ export default function Services({ reducedMotion }) {
             >
               <button
                 className="w-full flex items-center gap-6 py-7 text-left group"
+                data-preview={s.image}
                 onClick={() => setOpenId(isOpen ? null : s.id)}
                 onMouseEnter={() => setHoverImage(s.image)}
                 onMouseLeave={() => setHoverImage(null)}
