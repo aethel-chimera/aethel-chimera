@@ -346,9 +346,19 @@ export default function LiquidButton({
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
 
+      if (running) raf = requestAnimationFrame(draw);
+    };
+    // só desenha com o botão na tela: fora dela o shader rodava a 60 fps à toa
+    let running = false;
+    const play = () => {
+      if (running) return;
+      running = true;
       raf = requestAnimationFrame(draw);
     };
-    raf = requestAnimationFrame(draw);
+    const pause = () => {
+      running = false;
+      cancelAnimationFrame(raf);
+    };
 
     const onMove = (e) => {
       const now = performance.now();
@@ -384,11 +394,12 @@ export default function LiquidButton({
       btn.dispatchEvent(new CustomEvent("liquidclick", { bubbles: true }));
     };
     // liga/desliga o cursor virtual conforme o botão entra e sai da tela
-    let io;
-    if (COARSE_PTR) {
-      io = new IntersectionObserver(([e]) => { touchFx.onScreen = e.isIntersecting; }, { threshold: 0.15 });
-      io.observe(canvas);
-    }
+    const io = new IntersectionObserver(([e]) => {
+      touchFx.onScreen = e.isIntersecting;
+      if (e.isIntersecting) play();
+      else pause();
+    });
+    io.observe(canvas);
     const onTouchTap = () => { touchFx.tap = 1; s.pressT = 1; setTimeout(() => { s.pressT = 0; }, 160); };
     if (COARSE_PTR) canvas.parentElement?.addEventListener('pointerdown', onTouchTap, { passive: true });
 
@@ -418,7 +429,7 @@ export default function LiquidButton({
     // efeito roda mount→unmount→mount, e perder o contexto deixaria o canvas
     // em branco na segunda montagem. Parar o rAF e remover listeners basta.
     return () => {
-      cancelAnimationFrame(raf);
+      pause();
       ro.disconnect();
       document.removeEventListener("pointermove", onMove);
       document.removeEventListener("mouseout", onOut);
@@ -432,7 +443,7 @@ export default function LiquidButton({
         wrap.removeEventListener("pointermove", onWrapMove);
       }
       window.removeEventListener("resize", measure);
-      io?.disconnect();
+      io.disconnect();
       canvas.parentElement?.removeEventListener('pointerdown', onTouchTap);
     };
   }, [width, height]);

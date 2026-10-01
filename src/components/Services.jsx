@@ -46,11 +46,7 @@ export default function Services({ reducedMotion }) {
     if (reducedMotion || !window.matchMedia('(pointer: fine)').matches) return
     const pos = { x: 0, y: 0 }
     const cur = { x: 0, y: 0 }
-    let raf
-    const onMove = (e) => {
-      pos.x = e.clientX
-      pos.y = e.clientY
-    }
+    let raf = 0
     const tick = () => {
       cur.x += (pos.x - cur.x) * PREVIEW_FOLLOW
       cur.y += (pos.y - cur.y) * PREVIEW_FOLLOW
@@ -58,10 +54,15 @@ export default function Services({ reducedMotion }) {
         // preview ao lado direito do cursor, centralizado na vertical (altura 160 -> -80)
         previewRef.current.style.transform = `translate(${cur.x + 24}px, ${cur.y - 80}px)`
       }
-      raf = requestAnimationFrame(tick)
+      // dorme quando alcança o ponteiro; o próximo mousemove acorda
+      raf = Math.abs(pos.x - cur.x) + Math.abs(pos.y - cur.y) > 0.2 ? requestAnimationFrame(tick) : 0
     }
-    raf = requestAnimationFrame(tick)
-    window.addEventListener('mousemove', onMove)
+    const onMove = (e) => {
+      pos.x = e.clientX
+      pos.y = e.clientY
+      if (!raf) raf = requestAnimationFrame(tick)
+    }
+    window.addEventListener('mousemove', onMove, { passive: true })
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('mousemove', onMove)

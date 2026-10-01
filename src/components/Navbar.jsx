@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { NAV_LINKS, CONTACT, waLink } from '../data'
-import LiquidButton from './LiquidButton'
+import PillButton from './PillButton'
 import AudioToggle from './AudioToggle'
 
 export default function Navbar() {
@@ -83,29 +83,16 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-2">
             <AudioToggle />
-            {/* botão líquido compacto. O header não tem overflow-hidden, então
-                o canvas do efeito pode transbordar sem ser cortado. */}
-            <LiquidButton
+            <PillButton
               width={156}
               height={40}
-              pad={22}
               fontSize={11}
-              viscosity={8}
-              approach={40}
-              deform={1}
-              bounce={1}
-              organic={10}
-              fillTime={3250}
-              minSpeed={400}
-              snapSpeed={1900}
-              sigma={10}
-              shape="pill"
               color="#C8CAD0"
               aria-label="Iniciar projeto"
               onClick={() => closeAnd('#contato')}
             >
               Iniciar projeto
-            </LiquidButton>
+            </PillButton>
           </div>
 
           <button

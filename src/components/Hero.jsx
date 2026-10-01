@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ArrowDown } from 'lucide-react'
 import { TICKER_ITEMS } from '../data'
-import LiquidButton from './LiquidButton'
+import PillButton from './PillButton'
 import Scramble from './Scramble'
 import HalftoneBackground from './HalftoneBackground'
 
@@ -82,32 +82,9 @@ export default function Hero({ ready, reducedMotion }) {
             empresa: site, tráfego, conteúdo e evolução contínua.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-5">
-            {/* CTA líquido. Fora do Magnetic e sem a classe hero-cta porque
-                ambos aplicam transform, que quebra o mix-blend do texto. A
-                margem esquerda negativa compensa a folga do canvas, alinhando
-                o pill com o título à esquerda. */}
-            <LiquidButton
-              width={200}
-              height={52}
-              pad={40}
-              fontSize={13}
-              viscosity={4}
-              approach={80}
-              deform={2}
-              bounce={4}
-              organic={10}
-              fillTime={3250}
-              minSpeed={400}
-              snapSpeed={1900}
-              sigma={50}
-              shape="pill"
-              color="#F4F2EC"
-              aria-label="Iniciar projeto"
-              onClick={scrollToContact}
-              style={{ marginLeft: -40 }}
-            >
+            <PillButton width={200} height={52} fontSize={13} aria-label="Iniciar projeto" onClick={scrollToContact}>
               Iniciar projeto
-            </LiquidButton>
+            </PillButton>
             <a
               href="#catalogo"
               className="hero-cta mono-label group inline-flex items-center gap-3 pb-1 text-titanium hover:text-ivory transition-colors link-underline"

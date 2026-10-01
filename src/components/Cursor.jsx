@@ -13,23 +13,24 @@ export default function Cursor() {
 
     const pos = { x: -100, y: -100 }
     const ring = { x: -100, y: -100 }
-    let raf
+    let raf = 0
+
+    // o loop só roda enquanto o anel ainda persegue o ponteiro; parado, dorme
+    const tick = () => {
+      ring.x += (pos.x - ring.x) * 0.12
+      ring.y += (pos.y - ring.y) * 0.12
+      if (dotRef.current) dotRef.current.style.transform = `translate(${pos.x}px, ${pos.y}px)`
+      if (ringRef.current) ringRef.current.style.transform = `translate(${ring.x}px, ${ring.y}px)`
+      raf = Math.abs(pos.x - ring.x) + Math.abs(pos.y - ring.y) > 0.2 ? requestAnimationFrame(tick) : 0
+    }
 
     const onMove = (e) => {
       pos.x = e.clientX
       pos.y = e.clientY
       const target = e.target?.closest?.('[data-cursor]')
       setLabel(target ? target.dataset.cursor : '')
+      if (!raf) raf = requestAnimationFrame(tick)
     }
-
-    const tick = () => {
-      ring.x += (pos.x - ring.x) * 0.12
-      ring.y += (pos.y - ring.y) * 0.12
-      if (dotRef.current) dotRef.current.style.transform = `translate(${pos.x}px, ${pos.y}px)`
-      if (ringRef.current) ringRef.current.style.transform = `translate(${ring.x}px, ${ring.y}px)`
-      raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
     window.addEventListener('mousemove', onMove)
     // mouseover cobre o caso de o DOM trocar SOB o cursor parado (abrir/fechar
     // o case): reavalia o alvo e limpa o rótulo herdado da tela anterior.

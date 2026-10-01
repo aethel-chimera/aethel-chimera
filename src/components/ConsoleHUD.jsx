@@ -47,15 +47,37 @@ export default function ConsoleHUD() {
   }, [])
 
   // coordenada de scroll (readout técnico)
+  // no máximo uma leitura por quadro, e a altura da página só é medida no resize
   useEffect(() => {
-    const onScroll = () => {
-      const max = document.body.scrollHeight - window.innerHeight
+    let raf = 0
+    let max = 0
+    const measure = () => {
+      max = document.body.scrollHeight - window.innerHeight
+    }
+    const update = () => {
+      raf = 0
       const p = max > 0 ? window.scrollY / max : 0
       setCoord(String(Math.round(p * 9999)).padStart(4, '0'))
     }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    const onResize = () => {
+      measure()
+      onScroll()
+    }
+    measure()
+    update()
+    // a página cresce depois do primeiro paint (fontes, imagens): remede uma vez
+    const late = setTimeout(measure, 2000)
     window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
+    window.addEventListener('resize', onResize)
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(late)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+    }
   }, [])
 
   // relógio de Brasília

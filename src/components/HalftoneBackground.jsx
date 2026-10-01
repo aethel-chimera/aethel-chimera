@@ -6,6 +6,8 @@ import { useEffect, useRef } from 'react'
 const DEFAULT_COLOR = [165, 161, 245]
 const STEPS = 10 // faixas de brilho: um fillStyle e um path por faixa
 const TICK_MS = 28 // passo fixo do crescimento, independente do FPS
+const DUST_MS = 500
+const DUST_MIN = 0.46 // abaixo disso a mancha nunca vira poeira (limiar mínimo 0.6 - 0.14)
 const SEEDS = 3 // focos iniciais; com um só a tela passa muito tempo vazia
 const WARMUP_STEPS = 260 // a colônia já nasce crescida: sem isso o hero abre quase vazio
 
@@ -175,18 +177,36 @@ export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, sp
       }
     }
 
+    // poeira estática que respira em algumas manchas; o resto é vazio. Ela muda
+    // em ciclos de dezenas de segundos, então basta recalcular a cada DUST_MS
+    let dust = null
+    let dustAt = -Infinity
+    const updateDust = (t) => {
+      if (!dust || dust.length !== cloud.length) dust = new Float32Array(cloud.length)
+      for (let k = 0; k < cloud.length; k++) {
+        const cl = cloud[k]
+        if (cl <= DUST_MIN) {
+          dust[k] = 0
+          continue
+        }
+        const th = 0.6 + 0.14 * Math.sin(t * 0.12 + cl * 11)
+        dust[k] = cl > th && rough[k] < (cl - th) * 1.8 ? (0.1 + 0.06 * Math.sin(t * 0.18 + cl * 14)) * grain[k] : 0
+      }
+    }
+
     const draw = (t) => {
+      const now = performance.now()
+      if (now - dustAt > DUST_MS || !dust || dust.length !== cloud.length) {
+        updateDust(t)
+        dustAt = now
+      }
       ctx.clearRect(0, 0, w, h)
       const paths = Array.from({ length: STEPS }, () => [])
       for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
           const k = j * cols + i
           const gr = grain[k]
-          // poeira estática que respira em algumas manchas; o resto é vazio
-          const cl = cloud[k]
-          const th = 0.6 + 0.14 * Math.sin(t * 0.12 + cl * 11)
-          const dust = cl > th && rough[k] < (cl - th) * 1.8 ? (0.1 + 0.06 * Math.sin(t * 0.18 + cl * 14)) * gr : 0
-          let v = Math.max(dust, Math.min(1, val[k]) * gr)
+          let v = Math.max(dust[k], Math.min(1, val[k]) * gr)
           if (v < 0.06) continue
           if (v > 1) v = 1
           const s = Math.min(STEPS - 1, (v * STEPS) | 0)
@@ -247,13 +267,15 @@ export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, sp
     const loop = () => {
       const now = performance.now()
       const step = TICK_MS / speed
-      let guard = 0
-      while (now - last > step && guard++ < 4) {
+      let steps = 0
+      while (now - last > step && steps < 4) {
         last += step
         stepVirus()
+        steps++
       }
       if (now - last > step) last = now
-      draw(((now - t0) / 1000) * speed)
+      // redesenha só quando a colônia andou: ~35 fps, metade do custo de 60
+      if (steps) draw(((now - t0) / 1000) * speed)
       raf = requestAnimationFrame(loop)
     }
     const play = () => {

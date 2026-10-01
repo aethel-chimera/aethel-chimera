@@ -22,7 +22,7 @@ export const SERVICES = [
       'Páginas projetadas para uma única missão: transformar visita em contato. Arquitetura de persuasão, copy direcionado e carregamento abaixo de dois segundos.',
     deliverables: ['Estratégia de oferta e copy', 'Design exclusivo, sem templates', 'Build otimizado e publicação', 'Testes A/B de seções críticas'],
     integrations: ['Pix', 'WhatsApp', 'CRM', 'E-mail marketing'],
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=900&auto=format&fit=crop',
+    image: '/image/services/01-landing-pages.webp',
   },
   {
     id: '02',
@@ -32,7 +32,7 @@ export const SERVICES = [
       'Redesign completo de sites desatualizados: nova arquitetura, migração de conteúdo sem perda de SEO, performance auditada página a página.',
     deliverables: ['Auditoria técnica e de conteúdo', 'Novo design system', 'Migração com redirects 301', 'SEO técnico completo'],
     integrations: ['Analytics', 'Search Console', 'CDN'],
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=900&auto=format&fit=crop',
+    image: '/image/services/02-reestruturacao.webp',
   },
   {
     id: '03',
@@ -42,7 +42,7 @@ export const SERVICES = [
       'O site como ativo vivo: atualizações, segurança, monitoramento de uptime, backups e evolução contínua com relatório mensal de saúde.',
     deliverables: ['Monitoramento 24/7', 'Backups automatizados', 'Atualizações de segurança', 'Relatório mensal de performance'],
     integrations: ['Uptime Robot', 'Backups em nuvem', 'Staging'],
-    image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=900&auto=format&fit=crop',
+    image: '/image/services/03-manutencao.webp',
   },
   {
     id: '04',
@@ -52,7 +52,7 @@ export const SERVICES = [
       'Produção de conteúdo com direção de marca: calendário editorial, design de posts, roteiros de vídeo e gestão de comunidade.',
     deliverables: ['Calendário editorial mensal', 'Design e copy de posts', 'Roteiros para Reels', 'Relatório de engajamento'],
     integrations: ['Instagram', 'LinkedIn', 'TikTok', 'Meta Business'],
-    image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=900&auto=format&fit=crop',
+    image: '/image/services/04-social-media.webp',
   },
   {
     id: '05',
@@ -62,7 +62,7 @@ export const SERVICES = [
       'Google Ads e Meta Ads operados com método: estrutura de campanhas, criativos testados em ciclo e leitura semanal de dados.',
     deliverables: ['Setup de contas e pixels', 'Estrutura de campanhas', 'Criativos e variações', 'Dashboard de resultados'],
     integrations: ['Google Ads', 'Meta Ads', 'GA4', 'Tag Manager'],
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=900&auto=format&fit=crop',
+    image: '/image/services/05-trafego.webp',
   },
   {
     id: '06',
@@ -72,7 +72,7 @@ export const SERVICES = [
       'O ecossistema conectado: pagamentos por Pix e cartão, WhatsApp Business, CRM, agendamento online e automações de e-mail.',
     deliverables: ['Gateway de pagamento (Asaas)', 'WhatsApp Business API', 'CRM e funis', 'Automações sob demanda'],
     integrations: ['Pix', 'Asaas', 'WhatsApp', 'CRM', 'Agendamento'],
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=900&auto=format&fit=crop',
+    image: '/image/services/06-integracoes.webp',
   },
   {
     id: '07',
@@ -82,7 +82,7 @@ export const SERVICES = [
       'O que nenhuma agência local entrega: ativos 3D exclusivos modelados in-house (Blender) - mascotes, produtos e cenas cinematográficas - e páginas imersivas em WebGL, otimizadas para carregar leve.',
     deliverables: ['Modelagem e texturização PBR', 'Personagens e mascotes animados', 'Produto 3D interativo (girar/configurar)', 'Cenas e vídeos cinematográficos', 'Integração WebGL otimizada'],
     integrations: ['Blender', 'WebGL / Three.js', 'glTF', 'AR-ready'],
-    image: '/catalogo-vivo-poster.jpg',
+    image: '/image/services/07-modelagem-3d.webp',
   },
 ]
 

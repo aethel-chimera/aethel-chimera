@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react'
 import { PLANS, waLink } from '../data'
-import LiquidButton from './LiquidButton'
+import PillButton from './PillButton'
 import SectionHead from './SectionHead'
 
 // abre o WhatsApp já dizendo QUAL plano o cliente quer (mensagem contextual)
@@ -55,32 +55,19 @@ export default function Plans() {
               </ul>
             </div>
 
-            {/* botão FORA do card (o wrapper externo não tem overflow), sobreposto
-                na base. Assim o canvas do efeito transborda sem ser recortado.
-                Card claro (featured): efeito ESCURO + texto que inverte (mix-blend). */}
+            {/* card claro (featured): pílula escura que preenche com texto claro */}
             <div className="absolute inset-x-0 bottom-9 md:bottom-10 flex justify-center">
-              <LiquidButton
+              <PillButton
                 width={268}
                 height={48}
-                pad={30}
                 fontSize={12}
-                viscosity={4}
-                approach={80}
-                deform={3}
-                bounce={2}
-                organic={10}
-                fillTime={3250}
-                minSpeed={400}
-                snapSpeed={1900}
-                sigma={50}
-                shape="pill"
                 color={plan.featured ? '#0B0B10' : '#F4F2EC'}
-                textColor={plan.featured ? '#F4F2EC' : undefined}
+                ink={plan.featured ? '#F4F2EC' : '#0B0B10'}
                 aria-label={plan.cta}
                 onClick={() => openPlanWhatsApp(plan)}
               >
                 {plan.cta}
-              </LiquidButton>
+              </PillButton>
             </div>
           </div>
         ))}
