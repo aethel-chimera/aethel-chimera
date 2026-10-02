@@ -71,7 +71,7 @@ export default function Process({ reducedMotion, invest = 8000 }) {
         {PROCESS.map((step, i) => (
           <div
             key={step.num}
-            className="process-card card-wave group relative mb-6 last:mb-0 md:mb-0 md:sticky md:top-[var(--stick-top)] bg-obsidian-deep border border-ivory/10 rounded-2xl p-7 md:p-12 origin-top md:will-change-transform overflow-hidden"
+            className="process-card card-wave group relative mb-6 last:mb-0 md:mb-0 md:sticky md:top-[var(--stick-top)] px-panel bg-obsidian-deep rounded-xl p-7 md:p-12 origin-top md:will-change-transform overflow-hidden"
             style={{ '--stick-top': `calc(5rem + ${i * 1.1}rem)` }}
           >
             <div className="grid md:grid-cols-[1.05fr_0.95fr] gap-8 md:gap-12 items-center">
@@ -97,7 +97,7 @@ export default function Process({ reducedMotion, invest = 8000 }) {
               </div>
 
               {/* painel de diagnóstico / gráfico */}
-              <div className="relative rounded-xl border border-ivory/10 bg-obsidian/50 p-6 md:p-7">
+              <div className="px-panel relative rounded-xl bg-obsidian/50 p-6 md:p-7">
                 <span className="panel-tick" style={{ top: 8, left: 8, borderTopWidth: 1, borderLeftWidth: 1 }} aria-hidden="true" />
                 <span className="panel-tick" style={{ top: 8, right: 8, borderTopWidth: 1, borderRightWidth: 1 }} aria-hidden="true" />
                 <span className="panel-tick" style={{ bottom: 8, left: 8, borderBottomWidth: 1, borderLeftWidth: 1 }} aria-hidden="true" />
@@ -108,7 +108,7 @@ export default function Process({ reducedMotion, invest = 8000 }) {
 
             {/* overlay de escurecimento progressivo (empilhamento) */}
             <div
-              className="process-dim pointer-events-none absolute inset-0 rounded-2xl opacity-0 bg-gradient-to-b from-obsidian-deep/40 to-obsidian-deep"
+              className="process-dim pointer-events-none absolute inset-0 rounded-xl opacity-0 bg-gradient-to-b from-obsidian-deep/40 to-obsidian-deep"
               aria-hidden="true"
             />
           </div>

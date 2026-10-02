@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { X, ArrowRight, ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { CATALOG } from '../data'
+import PixelButton from './PixelButton'
 
 // Seção interna do projeto (case): imagem + info ao lado. Sem vídeo.
 export default function ProjectDetail({ index, onClose, onNav }) {
@@ -54,9 +55,9 @@ export default function ProjectDetail({ index, onClose, onNav }) {
         <span className="mono-label text-amber">
           [ {String(index + 1).padStart(2, '0')} / {String(CATALOG.length).padStart(2, '0')} ] // CASE
         </span>
-        <button onClick={onClose} className="mono-label text-titanium hover:text-ivory flex items-center gap-2" aria-label="Fechar projeto">
-          Fechar <X size={16} aria-hidden="true" />
-        </button>
+        <PixelButton variant="dark" size="sm" className="gap-2" onClick={onClose} aria-label="Fechar projeto">
+          Fechar <X size={14} aria-hidden="true" />
+        </PixelButton>
       </div>
 
       <div className="px-5 md:px-10 pb-24 pt-4 max-w-7xl mx-auto">
@@ -115,7 +116,7 @@ export default function ProjectDetail({ index, onClose, onNav }) {
             <p className="mono-label text-titanium/60 mb-3">Integrações</p>
             <div className="flex flex-wrap gap-2">
               {project.tags.map((t) => (
-                <span key={t} className="mono-label text-[0.6rem] border border-ivory/15 rounded-full px-3 py-1.5 text-titanium">
+                <span key={t} className="mono-label text-[0.6rem] border border-ivory/15 rounded-lg px-3 py-1.5 text-titanium">
                   {t}
                 </span>
               ))}
@@ -125,12 +126,12 @@ export default function ProjectDetail({ index, onClose, onNav }) {
 
         {/* navegação entre projetos */}
         <div className="detail-reveal flex items-center justify-between border-t border-ivory/10 mt-16 pt-8">
-          <button onClick={() => onNav((index - 1 + CATALOG.length) % CATALOG.length)} className="arrow-link group">
-            <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" aria-hidden="true" /> Anterior
-          </button>
-          <button onClick={() => onNav((index + 1) % CATALOG.length)} className="mono-label text-titanium hover:text-ivory inline-flex items-center gap-2 group">
-            Próximo <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
-          </button>
+          <PixelButton variant="dark" size="sm" className="gap-2" onClick={() => onNav((index - 1 + CATALOG.length) % CATALOG.length)}>
+            <ArrowLeft size={14} aria-hidden="true" /> Anterior
+          </PixelButton>
+          <PixelButton variant="dark" size="sm" className="gap-2" onClick={() => onNav((index + 1) % CATALOG.length)}>
+            Próximo <ArrowRight size={14} aria-hidden="true" />
+          </PixelButton>
         </div>
       </div>
     </div>

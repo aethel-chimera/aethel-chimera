@@ -212,7 +212,7 @@ export default function CatalogCard({ project, index, order, reducedMotion, onOp
             </ul>
             <div className="flex flex-wrap gap-2">
               {project.tags.map((tg) => (
-                <span key={tg} className="mono-label !text-[0.55rem] border border-ivory/15 rounded-full px-3 py-1.5 text-titanium">
+                <span key={tg} className="mono-label !text-[0.55rem] border border-ivory/15 rounded-lg px-3 py-1.5 text-titanium">
                   {tg}
                 </span>
               ))}

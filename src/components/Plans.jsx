@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react'
 import { PLANS, waLink } from '../data'
-import PillButton from './PillButton'
+import PixelButton from './PixelButton'
 import SectionHead from './SectionHead'
 
 // abre o WhatsApp já dizendo QUAL plano o cliente quer (mensagem contextual)
@@ -25,17 +25,17 @@ export default function Plans() {
           // wrapper SEM overflow para o selo poder sair acima do card sem ser cortado
           <div key={plan.name} className={`relative ${plan.featured ? 'md:-translate-y-4' : ''}`}>
             {plan.badge && (
-              <span className="absolute -top-3 left-8 z-10 mono-label text-[0.6rem] bg-amber text-obsidian rounded-full px-4 py-1.5">
+              <span className="absolute -top-3 left-8 z-10 mono-label text-[0.6rem] bg-amber text-obsidian rounded-lg px-4 py-1.5">
                 {plan.badge}
               </span>
             )}
             {/* card COM overflow-hidden (a linha de luz do topo acompanha os
                 cantos arredondados). O pb-28 reserva o espaço onde o botão fica. */}
             <div
-              className={`card-wave overflow-hidden relative rounded-2xl px-8 md:px-10 pt-8 md:pt-10 pb-36 h-full flex flex-col ${
+              className={`card-wave overflow-hidden relative rounded-xl px-8 md:px-10 pt-8 md:pt-10 pb-36 h-full flex flex-col ${
                 plan.featured
-                  ? 'bg-ivory text-obsidian'
-                  : 'bg-obsidian-deep border border-ivory/10 text-ivory'
+                  ? 'px-panel px-panel--light bg-ivory text-obsidian'
+                  : 'px-panel bg-obsidian-deep text-ivory'
               }`}
             >
               <p className={`mono-label mb-6 ${plan.featured ? 'text-obsidian/60' : 'text-titanium/60'}`}>{plan.name}</p>
@@ -55,19 +55,15 @@ export default function Plans() {
               </ul>
             </div>
 
-            {/* card claro (featured): pílula escura que preenche com texto claro */}
+            {/* card claro (featured): botão escuro */}
             <div className="absolute inset-x-0 bottom-9 md:bottom-10 flex justify-center">
-              <PillButton
-                width={268}
-                height={48}
-                fontSize={12}
-                color={plan.featured ? '#0B0B10' : '#F4F2EC'}
-                ink={plan.featured ? '#F4F2EC' : '#0B0B10'}
+              <PixelButton
+                variant={plan.featured ? 'dark' : 'light'}
                 aria-label={plan.cta}
                 onClick={() => openPlanWhatsApp(plan)}
               >
                 {plan.cta}
-              </PillButton>
+              </PixelButton>
             </div>
           </div>
         ))}

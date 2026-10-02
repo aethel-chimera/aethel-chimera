@@ -36,16 +36,21 @@ export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, sp
     let wander = 0
     let burst = -1
     let vigor = 1
+    let channel = 1
+    let wasBig = false
+    let covered = 0 // células vivas: freia o crescimento quando a colônia fica grande
 
     const seedVirus = () => {
       const n = cols * rows
       val = val && val.length === n ? val : new Float32Array(n)
       inf = new Uint8Array(n)
       front = []
+      covered = 0
       for (let s = 0; s < SEEDS; s++) {
         const i = ((0.12 + Math.random() * 0.76) * cols) | 0
         const j = ((0.12 + Math.random() * 0.76) * rows) | 0
         const k = j * cols + i
+        if (!inf[k]) covered++
         inf[k] = 1
         val[k] = 1.9
         front.push(k)
@@ -110,6 +115,7 @@ export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, sp
             const cj = (p.y + Math.sin(a) * rr) | 0
             if (ci < 0 || cj < 0 || ci >= cols || cj >= rows) continue
             const k = cj * cols + ci
+            if (!inf[k]) covered++
             inf[k] = 1
             val[k] = 1.2
             if (Math.random() < 0.06) front.push(k)
@@ -124,15 +130,21 @@ export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, sp
           if (val[k] < 0.04) {
             val[k] = 0
             inf[k] = 0
+            covered--
           }
         }
       }
 
       tick++
       wander += (Math.random() - 0.5) * 0.28
+      // rajadas grandes alternam com pausas curtas; nas grandes o crescimento
+      // corre por "veias" estreitas do ruído (tentáculos, não um disco)
       if (burst-- < 0) {
-        burst = 90 + ((Math.random() * 320) | 0)
-        vigor = Math.random() < 0.25 ? 1.25 + Math.random() * 0.35 : 0.85 + Math.random() * 0.35
+        const big = !wasBig
+        wasBig = big
+        burst = big ? 95 + ((Math.random() * 231) | 0) : 3 + ((Math.random() * 12) | 0)
+        vigor = big ? 2.58 + Math.random() * 1.46 : 0.9 + Math.random() * 0.4
+        channel = big ? 2.2 + Math.random() * 1.6 : 1
       }
       const ang = tick * 0.004 + 3.2 * Math.sin(tick * 0.0021) + wander
       const dxa = Math.cos(ang)
@@ -143,23 +155,38 @@ export default function HalftoneBackground({ color = DEFAULT_COLOR, cell = 5, sp
         const i = k % cols
         const j = (k / cols) | 0
         let alive = false
-        for (let a = 0; a < 7; a++) {
+        for (let a = 0; a < 5; a++) {
           const d = (Math.random() * 4) | 0
           const ni = i + (d === 0 ? 1 : d === 1 ? -1 : 0)
           const nj = j + (d === 2 ? 1 : d === 3 ? -1 : 0)
           if (ni < 0 || nj < 0 || ni >= cols || nj >= rows) continue
           const nk = nj * cols + ni
           if (inf[nk]) continue
-          // cresce a favor da deriva e das manchas da nuvem: vira tentáculo, não círculo
+          // cresce a favor da deriva e das manchas da nuvem; desacelera conforme a
+          // colônia ocupa a tela, para continuar um organismo e não uma explosão
           const dot = d === 0 ? dxa : d === 1 ? -dxa : d === 2 ? dya : -dya
           const bias = 0.3 + 0.7 * Math.max(0, dot)
-          if (Math.random() > (0.45 + 0.5 * cloud[nk]) * bias * vigor) continue
+          const room = Math.max(0, 1 - covered / (val.length * 0.37))
+          const vein = channel > 1 ? 0.06 + 1.2 * Math.pow(cloud[nk], channel) : 0.45 + 0.5 * cloud[nk]
+          if (Math.random() > vein * bias * vigor * room) continue
+          covered++
           inf[nk] = 1
           val[nk] = 1.9
           next.push(nk)
           alive = true
         }
         if (alive) next.push(k)
+      }
+      // frente de avanço limitada: uma frente enorme vira uma onda reta
+      const maxFront = Math.max(40, (cols * 0.6) | 0)
+      if (next.length > maxFront) {
+        for (let n = next.length - 1; n > 0; n--) {
+          const r = (Math.random() * (n + 1)) | 0
+          const tmp = next[n]
+          next[n] = next[r]
+          next[r] = tmp
+        }
+        next.length = maxFront
       }
       front = next
 

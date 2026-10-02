@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { SERVICES, CONTACT, waLink } from '../data'
+import PixelButton from './PixelButton'
+import PixelSelect from './PixelSelect'
 
 // ---------------------------------------------------------------------------
 // BRIEFING - solicitação de orçamento, dentro da seção da Calculadora.
@@ -39,6 +41,7 @@ export default function BriefingRequest({ invest }) {
   const [erro, setErro] = useState('')
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
+  const pick = (k) => (v) => setForm((f) => ({ ...f, [k]: v }))
 
   const toggleServico = (titulo) =>
     setServicos((s) => (s.includes(titulo) ? s.filter((x) => x !== titulo) : [...s, titulo]))
@@ -99,13 +102,11 @@ export default function BriefingRequest({ invest }) {
     }
   }
 
-  const campo =
-    'w-full rounded-lg border border-ivory/15 bg-obsidian/60 px-3.5 py-3 text-ivory text-sm ' +
-    'placeholder:text-titanium/40 focus:border-amber focus:outline-none focus:ring-1 focus:ring-amber/40 transition-colors'
+  const campo = 'px-field w-full'
 
   if (enviado) {
     return (
-      <div className="relative rounded-2xl border border-signal/30 bg-obsidian-deep/70 p-8 md:p-12 text-center">
+      <div className="relative rounded-xl border border-signal/30 bg-obsidian-deep/70 p-8 md:p-12 text-center">
         <p className="mono-label text-signal mb-3">
           {CRM_ENDPOINT ? 'Briefing recebido' : 'Briefing pronto'}
         </p>
@@ -131,16 +132,17 @@ export default function BriefingRequest({ invest }) {
             </>
           )}
         </p>
-        <button
+        <PixelButton
+          variant="dark"
+          size="sm"
           onClick={() => {
             setEnviado(false)
             setForm(EMPTY)
             setServicos([])
           }}
-          className="mono-label text-titanium/70 hover:text-ivory transition-colors min-h-[44px]"
         >
           Enviar outra solicitação
-        </button>
+        </PixelButton>
       </div>
     )
   }
@@ -148,7 +150,7 @@ export default function BriefingRequest({ invest }) {
   return (
     <form
       onSubmit={onSubmit}
-      className="relative rounded-2xl border border-ivory/12 bg-obsidian-deep/70 p-6 sm:p-8 md:p-10"
+      className="px-panel relative rounded-xl bg-obsidian-deep/70 p-6 sm:p-8 md:p-10"
     >
       <span className="panel-tick" style={{ top: 8, left: 8, borderTopWidth: 1, borderLeftWidth: 1 }} aria-hidden="true" />
       <span className="panel-tick" style={{ top: 8, right: 8, borderTopWidth: 1, borderRightWidth: 1 }} aria-hidden="true" />
@@ -174,19 +176,15 @@ export default function BriefingRequest({ invest }) {
           {SERVICES.map((s) => {
             const on = servicos.includes(s.title)
             return (
-              <button
+              <PixelButton
                 key={s.id}
-                type="button"
+                variant="dark"
+                size="sm"
                 onClick={() => toggleServico(s.title)}
                 aria-pressed={on}
-                className={`rounded-full border px-4 min-h-[44px] text-xs transition-colors ${
-                  on
-                    ? 'border-amber bg-amber/15 text-amber'
-                    : 'border-ivory/15 text-titanium/75 hover:border-ivory/35 hover:text-ivory'
-                }`}
               >
                 {s.title}
-              </button>
+              </PixelButton>
             )
           })}
         </div>
@@ -254,21 +252,11 @@ export default function BriefingRequest({ invest }) {
       <div className="grid sm:grid-cols-2 gap-4 mb-8">
         <div>
           <label htmlFor="bf-prazo" className="mono-label text-titanium/60 block mb-2">Prazo desejado</label>
-          <select id="bf-prazo" value={form.prazo} onChange={set('prazo')} className={campo}>
-            <option value="">Selecione</option>
-            {PRAZOS.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
+          <PixelSelect id="bf-prazo" value={form.prazo} onChange={pick('prazo')} options={PRAZOS} />
         </div>
         <div>
           <label htmlFor="bf-origem" className="mono-label text-titanium/60 block mb-2">Como nos conheceu</label>
-          <select id="bf-origem" value={form.origem} onChange={set('origem')} className={campo}>
-            <option value="">Selecione</option>
-            {ORIGENS.map((o) => (
-              <option key={o} value={o}>{o}</option>
-            ))}
-          </select>
+          <PixelSelect id="bf-origem" value={form.origem} onChange={pick('origem')} options={ORIGENS} />
         </div>
       </div>
 
@@ -279,19 +267,12 @@ export default function BriefingRequest({ invest }) {
       )}
 
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-        <button
-          type="submit"
-          className="rounded-full bg-ivory text-obsidian font-display font-semibold text-sm px-7 min-h-[48px] hover:bg-amber transition-colors"
-        >
+        <PixelButton type="submit">
           {CRM_ENDPOINT ? 'Enviar solicitação' : 'Enviar pelo WhatsApp'}
-        </button>
-        <button
-          type="button"
-          onClick={copiar}
-          className="mono-label text-titanium/70 hover:text-ivory transition-colors min-h-[44px] px-2 text-left"
-        >
+        </PixelButton>
+        <PixelButton variant="dark" onClick={copiar}>
           {copiado ? 'Briefing copiado' : 'Copiar briefing'}
-        </button>
+        </PixelButton>
       </div>
       <p className="font-mono text-[0.62rem] text-titanium/45 mt-4 leading-relaxed">
         {CRM_ENDPOINT

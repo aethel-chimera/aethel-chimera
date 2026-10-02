@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { CONTACT, waLink } from '../data'
-import LiquidButton from './LiquidButton'
+import PixelButton from './PixelButton'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -46,37 +46,10 @@ export default function FinalCTA({ reducedMotion }) {
           <span className="font-serif italic normal-case text-amber tracking-normal">organismo?</span>
         </h2>
 
-        {/* O LiquidButton usa mix-blend-mode no texto, que quebra sob um
-            ancestral com transform/opacity - por isso fica fora do Magnetic e
-            da animação .cta-reveal. reduced-motion cai no link simples. */}
         <div className="mt-14">
-          {reducedMotion ? (
-            <a
-              href={CONTACT.whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mono-label inline-block rounded-full border-2 border-ivory text-ivory px-14 py-6 text-sm hover:bg-ivory hover:text-obsidian transition-colors duration-400"
-            >
-              Iniciar projeto
-            </a>
-          ) : (
-            <LiquidButton
-              viscosity={10}
-              approach={160}
-              deform={10}
-              bounce={7}
-              organic={10}
-              fillTime={3250}
-              minSpeed={400}
-              snapSpeed={1900}
-              shape="pill"
-              color="#F4F2EC"
-              aria-label="Iniciar projeto pelo WhatsApp"
-              onClick={() => window.open(CONTACT.whatsappUrl, '_blank', 'noopener,noreferrer')}
-            >
-              Iniciar projeto
-            </LiquidButton>
-          )}
+          <PixelButton size="lg" href={CONTACT.whatsappUrl} aria-label="Iniciar projeto pelo WhatsApp">
+            Iniciar projeto
+          </PixelButton>
         </div>
 
         {/* canais oficiais - todos com link funcional (wa.me / mailto / instagram) */}

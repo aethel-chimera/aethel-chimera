@@ -36,14 +36,10 @@
     />
     <meta name="twitter:image" content="https://www.aethelchimera.com/image/og.png" />
     <meta name="theme-color" content="#0B0B10" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- stylesheet direto (sem handler inline de onload, que a CSP script-src
-         'self' bloquearia); preconnect + display=swap seguram o FCP -->
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap"
-    />
+    <!-- Adobe Fonts, projeto aethel-chimera: Termina (texto) e Lust Script
+         Display (destaques). Funciona enquanto a assinatura estiver ativa -->
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+    <link rel="stylesheet" href="https://use.typekit.net/ffb8tki.css" />
     <!-- dados estruturados: quem somos, contatos e serviços (schema.org) -->
     <script type="application/ld+json">
     {
@@ -136,7 +132,7 @@
         id="boot-splash"
         style="position:fixed;inset:0;background:#0B0B10;display:flex;align-items:center;justify-content:center;z-index:9999"
       >
-        <span style="font-family:'Space Grotesk',system-ui,sans-serif;font-size:48px;font-weight:600;color:#F4F2EC;letter-spacing:-0.02em">Æ</span>
+        <span style="font-family:termina,system-ui,sans-serif;font-size:48px;font-weight:600;color:#F4F2EC;letter-spacing:-0.02em">Æ</span>
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>

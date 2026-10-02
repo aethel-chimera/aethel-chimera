@@ -1,20 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ArrowDown } from 'lucide-react'
-import { TICKER_ITEMS } from '../data'
-import PillButton from './PillButton'
+import { TICKER_ITEMS, CONTACT } from '../data'
+import PixelButton from './PixelButton'
 import Scramble from './Scramble'
 import HalftoneBackground from './HalftoneBackground'
 
-const HERO_FADE = 'linear-gradient(to bottom, #000 25%, rgba(0,0,0,0.55) 62%, transparent 100%)'
-
-// rola até o contato respeitando o smooth scroll (Lenis), com fallback nativo
-function scrollToContact() {
-  const el = document.querySelector('#contato')
-  if (!el) return
-  if (window.__lenis) window.__lenis.scrollTo(el, { offset: -64 })
-  else el.scrollIntoView({ behavior: 'smooth' })
-}
+// âmbar da marca (#E0A458); constante fora do componente para não reiniciar o canvas a cada render
+const HALFTONE_COLOR = [224, 164, 88]
+// some cedo e em curva suave: chega a zero antes do letreiro, sem linha de corte
+const HERO_FADE = 'linear-gradient(to bottom, #000 0%, #000 12%, rgba(0,0,0,0.6) 38%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.08) 75%, transparent 86%)'
 
 export default function Hero({ ready, reducedMotion }) {
   const rootRef = useRef(null)
@@ -59,12 +54,12 @@ export default function Hero({ ready, reducedMotion }) {
         style={{ maskImage: HERO_FADE, WebkitMaskImage: HERO_FADE }}
         aria-hidden="true"
       >
-        <HalftoneBackground reducedMotion={reducedMotion} />
+        <HalftoneBackground cell={9} speed={1} color={HALFTONE_COLOR} reducedMotion={reducedMotion} />
         <div className="absolute inset-0 bg-gradient-to-r from-obsidian/60 via-transparent to-transparent" />
       </div>
 
       <div className="relative z-10 flex-1 flex items-end px-5 md:px-10 pb-28 pt-32">
-        <div className="max-w-[44rem]">
+        <div className="max-w-[52rem]">
           <div className="flex items-center gap-4 mb-6 hero-sub">
             <span className="mono-label text-amber whitespace-nowrap">[ SEC 01 ]</span>
             <span className="h-px w-12 bg-ivory/15" aria-hidden="true" />
@@ -82,9 +77,9 @@ export default function Hero({ ready, reducedMotion }) {
             empresa: site, tráfego, conteúdo e evolução contínua.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-5">
-            <PillButton width={200} height={52} fontSize={13} aria-label="Iniciar projeto" onClick={scrollToContact}>
+            <PixelButton size="lg" href={CONTACT.whatsappUrl} aria-label="Iniciar projeto pelo WhatsApp">
               Iniciar projeto
-            </PillButton>
+            </PixelButton>
             <a
               href="#catalogo"
               className="hero-cta mono-label group inline-flex items-center gap-3 pb-1 text-titanium hover:text-ivory transition-colors link-underline"

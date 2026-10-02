@@ -149,7 +149,7 @@ export default function Services({ reducedMotion }) {
                       <p className="mono-label text-amber mb-3">Integrações típicas</p>
                       <div className="flex flex-wrap gap-2">
                         {s.integrations.map((tag) => (
-                          <span key={tag} className="mono-label text-[0.6rem] border border-ivory/15 rounded-full px-3 py-1.5 text-titanium">
+                          <span key={tag} className="mono-label text-[0.6rem] border border-ivory/15 rounded-lg px-3 py-1.5 text-titanium">
                             {tag}
                           </span>
                         ))}
@@ -171,7 +171,7 @@ export default function Services({ reducedMotion }) {
           boxShadow:
             '0 50px 100px -20px rgba(0, 0, 0, 0.95), 0 25px 55px -25px rgba(0, 0, 0, 0.9), 0 0 70px -5px rgba(0, 0, 0, 0.85)',
         }}
-        className={`fixed top-0 left-0 z-[80] w-64 h-40 rounded-lg overflow-hidden pointer-events-none transition-opacity duration-300 hidden md:block ${
+        className={`fixed top-0 left-0 z-[80] w-64 h-40 rounded-xl overflow-hidden pointer-events-none transition-opacity duration-300 hidden md:block ${
           hoverImage ? 'opacity-100' : 'opacity-0'
         }`}
       >

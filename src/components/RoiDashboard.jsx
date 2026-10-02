@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import SectionHead from './SectionHead'
 import BriefingRequest from './BriefingRequest'
 import { INVEST_MIN, INVEST_MAX, INVEST_REF } from '../data'
+import PixelButton from './PixelButton'
+import { fill } from '../audio'
 
 // ---- Calculadora de Retorno (ROI) ----
 // Métrica "Índice de Retorno Aethel": o cliente define o investimento mensal e
@@ -95,7 +97,7 @@ export default function RoiDashboard({ invest, setInvest }) {
 
       <div className="relative z-10 grid lg:grid-cols-[0.95fr_1.15fr] gap-6 lg:gap-10 items-start">
         {/* ---- Controle: investimento ---- */}
-        <div className="rounded-2xl border border-ivory/12 bg-obsidian-deep/70 p-7 md:p-9">
+        <div className="px-panel relative rounded-xl bg-obsidian-deep/70 p-7 md:p-9">
           <label htmlFor="roi-invest" className="mono-label text-titanium/70 block mb-3">
             Investimento mensal
           </label>
@@ -111,7 +113,11 @@ export default function RoiDashboard({ invest, setInvest }) {
             max={INVEST_MAX}
             step={500}
             value={invest}
-            onChange={(e) => setInvest(Number(e.target.value))}
+            onChange={(e) => {
+              const v = Number(e.target.value)
+              setInvest(v)
+              fill((v - INVEST_MIN) / (INVEST_MAX - INVEST_MIN))
+            }}
             className="roi-range w-full"
             aria-valuetext={brl(invest) + ' por mês'}
           />
@@ -122,43 +128,42 @@ export default function RoiDashboard({ invest, setInvest }) {
 
           <div className="grid grid-cols-3 gap-3 mt-8" role="group" aria-label="Atalhos de investimento">
             {[8000, 30000, 100000].map((v) => (
-              <button
+              <PixelButton
                 key={v}
+                variant="dark"
+                size="sm"
+                className="w-full !px-1 !tracking-[0.06em]"
                 onClick={() => setInvest(v)}
-                style={{ letterSpacing: '0.08em' }}
-                className={`mono-label text-[0.55rem] sm:text-[0.6rem] rounded-full py-2.5 px-1 border transition-colors text-center whitespace-nowrap flex items-center justify-center ${
-                  invest === v
-                    ? 'border-amber bg-amber/15 text-amber'
-                    : 'border-ivory/15 text-titanium/70 hover:border-ivory/35 hover:text-ivory'
-                }`}
+                aria-pressed={invest === v}
               >
                 {brl(v)}
-              </button>
+              </PixelButton>
             ))}
           </div>
         </div>
 
         {/* ---- Resultado: ROI + breakdown por canal ---- */}
-        <div className="rounded-2xl border border-ivory/12 bg-obsidian-deep/70 p-7 md:p-9">
+        <div className="px-panel relative rounded-xl bg-obsidian-deep/70 p-7 md:p-9">
           {/* indicadores principais (aria-live para acessibilidade) */}
-          <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8" aria-live="polite">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-5 md:gap-4 mb-8" aria-live="polite">
             <div>
               <p className="mono-label text-[0.55rem] text-titanium/55 mb-1.5">Índice de retorno</p>
-              <p className="font-display font-semibold text-[clamp(1.05rem,4.6vw,2.25rem)] text-signal tabular-nums leading-none break-words">
+              <p className="font-display font-semibold text-[clamp(1rem,4.2vw,1.85rem)] text-signal tabular-nums leading-none whitespace-nowrap">
                 {data.roi.toFixed(1)}×
               </p>
               <p className="font-mono text-[0.6rem] text-titanium/55 mt-1.5">por R$ 1 investido</p>
             </div>
             <div>
               <p className="mono-label text-[0.55rem] text-titanium/55 mb-1.5">Retorno / mês</p>
-              <p className="font-display font-semibold text-[clamp(1.05rem,4.6vw,2.25rem)] text-ivory tabular-nums leading-none break-words">
+              <p className="font-display font-semibold text-[clamp(1rem,4.2vw,1.85rem)] text-ivory tabular-nums leading-none whitespace-nowrap">
                 {brl(data.totalReturn)}
               </p>
               <p className="font-mono text-[0.6rem] text-titanium/55 mt-1.5">projeção bruta</p>
             </div>
-            <div>
+            {/* no celular o lucro anual ganha a linha inteira: em 3 colunas não cabia */}
+            <div className="col-span-2 sm:col-span-1">
               <p className="mono-label text-[0.55rem] text-titanium/55 mb-1.5">Lucro / ano</p>
-              <p className="font-display font-semibold text-[clamp(1.05rem,4.6vw,2.25rem)] text-amber tabular-nums leading-none break-words">
+              <p className="font-display font-semibold text-[clamp(1rem,4.2vw,1.85rem)] text-amber tabular-nums leading-none whitespace-nowrap">
                 {brl(data.net * 12)}
               </p>
               <p className="font-mono text-[0.6rem] text-titanium/55 mt-1.5">retorno − investimento</p>

@@ -37,6 +37,9 @@ function Counter({ stat, reducedMotion }) {
 
 // Carrossel arrastável com inércia: velocidade registrada no pointermove,
 // decaimento aplicado após o pointerup. Sem setas.
+// degradê igual nos dois lados, do tamanho da margem lateral da seção (--fade)
+const EDGE_FADE = 'linear-gradient(to right, transparent 0, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%)'
+
 function TestimonialCarousel() {
   const trackRef = useRef(null)
 
@@ -99,12 +102,18 @@ function TestimonialCarousel() {
   }, [])
 
   return (
-    <div className="overflow-hidden select-none touch-pan-y" data-cursor="ARRASTE">
-      <div ref={trackRef} className="flex gap-6 will-change-transform">
+    // a faixa ocupa também a margem da seção (-mx) e o degradê fica só nela:
+    // parado, o primeiro card começa alinhado ao título e sem corte
+    <div
+      className="-mx-5 md:-mx-10 [--fade:20px] md:[--fade:40px] overflow-hidden select-none touch-pan-y"
+      data-cursor="ARRASTE"
+      style={{ maskImage: EDGE_FADE, WebkitMaskImage: EDGE_FADE }}
+    >
+      <div ref={trackRef} className="flex gap-6 px-5 md:px-10 will-change-transform">
         {TESTIMONIALS.map((t) => (
           <figure
             key={t.slug}
-            className="shrink-0 w-[85vw] md:w-[34rem] bg-obsidian-deep border border-ivory/10 rounded-2xl p-8 md:p-12 flex flex-col"
+            className="shrink-0 w-[85vw] md:w-[34rem] px-panel relative bg-obsidian-deep rounded-xl p-8 md:p-12 flex flex-col"
           >
             {/* Com depoimento colhido, o card vira citação. Sem, mostra o que
                 foi ENTREGUE - nada de frase inventada em nome de cliente real. */}
@@ -138,7 +147,7 @@ function TestimonialCarousel() {
                   src={t.logo}
                   alt=""
                   loading="lazy"
-                  className="h-12 w-20 object-cover rounded-md border border-ivory/10 shrink-0"
+                  className="h-12 w-20 object-cover rounded-lg border border-ivory/10 shrink-0"
                 />
               )}
             </figcaption>

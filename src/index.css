@@ -22,10 +22,49 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* no desktop a barra nativa some: quem desenha é o ScrollBar (polegar pixelado) */
+@media (pointer: fine) {
+  html {
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+}
+.px-scroll {
+  --px: 2px;
+  position: fixed;
+  top: 0;
+  right: 6px;
+  z-index: 300;
+  width: 10px;
+  background: #f4f2ec;
+  box-shadow:
+    inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 #a9abb2,
+    inset var(--px) var(--px) 0 0 #ffffff;
+  /* cantos recortados em degrau, como pixel */
+  clip-path: polygon(
+    2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px,
+    100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%,
+    2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px
+  );
+  opacity: 0.35;
+  touch-action: none;
+  transition: opacity 0.3s steps(3);
+}
+.px-scroll:hover,
+.px-scroll.is-active {
+  opacity: 1;
+}
+
+
 body {
   background-color: var(--obsidian);
   color: var(--ivory);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: termina, sans-serif;
+  /* a Termina é ~35% mais larga que a fonte anterior: font-size-adjust iguala a
+     altura do x e mantém as larguras do layout. Títulos e rótulos têm o seu */
+  font-size-adjust: 0.45;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   overflow-x: clip;
@@ -69,11 +108,13 @@ body {
 }
 
 /* ---- cursor customizado ---- */
+/* o nativo some em TUDO: elementos com cursor próprio (pointer, grab) faziam a
+   mãozinha do sistema aparecer junto com o cursor desenhado */
 @media (pointer: fine) {
   body.custom-cursor,
-  body.custom-cursor a,
-  body.custom-cursor button {
-    cursor: none;
+  body.custom-cursor *,
+  body.custom-cursor.dragging * {
+    cursor: none !important;
   }
 }
 
@@ -87,39 +128,57 @@ body {
      dentro do case, com o anel congelado da tela anterior. */
   z-index: 400;
   pointer-events: none;
-  border-radius: 9999px;
   will-change: transform;
 }
+/* quadradinho dourado, centrado no ponto exato do clique. O span interno muda
+   de tamanho: o transform do div é o da posição */
 .cursor-dot {
-  width: 8px;
-  height: 8px;
-  background: #fff;
-  margin: -4px 0 0 -4px;
-  /* inverte o que estiver embaixo: branco no escuro, preto no claro */
-  mix-blend-mode: difference;
+  width: 0;
+  height: 0;
 }
+.cursor-dot span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  border: 2px solid var(--amber);
+  border-radius: 2px;
+  background: var(--amber);
+  transform: translate(-50%, -50%);
+  transition: width 0.14s steps(2), height 0.14s steps(2), background-color 0.14s steps(2);
+}
+/* sobre link ou botão: cresce pouco e vira só contorno, para não tampar o texto */
+.cursor-dot span.is-hover {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: transparent;
+}
+/* etiqueta: invisível no estado normal, aparece acima do ponteiro com rótulo */
 .cursor-ring {
-  width: 26px;
-  height: 26px;
-  margin: -13px 0 0 -13px;
-  border: 1.5px solid #fff;
+  width: 0;
+  height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: width 0.3s, height 0.3s, margin 0.3s, background-color 0.3s;
-  mix-blend-mode: difference;
+  /* cantos recortados em degrau, como pixel */
+  clip-path: polygon(
+    4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+    100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%,
+    4px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 4px 4px
+  );
+  transition: width 0.2s steps(3), height 0.2s steps(3), margin 0.2s steps(3), background-color 0.2s steps(2);
 }
+/* cabe "ARRASTE", o rótulo mais longo */
 .cursor-ring.is-label {
-  width: 84px;
-  height: 84px;
-  margin: -42px 0 0 -42px;
+  width: 76px;
+  height: 24px;
+  margin: -32px 0 0 -38px;
   background: rgba(224, 164, 88, 0.92);
-  border-color: transparent;
-  /* rótulo precisa ser legível, então sem inversão */
-  mix-blend-mode: normal;
 }
 .cursor-ring .cursor-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: termina, sans-serif;
   font-size: 10px;
   letter-spacing: 0.18em;
   color: var(--obsidian);
@@ -132,10 +191,24 @@ body {
 
 /* ---- utilitários de tipografia ---- */
 .mono-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: termina, sans-serif;
   font-size: 0.7rem;
-  letter-spacing: 0.18em;
+  font-weight: 500;
+  font-size-adjust: 0.5;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+.font-display {
+  font-size-adjust: 0.42;
+}
+.font-mono {
+  font-size-adjust: 0.5;
+}
+/* destaques dourados (Lust Script Display): sem itálico falso, porque a fonte
+   já é inclinada, e na mesma altura de x da serifa anterior */
+.font-serif {
+  font-synthesis: none;
+  font-size-adjust: 0.45;
 }
 
 /* enquanto orbita a quimera, não selecionar texto */
@@ -289,7 +362,7 @@ button:focus-visible {
   bottom: 22px;
   left: 46px;
   pointer-events: none;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: termina, sans-serif;
   font-size: 0.6rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -299,7 +372,7 @@ button:focus-visible {
 
 /* link com seta no estilo AT: "-> LABEL" */
 .arrow-link {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: termina, sans-serif;
   font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -323,10 +396,12 @@ button:focus-visible {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.9rem;
-  padding: 0.55rem 1.15rem;
+  gap: 0.75rem;
+  /* mesma altura e canto do botão do header (px-btn--xs) */
+  height: 36px;
+  padding: 0 0.9rem;
   border: 1px solid rgba(244, 242, 236, 0.16);
-  border-radius: 9999px;
+  border-radius: 8px;
   background: rgba(11, 11, 16, 0.5);
   backdrop-filter: blur(8px);
 }
@@ -371,14 +446,12 @@ button:focus-visible {
 /* painel flutuante do stream de trabalho (estilo AT) */
 .at-panel {
   position: relative;
-  border: 1px solid rgba(244, 242, 236, 0.14);
   background: rgba(7, 7, 11, 0.72);
   overflow: hidden;
-  transition: border-color 0.4s, box-shadow 0.4s;
+  transition: box-shadow 0.4s;
 }
 .at-panel:hover {
-  border-color: rgba(224, 164, 88, 0.5);
-  box-shadow: 0 0 0 1px rgba(224, 164, 88, 0.25), 0 30px 80px -30px rgba(224, 164, 88, 0.3);
+  box-shadow: 0 0 0 1px rgba(224, 164, 88, 0.4), 0 30px 80px -30px rgba(224, 164, 88, 0.3);
 }
 .at-panel .panel-scanlines {
   position: absolute;
@@ -486,37 +559,20 @@ button:focus-visible {
   100% { transform: translate3d(2.5%, 2%, 0) scale(1.12); opacity: 1; }
 }
 
-/* toggle de áudio AT */
+/* botão de som: só o ícone de alto-falante, branco */
 .audio-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--titanium);
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--ivory);
+  opacity: 0.8;
+  transition: opacity 0.2s;
 }
-.audio-bars {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 12px;
-}
-.audio-bars span {
-  width: 2px;
-  background: var(--amber);
-  height: 3px;
-}
-.audio-toggle.is-on .audio-bars span {
-  animation: audio-eq 0.9s ease-in-out infinite;
-}
-.audio-bars span:nth-child(2) { animation-delay: 0.15s; }
-.audio-bars span:nth-child(3) { animation-delay: 0.3s; }
-.audio-bars span:nth-child(4) { animation-delay: 0.45s; }
-@keyframes audio-eq {
-  0%, 100% { height: 3px; }
-  50% { height: 12px; }
+.audio-toggle:hover,
+.audio-toggle:focus-visible {
+  opacity: 1;
 }
 
 /* número-fantasma do Processo via pseudo-elemento: puramente decorativo,
@@ -573,6 +629,8 @@ button:focus-visible {
 .card-wave::before {
   content: '';
   position: absolute;
+  /* acima da camada de relevo (::after, z 5), senão a luz some embaixo dela */
+  z-index: 6;
   top: 0;
   left: 0;
   right: 0;
@@ -726,6 +784,17 @@ main > section::after {
   bottom: 0;
   background: linear-gradient(to top, rgba(7, 7, 11, 0.72), rgba(7, 7, 11, 0.34) 38%, rgba(7, 7, 11, 0.12) 68%, transparent);
 }
+/* hero -> manifesto: o hero já some no próprio degradê; as duas faixas escuras
+   somadas formavam uma tarja que lia como corte */
+#hero::after,
+#manifesto::before {
+  display: none;
+}
+/* contato -> rodapé: a faixa escura da base terminava seca no espaço antes do
+   rodapé; o rodapé já escurece sozinho no próprio degradê */
+#contato::after {
+  display: none;
+}
 
 /* ===========================================================================
    HOVER "TV ESTRAGADA" - CTA do catálogo (componente GlitchCaseButton em
@@ -746,8 +815,7 @@ main > section::after {
 .nature-card {
   --acc: var(--amber);
   position: relative;
-  border: 1px solid rgba(244, 242, 236, 0.1);
-  border-radius: 16px;
+  border-radius: 12px;
   background: linear-gradient(180deg, rgba(244, 242, 236, 0.025), rgba(244, 242, 236, 0));
   padding: 0.8rem 0.8rem 1.4rem;
   transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
@@ -757,7 +825,6 @@ main > section::after {
 }
 .nature-card:hover,
 .nature-card.is-active {
-  border-color: rgba(244, 242, 236, 0.2);
   background: linear-gradient(180deg, rgba(244, 242, 236, 0.045), rgba(244, 242, 236, 0));
 }
 
@@ -800,7 +867,7 @@ main > section::after {
 }
 .nature-emblem .ghost {
   position: relative;
-  font-family: 'Instrument Serif', serif;
+  font-family: lust-script-display, serif;
   font-style: italic;
   font-size: clamp(1.4rem, 2.4vw, 2.1rem);
   color: rgba(244, 242, 236, 0.16);
@@ -814,7 +881,7 @@ main > section::after {
   position: absolute;
   top: 10px;
   right: 12px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: termina, sans-serif;
   font-size: 0.55rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -826,7 +893,7 @@ main > section::after {
   transform: translateZ(24px);
 }
 .nature-kicker {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: termina, sans-serif;
   font-size: 0.58rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -890,42 +957,199 @@ main > section::after {
   }
 }
 
-/* pílula leve (PillButton): contorno que preenche no hover */
-.pill-btn {
+/* botão em relevo (PixelButton): luz em cima/esquerda e sombra embaixo/direita
+   por dentro da face; sobe 2 px no hover e afunda no clique, em degraus */
+.px-btn {
+  --px: 4px;
+  --c: #f4f2ec;
+  --hi: #ffffff;
+  --lo: #a9abb2;
+  --ink: #0b0b10;
+  --lift: 0px;
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   max-width: calc(100vw - 2rem);
-  padding: 0 1.5em;
-  border: 1.5px solid var(--pill);
-  border-radius: 9999px;
-  background: transparent;
-  color: var(--pill);
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  min-height: 48px;
+  padding: 14px 24px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--c);
+  color: var(--ink);
+  font-family: termina, system-ui, sans-serif;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.35s, color 0.35s;
+  transform: translateY(var(--lift));
+  box-shadow:
+    inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 var(--lo),
+    inset var(--px) var(--px) 0 0 var(--hi);
+  transition: transform 80ms steps(2), box-shadow 80ms steps(2);
 }
-.pill-btn:hover,
-.pill-btn:focus-visible {
-  background: var(--pill);
-  color: var(--pill-ink);
-  outline: none;
+.px-btn:hover {
+  --lift: -2px;
+}
+.px-btn:active {
+  --lift: 1px;
+  box-shadow:
+    inset var(--px) var(--px) 0 0 var(--lo),
+    inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 var(--hi);
+}
+/* opção selecionada (chips e atalhos): dourada e afundada */
+.px-btn[aria-pressed='true'],
+.px-btn[aria-pressed='true']:hover {
+  --c: #e0a458;
+  --hi: #f3c98c;
+  --lo: #a8742f;
+  --ink: #0b0b10;
+  --lift: 1px;
+  box-shadow:
+    inset var(--px) var(--px) 0 0 var(--lo),
+    inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 var(--hi);
+}
+.px-btn:focus-visible {
+  outline: 2px dashed var(--amber);
+  outline-offset: calc(var(--px) * 3);
+}
+.px-btn--dark {
+  --c: #1c1d23;
+  --hi: #3a3b44;
+  --lo: #07070b;
+  --ink: #f4f2ec;
+}
+.px-btn--sm {
+  --px: 3px;
+  min-height: 40px;
+  padding: 10px 16px;
+  font-size: 11px;
+}
+/* header: mais baixo e fino para não pesar na barra */
+.px-btn--xs {
+  --px: 2px;
+  min-height: 36px;
+  padding: 9px 16px;
+  font-size: 10.5px;
+}
+.px-btn--lg {
+  min-height: 56px;
+  padding: 18px 30px;
+  font-size: 14px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .px-btn {
+    transition: none;
+  }
 }
 
-/* Firefox: desfoque de fundo e mix-blend custam um repaint por quadro lá.
-   Sem eles a navbar e o cursor ficam sólidos e a rolagem destrava. */
+/* relevo dos cards: mesma linguagem do botão, bem mais sutil. Fica numa camada
+   por cima do conteúdo (::after) porque imagens no topo cobririam a borda.
+   O card precisa ser relative/sticky pela própria classe */
+.px-panel::after,
+.at-panel::after,
+.nature-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 2px 2px 0 0 rgba(244, 242, 236, 0.1),
+    inset -2px -2px 0 0 rgba(0, 0, 0, 0.55);
+  transition: box-shadow 0.2s steps(2);
+}
+/* cards com hover: a luz do relevo fica dourada */
+.at-panel:hover::after,
+.nature-card:hover::after,
+.nature-card.is-active::after,
+.px-panel.card-wave:hover::after {
+  box-shadow:
+    inset 2px 2px 0 0 rgba(224, 164, 88, 0.6),
+    inset -2px -2px 0 0 rgba(0, 0, 0, 0.55);
+}
+/* card claro (plano em destaque): luz branca e sombra suave */
+.px-panel--light::after {
+  box-shadow:
+    inset 2px 2px 0 0 rgba(255, 255, 255, 0.9),
+    inset -2px -2px 0 0 rgba(11, 11, 16, 0.18);
+}
+
+/* campo de formulário: o mesmo relevo do botão, só que afundado (sombra em
+   cima/esquerda, luz embaixo/direita); foco acende o contorno em âmbar */
+.px-field {
+  display: block;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #15161b;
+  color: var(--ivory);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  box-shadow:
+    inset 3px 3px 0 0 #07070b,
+    inset -3px -3px 0 0 #2a2b33;
+  transition: box-shadow 0.12s steps(2);
+}
+.px-field::placeholder {
+  color: rgba(200, 202, 208, 0.4);
+}
+.px-field:hover {
+  box-shadow:
+    inset 3px 3px 0 0 #07070b,
+    inset -3px -3px 0 0 #3a3b44;
+}
+.px-field:focus,
+.px-field:focus-visible,
+.px-field[aria-expanded='true'] {
+  outline: none;
+  box-shadow:
+    inset 3px 3px 0 0 #07070b,
+    inset -3px -3px 0 0 #2a2b33,
+    0 0 0 2px var(--amber);
+}
+
+/* lista do PixelSelect: painel em relevo, opção ativa em âmbar */
+.px-menu {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: 8px;
+  background: #1c1d23;
+  box-shadow:
+    inset -3px -3px 0 0 #07070b,
+    inset 3px 3px 0 0 #3a3b44,
+    0 18px 40px -12px rgba(0, 0, 0, 0.8);
+}
+.px-option {
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: var(--titanium);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.px-option.is-active {
+  background: rgba(224, 164, 88, 0.14);
+  color: var(--ivory);
+}
+.px-option[aria-selected='true'] {
+  color: var(--amber);
+}
+
+/* Firefox: o desfoque de fundo da navbar custa um repaint por quadro lá */
 @supports (-moz-appearance: none) {
   .at-pill {
     backdrop-filter: none;
     background: rgba(11, 11, 16, 0.88);
-  }
-  .cursor-dot,
-  .cursor-ring {
-    mix-blend-mode: normal;
   }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { NAV_LINKS, CONTACT, waLink } from '../data'
-import PillButton from './PillButton'
+import PixelButton from './PixelButton'
 import AudioToggle from './AudioToggle'
 
 export default function Navbar() {
@@ -63,9 +63,9 @@ export default function Navbar() {
         <nav className="flex items-center justify-between px-5 md:px-10 h-16" aria-label="Principal">
           {/* pílula de marca + status no estilo AT */}
           <div className="at-pill">
-            <a href="#hero" className="flex items-center gap-2.5 leading-none" aria-label="Aethel Chimera - início">
-              <img src="/image/logo-white.png" alt="Aethel Chimera" className="h-7 w-auto" />
-              <span className="font-display font-semibold text-xl text-ivory">Æ</span>
+            <a href="#hero" className="flex items-center gap-2 leading-none" aria-label="Aethel Chimera - início">
+              <img src="/image/logo-mark.webp" alt="Aethel Chimera" width="23" height="24" className="h-6 w-auto" />
+              <span className="font-display font-semibold text-lg text-ivory">Æ</span>
             </a>
             <span className="connector" aria-hidden="true" />
             <span className="mono-label text-[0.6rem] text-titanium hidden sm:inline">Aethel//Chimera</span>
@@ -83,26 +83,21 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-2">
             <AudioToggle />
-            <PillButton
-              width={156}
-              height={40}
-              fontSize={11}
-              color="#C8CAD0"
-              aria-label="Iniciar projeto"
-              onClick={() => closeAnd('#contato')}
-            >
+            <PixelButton size="xs" href={CONTACT.whatsappUrl} aria-label="Iniciar projeto pelo WhatsApp">
               Iniciar projeto
-            </PillButton>
+            </PixelButton>
           </div>
 
-          <button
-            className="md:hidden mono-label text-ivory"
+          <PixelButton
+            variant="dark"
+            size="sm"
+            className="md:!hidden"
             onClick={() => setOpen(!open)}
             aria-expanded={open}
             aria-label={open ? 'Fechar menu' : 'Abrir menu'}
           >
             {open ? 'Fechar' : 'Menu'}
-          </button>
+          </PixelButton>
         </nav>
       </header>
 
@@ -111,13 +106,15 @@ export default function Navbar() {
         <div ref={menuRef} className="fixed inset-0 z-[120] bg-obsidian-deep flex flex-col justify-center px-8 md:hidden">
           {/* o overlay agora cobre o header, então precisa do seu próprio
               controle de fechar (o toggle do header fica por baixo) */}
-          <button
+          <PixelButton
+            variant="dark"
+            size="sm"
+            className="!absolute top-3 right-5"
             onClick={() => setOpen(false)}
-            className="mono-label absolute top-0 right-5 h-16 flex items-center text-ivory"
             aria-label="Fechar menu"
           >
             Fechar
-          </button>
+          </PixelButton>
           <ul className="space-y-2">
             {NAV_LINKS.map((l, i) => (
               <li key={l.href} className="overflow-hidden">

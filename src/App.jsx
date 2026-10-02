@@ -5,6 +5,7 @@ import Lenis from 'lenis'
 
 import Preloader from './components/Preloader'
 import Cursor from './components/Cursor'
+import ScrollBar from './components/ScrollBar'
 import ConsoleHUD from './components/ConsoleHUD'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
@@ -79,6 +80,7 @@ export default function App() {
       <div className="vignette" aria-hidden="true" />
 
       <Cursor />
+      {loaded && <ScrollBar />}
       {loaded && <ConsoleHUD />}
       <Navbar />
 
