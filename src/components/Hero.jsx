@@ -58,7 +58,7 @@ export default function Hero({ ready, reducedMotion }) {
         <div className="absolute inset-0 bg-gradient-to-r from-obsidian/60 via-transparent to-transparent" />
       </div>
 
-      <div className="relative z-10 flex-1 flex items-end px-5 md:px-10 pb-28 pt-32">
+      <div className="relative z-10 flex-1 flex items-center md:items-end px-5 md:px-10 pb-16 md:pb-28 pt-28 md:pt-32">
         <div className="max-w-[52rem]">
           <div className="flex items-center gap-4 mb-6 hero-sub">
             <span className="mono-label text-amber whitespace-nowrap">[ SEC 01 ]</span>

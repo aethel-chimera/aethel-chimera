@@ -9,6 +9,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false)
   const menuRef = useRef(null)
   const linksRef = useRef([])
+  const closingRef = useRef(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -41,15 +42,33 @@ export default function Navbar() {
     }
   }, [open])
 
-  const closeAnd = (href) => {
-    setOpen(false)
-    requestAnimationFrame(() => {
-      const target = document.querySelector(href)
-      if (!target) return
-      if (window.__lenis) window.__lenis.scrollTo(target, { offset: -64 })
-      else target.scrollIntoView({ behavior: 'smooth' })
-    })
+  // fecha com a animação de abrir ao contrário: as palavras sobem e a cortina
+  // recolhe; só no fim o menu sai da página (antes sumia na hora)
+  const closeMenu = (then) => {
+    const menu = menuRef.current
+    if (!menu || closingRef.current) return
+    closingRef.current = true
+    gsap
+      .timeline({
+        onComplete: () => {
+          closingRef.current = false
+          setOpen(false)
+          then?.()
+        },
+      })
+      .to(linksRef.current.filter(Boolean), { yPercent: -110, duration: 0.35, stagger: 0.04, ease: 'power3.in' })
+      .to(menu, { clipPath: 'inset(0 0 100% 0)', duration: 0.6, ease: 'power4.inOut' }, '-=0.15')
   }
+
+  const closeAnd = (href) =>
+    closeMenu(() =>
+      requestAnimationFrame(() => {
+        const target = document.querySelector(href)
+        if (!target) return
+        if (window.__lenis) window.__lenis.scrollTo(target, { offset: -64 })
+        else target.scrollIntoView({ behavior: 'smooth' })
+      })
+    )
 
   return (
     <>
@@ -92,7 +111,7 @@ export default function Navbar() {
             variant="dark"
             size="sm"
             className="md:!hidden"
-            onClick={() => setOpen(!open)}
+            onClick={() => (open ? closeMenu() : setOpen(true))}
             aria-expanded={open}
             aria-label={open ? 'Fechar menu' : 'Abrir menu'}
           >
@@ -110,7 +129,7 @@ export default function Navbar() {
             variant="dark"
             size="sm"
             className="!absolute top-3 right-5"
-            onClick={() => setOpen(false)}
+            onClick={() => closeMenu()}
             aria-label="Fechar menu"
           >
             Fechar
@@ -123,8 +142,9 @@ export default function Navbar() {
                   onClick={() => closeAnd(l.href)}
                   className="flex items-baseline gap-4 text-left"
                 >
-                  <span className="font-mono text-xs text-amber">0{i + 1}</span>
-                  <span className="font-display font-semibold text-5xl text-ivory uppercase tracking-tightest">
+                  {/* largura fixa: os algarismos da Termina têm larguras diferentes */}
+                  <span className="font-mono text-xs text-amber w-6 shrink-0 tabular-nums">0{i + 1}</span>
+                  <span className="font-display font-semibold text-[clamp(2rem,11vw,3rem)] text-ivory uppercase tracking-tightest">
                     {l.label}
                   </span>
                 </button>
@@ -142,7 +162,7 @@ export default function Navbar() {
                 href={waLink(p.e164)}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
+                onClick={() => closeMenu()}
                 className="flex items-center gap-3 text-ivory text-base"
               >
                 <span className="text-amber" aria-hidden="true">↗</span>
@@ -151,7 +171,7 @@ export default function Navbar() {
             ))}
             <a
               href={CONTACT.emailUrl}
-              onClick={() => setOpen(false)}
+              onClick={() => closeMenu()}
               className="flex items-center gap-3 text-titanium text-sm break-all"
             >
               <span className="text-amber" aria-hidden="true">↗</span>
@@ -161,7 +181,7 @@ export default function Navbar() {
               href={CONTACT.instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
+              onClick={() => closeMenu()}
               className="flex items-center gap-3 text-titanium text-sm"
             >
               <span className="text-amber" aria-hidden="true">↗</span>
