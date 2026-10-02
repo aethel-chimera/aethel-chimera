@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 :root {
+  /* largura máxima do conteúdo: em telas maiores as margens crescem e o
+     conteúdo fica centralizado; fundos e efeitos seguem ocupando a tela */
+  --page-max: 90rem;
   --obsidian: #0b0b10;
   --titanium: #c8cad0;
   --ivory: #f4f2ec;
@@ -176,17 +179,48 @@ body {
   height: 24px;
   margin: -32px 0 0 -38px;
   background: rgba(224, 164, 88, 0.92);
+  /* monta bloquinho por bloquinho: nasce como um quadradinho no centro e
+     cresce em degraus secos até virar a etiqueta */
+  animation: cursor-label-build 0.32s steps(6, end) both;
+}
+@keyframes cursor-label-build {
+  from {
+    width: 4px;
+    height: 4px;
+    margin: -22px 0 0 -2px;
+  }
+  45% {
+    width: 24px;
+    height: 24px;
+    margin: -32px 0 0 -12px;
+  }
+  to {
+    width: 76px;
+    height: 24px;
+    margin: -32px 0 0 -38px;
+  }
 }
 .cursor-ring .cursor-label {
   font-family: termina, sans-serif;
   font-size: 10px;
   letter-spacing: 0.18em;
   color: var(--obsidian);
+  white-space: nowrap;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.1s steps(2);
 }
+/* o texto só entra depois que a etiqueta terminou de montar */
 .cursor-ring.is-label .cursor-label {
   opacity: 1;
+  transition-delay: 0.3s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-ring.is-label {
+    animation: none;
+  }
+  .cursor-ring.is-label .cursor-label {
+    transition-delay: 0s;
+  }
 }
 
 /* ---- utilitários de tipografia ---- */
@@ -1151,5 +1185,18 @@ main > section::after {
   .at-pill {
     backdrop-filter: none;
     background: rgba(11, 11, 16, 0.88);
+  }
+}
+
+/* margem lateral padrão das seções, header e rodapé: 20 px no celular, 40 px
+   no desktop e, acima de --page-max, o que sobrar para centralizar o conteúdo */
+.px-page {
+  padding-left: max(1.25rem, calc((100% - var(--page-max)) / 2));
+  padding-right: max(1.25rem, calc((100% - var(--page-max)) / 2));
+}
+@media (min-width: 768px) {
+  .px-page {
+    padding-left: max(2.5rem, calc((100% - var(--page-max)) / 2));
+    padding-right: max(2.5rem, calc((100% - var(--page-max)) / 2));
   }
 }

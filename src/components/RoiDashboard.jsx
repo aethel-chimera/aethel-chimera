@@ -85,7 +85,7 @@ export default function RoiDashboard({ invest, setInvest }) {
   const active = hover ? data.rows.find((r) => r.key === hover) : null
 
   return (
-    <section id="retorno" className="relative z-[3] px-5 md:px-10 py-32">
+    <section id="retorno" className="relative z-[3] px-page py-32">
       <div className="relative z-10 mb-14 max-w-2xl">
         <SectionHead index="05" kicker="Investimento × retorno" title="Calculadora" accent="de retorno" className="mb-6" />
         <p className="text-titanium leading-relaxed">
@@ -232,7 +232,7 @@ export default function RoiDashboard({ invest, setInvest }) {
           visitante transforma isso num pedido real. Fica na MESMA seção de
           propósito: o valor do slider vira a expectativa orçamentária do
           briefing, sem a pessoa digitar nada de novo. */}
-      <div id="briefing" className="relative z-10 mt-8 lg:mt-12 scroll-mt-24">
+      <div id="briefing" className="relative z-10 mx-auto mt-8 w-full max-w-6xl lg:mt-12 scroll-mt-24">
         <BriefingRequest invest={invest} />
       </div>
 

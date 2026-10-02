@@ -79,7 +79,7 @@ export default function Navbar() {
             : 'bg-transparent border-b border-transparent'
         }`}
       >
-        <nav className="flex items-center justify-between px-5 md:px-10 h-16" aria-label="Principal">
+        <nav className="flex items-center justify-between px-page h-16" aria-label="Principal">
           {/* pílula de marca + status no estilo AT */}
           <div className="at-pill">
             <a href="#hero" className="flex items-center gap-2 leading-none" aria-label="Aethel Chimera - início">

@@ -133,7 +133,7 @@ export default function Manifesto({ reducedMotion }) {
     <section
       id="manifesto"
       ref={rootRef}
-      className="relative z-[3] min-h-[100dvh] flex flex-col px-5 md:px-10 py-24 xl:py-0 overflow-hidden"
+      className="relative z-[3] min-h-[100dvh] flex flex-col px-page py-24 xl:py-0 overflow-hidden"
     >
       {/* CONTEÚDO centralizado na altura da seção */}
       <div className="flex-1 flex items-center w-full">

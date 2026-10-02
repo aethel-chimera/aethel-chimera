@@ -160,7 +160,7 @@ function TestimonialCarousel() {
 
 export default function Results({ reducedMotion }) {
   return (
-    <section id="resultados" className="relative z-[3] px-5 md:px-10 py-32">
+    <section id="resultados" className="relative z-[3] px-page py-32">
       <SectionHead index="07" kicker="Prova" title="Resultados" accent="medidos" className="mb-20" />
 
       {/* faixa de números */}
