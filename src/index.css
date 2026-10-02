@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* fontes reserva hospedadas no site: só são baixadas se a Termina ou a Lust
+   Script (Adobe Fonts) não carregarem, por exemplo com a assinatura cancelada */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/instrument-serif-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/instrument-serif-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   /* largura máxima do conteúdo: em telas maiores as margens crescem e o
      conteúdo fica centralizado; fundos e efeitos seguem ocupando a tela */
@@ -25,14 +52,12 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
-/* no desktop a barra nativa some: quem desenha é o ScrollBar (polegar pixelado) */
-@media (pointer: fine) {
-  html {
-    scrollbar-width: none;
-  }
-  html::-webkit-scrollbar {
-    display: none;
-  }
+/* a barra nativa some em qualquer tela: quem desenha é o ScrollBar */
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
 }
 .px-scroll {
   --px: 2px;
@@ -59,12 +84,23 @@ html {
 .px-scroll.is-active {
   opacity: 1;
 }
+/* celular: fina, colada na borda e só indicadora (o toque passa direto) */
+@media (max-width: 767px) {
+  .px-scroll {
+    right: 2px;
+    width: 4px;
+    box-shadow: none;
+    clip-path: none;
+    border-radius: 1px;
+    pointer-events: none;
+  }
+}
 
 
 body {
   background-color: var(--obsidian);
   color: var(--ivory);
-  font-family: termina, sans-serif;
+  font-family: termina, "Space Grotesk", sans-serif;
   /* a Termina é ~35% mais larga que a fonte anterior: font-size-adjust iguala a
      altura do x e mantém as larguras do layout. Títulos e rótulos têm o seu */
   font-size-adjust: 0.45;
@@ -201,7 +237,7 @@ body {
   }
 }
 .cursor-ring .cursor-label {
-  font-family: termina, sans-serif;
+  font-family: termina, "Space Grotesk", sans-serif;
   font-size: 10px;
   letter-spacing: 0.18em;
   color: var(--obsidian);
@@ -225,7 +261,7 @@ body {
 
 /* ---- utilitários de tipografia ---- */
 .mono-label {
-  font-family: termina, sans-serif;
+  font-family: termina, "Space Grotesk", sans-serif;
   font-size: 0.7rem;
   font-weight: 500;
   font-size-adjust: 0.5;
@@ -396,7 +432,7 @@ button:focus-visible {
   bottom: 22px;
   left: 46px;
   pointer-events: none;
-  font-family: termina, sans-serif;
+  font-family: termina, "Space Grotesk", sans-serif;
   font-size: 0.6rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -406,7 +442,7 @@ button:focus-visible {
 
 /* link com seta no estilo AT: "-> LABEL" */
 .arrow-link {
-  font-family: termina, sans-serif;
+  font-family: termina, "Space Grotesk", sans-serif;
   font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -901,7 +937,7 @@ main > section::after {
 }
 .nature-emblem .ghost {
   position: relative;
-  font-family: lust-script-display, serif;
+  font-family: lust-script-display, "Instrument Serif", serif;
   font-style: italic;
   font-size: clamp(1.4rem, 2.4vw, 2.1rem);
   color: rgba(244, 242, 236, 0.16);
@@ -915,7 +951,7 @@ main > section::after {
   position: absolute;
   top: 10px;
   right: 12px;
-  font-family: termina, sans-serif;
+  font-family: termina, "Space Grotesk", sans-serif;
   font-size: 0.55rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -927,7 +963,7 @@ main > section::after {
   transform: translateZ(24px);
 }
 .nature-kicker {
-  font-family: termina, sans-serif;
+  font-family: termina, "Space Grotesk", sans-serif;
   font-size: 0.58rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -1011,7 +1047,7 @@ main > section::after {
   border-radius: 8px;
   background: var(--c);
   color: var(--ink);
-  font-family: termina, system-ui, sans-serif;
+  font-family: termina, "Space Grotesk", system-ui, sans-serif;
   font-size: 13px;
   font-weight: 600;
   line-height: 1;

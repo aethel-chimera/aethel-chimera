@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 // Barra de rolagem própria: só o polegar pixelado, flutuando à direita, sem
-// trilho. A nativa fica escondida no desktop (index.css); no toque ela segue.
+// trilho. No celular ela fica fina e só indica a posição (index.css); arrastar
+// vale com mouse.
 const MIN_THUMB = 40 // px: abaixo disso o polegar fica difícil de pegar
 const MARGIN = 10 // folga em cima e embaixo da área do polegar
 const IDLE_MS = 900 // tempo sem rolar até o polegar voltar a ficar discreto
@@ -11,10 +12,7 @@ export default function ScrollBar() {
   const [active, setActive] = useState(false)
   const [enabled, setEnabled] = useState(false)
 
-  useEffect(() => {
-    if (!window.matchMedia('(pointer: fine)').matches) return
-    setEnabled(true)
-  }, [])
+  useEffect(() => setEnabled(true), [])
 
   useEffect(() => {
     if (!enabled) return

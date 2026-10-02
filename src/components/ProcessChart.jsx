@@ -218,7 +218,7 @@ function Growth({ chart, shown }) {
         {chart.months.map((m, i) => {
           const x = pad + (i / (chart.months.length - 1)) * (w - pad * 2)
           return (
-            <text key={m} x={x} y={h - 7} textAnchor="middle" fill="#C8CAD0" fillOpacity="0.5" style={{ font: '500 8px termina, sans-serif', letterSpacing: '0.1em' }}>
+            <text key={m} x={x} y={h - 7} textAnchor="middle" fill="#C8CAD0" fillOpacity="0.5" style={{ font: "500 8px termina, 'Space Grotesk', sans-serif", letterSpacing: '0.1em' }}>
               {m}
             </text>
           )

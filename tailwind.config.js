@@ -16,9 +16,9 @@ export default {
         signal: '#3DDC97',
       },
       fontFamily: {
-        display: ['termina', 'sans-serif'],
-        serif: ['lust-script-display', 'serif'],
-        mono: ['termina', 'sans-serif'],
+        display: ['termina', '"Space Grotesk"', 'sans-serif'],
+        serif: ['lust-script-display', '"Instrument Serif"', 'serif'],
+        mono: ['termina', '"Space Grotesk"', 'sans-serif'],
       },
       letterSpacing: {
         tightest: '-0.04em',

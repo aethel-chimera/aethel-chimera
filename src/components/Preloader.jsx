@@ -118,7 +118,7 @@ export default function Preloader({ onDone }) {
             x="60"
             y="78"
             textAnchor="middle"
-            fontFamily="termina, sans-serif"
+            fontFamily="termina, 'Space Grotesk', sans-serif"
             fontSize="88"
             fontWeight="600"
             fill="none"
